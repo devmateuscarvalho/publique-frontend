@@ -5,8 +5,7 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const apiProxy = (
   process.env.API_PROXY_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  (process.env.VERCEL ? "https://85-239-240-59.sslip.io" : "http://127.0.0.1:8080")
+  (process.env.VERCEL ? "http://85.239.240.59:8080" : process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8080")
 ).replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
