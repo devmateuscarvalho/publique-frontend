@@ -229,7 +229,20 @@ function NewUserBody() {
 }
 
 function memberColumns(
-  t: (key: "columns.email" | "columns.locale" | "columns.role" | "columns.createdAt" | "columns.actions" | "owner" | "member" | "remove" | "role") => string,
+  t: (
+    key:
+      | "columns.email"
+      | "columns.locale"
+      | "columns.role"
+      | "columns.createdAt"
+      | "columns.actions"
+      | "owner"
+      | "member"
+      | "remove"
+      | "removeConfirm"
+      | "cancel"
+      | "role",
+  ) => string,
   labels: (kind: "locale", code: string) => string,
   locale: string,
   changeRole: { mutate: (input: { id: string; role: string }) => void },

@@ -55,6 +55,39 @@ import {
 } from "@/lib/backoffice-preset-shared";
 import { logoPlacements } from "@/lib/post-template";
 
+function imageExtension(url: string, contentType: string): string {
+  const type = contentType.split(";")[0]?.trim().toLowerCase() ?? "";
+  if (type === "image/jpeg" || type === "image/jpg") return "jpg";
+  if (type === "image/webp") return "webp";
+  if (type === "image/gif") return "gif";
+  if (type === "image/png") return "png";
+  const match = url.split("?")[0]?.match(/\.([a-z0-9]+)$/i);
+  const ext = match?.[1]?.toLowerCase();
+  if (ext === "jpeg") return "jpg";
+  if (ext && ["png", "jpg", "webp", "gif"].includes(ext)) return ext;
+  return "png";
+}
+
+async function downloadImagesAsZip(urls: string[], zipName: string, fileBase: string) {
+  const zip = new JSZip();
+  for (const [index, url] of urls.entries()) {
+    const response = await fetch(url, { credentials: "include" });
+    if (!response.ok) {
+      throw new Error("download_failed");
+    }
+    const blob = await response.blob();
+    const ext = imageExtension(url, blob.type);
+    zip.file(`${fileBase}-${String(index + 1).padStart(2, "0")}.${ext}`, blob);
+  }
+  const archive = await zip.generateAsync({ type: "blob" });
+  const objectUrl = URL.createObjectURL(archive);
+  const anchor = document.createElement("a");
+  anchor.href = objectUrl;
+  anchor.download = zipName;
+  anchor.click();
+  URL.revokeObjectURL(objectUrl);
+}
+
 export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; kind?: string }) {
   const t = useTranslations("backoffice");
   const creation = useTranslations("creation");

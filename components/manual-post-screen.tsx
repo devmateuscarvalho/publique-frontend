@@ -453,7 +453,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
   const linkedinFailed = !linkedinPublished && linkedinPublication?.status === "failed";
   const linkedinPostedAt = formatWhen(linkedinPublication?.updated_at, format);
   const needsConnect = !linkedinPublished && !linkedin?.configured;
-  const needsPage = !linkedinPublished && Boolean(linkedin?.configured) && !linkedin.page_urn?.trim();
+  const needsPage = !linkedinPublished && Boolean(linkedin?.configured) && !linkedin?.page_urn?.trim();
   const returnTo = brandId ? `/posts/${postId}?brand=${brandId}` : `/posts/${postId}`;
 
   useEffect(() => {
