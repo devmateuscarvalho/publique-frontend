@@ -444,15 +444,19 @@ function ManualDraftPage({ postId }: { postId: string }) {
   const linkedin = byNetwork.get("linkedin");
   const instagram = byNetwork.get("instagram");
   const linkedinReady = Boolean(linkedin?.configured && linkedin.page_urn?.trim());
-  const needsInstagramConnect =
-    !instagram?.configured && Boolean(instagram?.oauth_available) && organization?.role === "owner";
+  const instagramReady = Boolean(instagram?.configured && instagram.page_urn?.trim());
   const linkedinPublication = (post?.publications ?? []).find((item) => item.network === "linkedin");
-  const linkedinPublished =
-    linkedinPublication?.status === "published" ||
-    (status === "published" && linkedinPublication?.status !== "failed");
+  const instagramPublication = (post?.publications ?? []).find((item) => item.network === "instagram");
+  const linkedinPublished = linkedinPublication?.status === "published";
+  const instagramPublished = instagramPublication?.status === "published";
   const linkedinFailed = !linkedinPublished && linkedinPublication?.status === "failed";
+  const instagramFailed = !instagramPublished && instagramPublication?.status === "failed";
   const linkedinPostedAt = formatWhen(linkedinPublication?.updated_at, format);
+  const instagramPostedAt = formatWhen(instagramPublication?.updated_at, format);
+  const linkedinCanSend = linkedinReady && !linkedinPublished;
+  const instagramCanSend = instagramReady && !instagramPublished;
   const needsConnect = !linkedinPublished && !linkedin?.configured;
+  const needsInstagramConnect = !instagramPublished && !instagram?.configured;
   const needsPage = !linkedinPublished && Boolean(linkedin?.configured) && !linkedin?.page_urn?.trim();
   const returnTo = brandId ? `/posts/${postId}?brand=${brandId}` : `/posts/${postId}`;
 
@@ -534,11 +538,16 @@ function ManualDraftPage({ postId }: { postId: string }) {
     onError: (error) => appToast.error(errors(mapDraftError(error))),
   });
   const publish = useMutation({
-    mutationFn: () =>
-      api<{ post: Post }>(`/v1/brands/${brandId}/posts/${postId}/publish`, {
+    mutationFn: () => {
+      const networks = [
+        ...(linkedinCanSend ? (["linkedin"] as const) : []),
+        ...(instagramCanSend ? (["instagram"] as const) : []),
+      ];
+      return api<{ post: Post }>(`/v1/brands/${brandId}/posts/${postId}/publish`, {
         method: "POST",
-        body: JSON.stringify({ networks: ["linkedin"] }),
-      }),
+        body: JSON.stringify({ networks }),
+      });
+    },
     onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: ["post", brandId, postId] });
       await queryClient.invalidateQueries({ queryKey: ["posts"] });
@@ -546,7 +555,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
     onError: (error) => appToast.error(errors(mapDraftError(error))),
   });
   const canPublish =
-    linkedinReady && !linkedinPublished && !linkedinFailed && !publish.isPending && status === "draft";
+    status === "draft" && !publish.isPending && (linkedinCanSend || instagramCanSend);
   const alreadyPosted =
     status === "published" ||
     status === "publishing" ||
@@ -700,7 +709,9 @@ function ManualDraftPage({ postId }: { postId: string }) {
                 <div className="min-w-0 flex-1 space-y-1">
                   <p className="text-sm font-medium">{t("manualPublishNetworks.instagram")}</p>
                   <p className="text-xs text-ink/60">
-                    {connectInstagram.isPending ? t("viewConnectingInstagram") : t("manualPublishNeedCredential")}
+                    {connectInstagram.isPending
+                      ? t("viewConnectingInstagram")
+                      : t("manualPublishNeedInstagramCredential")}
                   </p>
                 </div>
                 <span className="shrink-0 rounded-md border border-input px-2 py-0.5 text-[10px] font-medium text-ink/60">
@@ -708,22 +719,36 @@ function ManualDraftPage({ postId }: { postId: string }) {
                 </span>
               </button>
             ) : (
-              <div className="flex min-h-11 items-start gap-3 rounded-xl border border-dashed border-input px-3 py-3">
+              <div className="flex min-h-11 items-start gap-3 rounded-xl border border-input px-3 py-3">
                 <div className="min-w-0 flex-1 space-y-1">
-                  <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
-                    {t("manualPublishNetworks.instagram")}
-                    <span className="rounded-md border border-input px-1.5 py-0.5 text-[10px] font-medium text-ink/60">
-                      {t("manualPublishComingSoon")}
-                    </span>
-                  </p>
-                  <p className="text-xs text-ink/60">
-                    {instagram?.configured
-                      ? instagram.account_label || instagram.page_urn || t("viewNotPosted")
-                      : t("viewNotPosted")}
-                  </p>
+                  <p className="text-sm font-medium">{t("manualPublishNetworks.instagram")}</p>
+                  {publish.isPending && instagramCanSend ? (
+                    <p className="text-xs text-ink/70">{t("manualPublishPublishing")}</p>
+                  ) : instagramPublished ? (
+                    <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                      {instagramPostedAt ? t("viewPostedAt", { date: instagramPostedAt }) : t("viewPosted")}
+                    </p>
+                  ) : instagramFailed ? (
+                    <p className="text-xs text-red-700 dark:text-red-400">{t("manualPublishNetworkFailed")}</p>
+                  ) : (
+                    <p className="text-xs text-ink/60">
+                      {instagram?.account_label
+                        ? `${instagram.account_label} · ${t("viewNotPosted")}`
+                        : t("viewNotPosted")}
+                    </p>
+                  )}
                 </div>
-                <span className="shrink-0 rounded-md border border-input px-2 py-0.5 text-[10px] font-medium text-ink/60">
-                  {t("viewNotPosted")}
+                <span
+                  className={cn(
+                    "shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-medium",
+                    instagramPublished
+                      ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
+                      : instagramFailed
+                        ? "border-destructive/40 text-destructive"
+                        : "border-input text-ink/60",
+                  )}
+                >
+                  {instagramPublished ? t("viewPosted") : t("viewNotPosted")}
                 </span>
               </div>
             )}

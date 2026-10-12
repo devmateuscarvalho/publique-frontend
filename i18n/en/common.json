@@ -422,6 +422,7 @@
     },
     "manualPublishComingSoon": "Coming soon",
     "manualPublishNeedCredential": "Tap here to connect LinkedIn and publish on this network.",
+    "manualPublishNeedInstagramCredential": "Tap here to connect Instagram and publish on this network.",
     "manualPublishNeedPageUrn": "LinkedIn is connected. Choose the company page below.",
     "viewConnect": "Connect",
     "viewConnecting": "Opening LinkedIn…",
@@ -944,7 +945,7 @@
     "integration_unconfigured": "That network is not connected yet. Set it up under Integrations.",
     "linkedin_failed": "LinkedIn refused to publish on the company page. Allow publishing as the company on LinkedIn, connect again, and try once more.",
     "linkedin_denied": "LinkedIn authorization was cancelled.",
-    "instagram_failed": "Instagram refused the connection. Check the Meta app and try again.",
+    "instagram_failed": "Instagram refused to publish. Check the professional account, the Meta app, and that images are on a public HTTPS URL, then try again.",
     "instagram_denied": "Instagram authorization was cancelled.",
     "invalid_state": "The connection expired. Try connecting again.",
     "network_unavailable": "That network cannot publish in this version yet."

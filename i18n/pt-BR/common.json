@@ -422,6 +422,7 @@
     },
     "manualPublishComingSoon": "Em breve",
     "manualPublishNeedCredential": "Toque aqui para conectar o LinkedIn e publicar nesta rede.",
+    "manualPublishNeedInstagramCredential": "Toque aqui para conectar o Instagram e publicar nesta rede.",
     "manualPublishNeedPageUrn": "LinkedIn conectado. Escolha a página da empresa abaixo.",
     "viewConnect": "Conectar",
     "viewConnecting": "Abrindo o LinkedIn…",
@@ -944,7 +945,7 @@
     "integration_unconfigured": "Essa rede ainda não está conectada. Configure em Integrações.",
     "linkedin_failed": "O LinkedIn recusou publicar na página da empresa. Libere a publicação como empresa no LinkedIn, conecte de novo e tente outra vez.",
     "linkedin_denied": "A autorização no LinkedIn foi cancelada.",
-    "instagram_failed": "O Instagram recusou a conexão. Confira o app na Meta e tente de novo.",
+    "instagram_failed": "O Instagram recusou publicar. Confira a conta profissional, o app na Meta e se as imagens estão em um endereço HTTPS público, e tente de novo.",
     "instagram_denied": "A autorização no Instagram foi cancelada.",
     "invalid_state": "A conexão expirou. Tente conectar de novo.",
     "network_unavailable": "Essa rede ainda não publica nesta versão."
