@@ -9,7 +9,6 @@ import {
   LogOut,
   PenLine,
   Plus,
-  Plug,
   Settings,
   Shield,
   Sparkles,
@@ -137,7 +136,6 @@ function ShellFrame({
   const showCreateFab = !pathname.startsWith("/create");
   const settingsItems: { href: string; label: string; icon: LucideIcon }[] = [
     { href: "/settings/users", label: t("users"), icon: Users },
-    { href: "/settings/integrations", label: t("integrations"), icon: Plug },
     { href: "/settings/organization", label: t("organization"), icon: Briefcase },
   ];
   const backofficeItems: { href: string; label: string; icon: LucideIcon }[] = [

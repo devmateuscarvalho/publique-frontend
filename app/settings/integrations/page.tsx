@@ -1,11 +1,5 @@
-import { Suspense } from "react";
-
-import { IntegrationsScreen } from "@/components/integrations-screen";
+import { redirect } from "next/navigation";
 
 export default function IntegrationsPage() {
-  return (
-    <Suspense>
-      <IntegrationsScreen />
-    </Suspense>
-  );
+  redirect("/brands");
 }

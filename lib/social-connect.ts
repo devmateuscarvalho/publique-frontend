@@ -1,8 +1,8 @@
 import { api } from "@/lib/api";
 
 export function startSocialOAuth(
-  organizationID: string,
-  network: "linkedin" | "instagram",
+  brandID: string,
+  network: "linkedin" | "instagram" | "facebook",
   returnTo: string,
 ) {
   const qs = new URLSearchParams();
@@ -11,12 +11,12 @@ export function startSocialOAuth(
   }
   const suffix = qs.toString() ? `?${qs.toString()}` : "";
   return api<{ authorize_url: string }>(
-    `/v1/organizations/${organizationID}/integrations/${network}/connect${suffix}`,
+    `/v1/brands/${brandID}/integrations/${network}/connect${suffix}`,
   ).then((data) => {
     window.location.href = data.authorize_url;
   });
 }
 
-export function startLinkedInOAuth(organizationID: string, returnTo: string) {
-  return startSocialOAuth(organizationID, "linkedin", returnTo);
+export function startLinkedInOAuth(brandID: string, returnTo: string) {
+  return startSocialOAuth(brandID, "linkedin", returnTo);
 }

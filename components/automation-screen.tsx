@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import { AppShell } from "@/components/app-shell";
 import { ConfirmAlertDialog } from "@/components/confirm-alert-dialog";
 import { useCreationBrand } from "@/components/creation-brand";
+import { SocialNetworkIcon, type SocialNetworkID } from "@/components/social-network-icons";
 import { BrandFilter, CreationFrame, useBrandQuery } from "@/components/creation-screen";
 import { useAccount } from "@/components/use-account";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ import { usePresetCopy } from "@/lib/preset-i18n";
 import { cn } from "@/lib/utils";
 
 const weekdays = [1, 2, 3, 4, 5, 6, 7] as const;
-const networkChoices = ["linkedin", "instagram"] as const;
+const networkChoices = ["linkedin", "instagram", "facebook"] as const;
 const calendarDays = [7, 1, 2, 3, 4, 5, 6] as const;
 const calendarHours = Array.from({ length: 24 }, (_, hour) => hour);
 
@@ -240,7 +241,6 @@ function WeekPlanner() {
                   <div className="flex flex-wrap gap-2">
                     {networkChoices.map((id) => {
                       const selected = networks.includes(id);
-                      const Icon = id === "linkedin" ? LinkedInIcon : InstagramIcon;
                       return (
                         <button
                           key={id}
@@ -256,13 +256,8 @@ function WeekPlanner() {
                             )
                           }
                         >
-                          <Icon className="size-4" aria-hidden />
+                          <SocialNetworkIcon id={id as SocialNetworkID} className="size-4" />
                           {t(`manualPublishNetworks.${id}`)}
-                          {id === "instagram" ? (
-                            <span className={cn("text-[10px] font-medium", selected ? "text-background/80" : "text-ink/60")}>
-                              {t("manualPublishComingSoon")}
-                            </span>
-                          ) : null}
                         </button>
                       );
                     })}
@@ -471,23 +466,6 @@ function WeekPlanner() {
   );
 }
 
-function LinkedInIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden fill="currentColor">
-      <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45z" />
-    </svg>
-  );
-}
-
-function InstagramIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="3" width="18" height="18" rx="5" />
-      <circle cx="12" cy="12" r="4" />
-      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
 
 function NetworkMarks({ networks }: { networks?: string[] }) {
   const t = useTranslations("creation");
@@ -498,10 +476,9 @@ function NetworkMarks({ networks }: { networks?: string[] }) {
   return (
     <span className="mt-1 flex flex-wrap gap-1">
       {chosen.map((id) => {
-        const Icon = id === "linkedin" ? LinkedInIcon : InstagramIcon;
         return (
           <span key={id} className="inline-flex items-center gap-1 rounded-md border border-input px-1.5 py-0.5 text-xs text-ink/80">
-            <Icon className="size-3.5" aria-hidden />
+            <SocialNetworkIcon id={id} className="size-3.5" />
             {t(`manualPublishNetworks.${id}`)}
           </span>
         );

@@ -2,9 +2,11 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 
 import { BrandBrain } from "@/components/brand-brain";
+import { BrandIntegrations } from "@/components/integrations-screen";
 import { BrandVisualCard } from "@/components/brand-visual";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,6 +31,11 @@ export function BrandWorkspace({
   const segmentsT = useTranslations();
   const errors = useTranslations("errors");
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const networkReturn = Boolean(
+    searchParams.get("linkedin") || searchParams.get("instagram") || searchParams.get("facebook"),
+  );
+  const defaultTab = networkReturn ? "networks" : "profile";
 
   const [name, setName] = useState(brand.name);
   const [segmentId, setSegmentId] = useState(brand.segment_id || "");
@@ -98,10 +105,11 @@ export function BrandWorkspace({
 
   return (
     <section className="w-full space-y-4">
-      <Tabs defaultValue="profile" className="w-full">
+      <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList aria-label={t("section")}>
           <TabsTrigger value="profile">{t("sections.profile")}</TabsTrigger>
           <TabsTrigger value="visual">{t("sections.visual")}</TabsTrigger>
+          <TabsTrigger value="networks">{t("sections.networks")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-4">
@@ -150,6 +158,10 @@ export function BrandWorkspace({
 
         <TabsContent value="visual">
           <BrandVisualCard brandId={brand.id} autoSave />
+        </TabsContent>
+
+        <TabsContent value="networks">
+          <BrandIntegrations brandId={brand.id} />
         </TabsContent>
       </Tabs>
 

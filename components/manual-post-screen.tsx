@@ -13,6 +13,7 @@ import { BrandFilter, CreationFrame, useBrandQuery } from "@/components/creation
 import { FilterPills, type ListFilter } from "@/components/data-table";
 import { InstagramPhonePreview } from "@/components/instagram-phone-preview";
 import { LinkedInPagePicker } from "@/components/linkedin-page-picker";
+import { FacebookIcon, InstagramIcon, LinkedInIcon, socialConnectClass } from "@/components/social-network-icons";
 import { useAccount } from "@/components/use-account";
 import { PostCreatingWait } from "@/components/post-creating-wait";
 import { PostGeneratingCaptionLine, PostGeneratingStudio } from "@/components/post-generating-studio";
@@ -407,7 +408,8 @@ function ManualDraftPage({ postId }: { postId: string }) {
   const brandName = brands.find((brand) => brand.id === brandId)?.name ?? "";
   const oauthHandled = useRef(false);
   const instagramOAuthHandled = useRef(false);
-  const [showPicker, setShowPicker] = useState(false);
+  const facebookOAuthHandled = useRef(false);
+  const [showPicker, setShowPicker] = useState<"linkedin" | "facebook" | null>(null);
 
   const postQuery = useQuery({
     queryKey: ["post", brandId, postId],
@@ -428,10 +430,9 @@ function ManualDraftPage({ postId }: { postId: string }) {
     enabled: Boolean(brandId),
   });
   const integrationsQuery = useQuery({
-    queryKey: ["integrations", organization?.id],
-    enabled: Boolean(organization?.id),
-    queryFn: () =>
-      api<{ integrations: IntegrationStatus[] }>(`/v1/organizations/${organization?.id}/integrations`),
+    queryKey: ["integrations", brandId],
+    enabled: Boolean(brandId),
+    queryFn: () => api<{ integrations: IntegrationStatus[] }>(`/v1/brands/${brandId}/integrations`),
   });
 
   const post = postQuery.data?.post;
@@ -443,21 +444,30 @@ function ManualDraftPage({ postId }: { postId: string }) {
   const byNetwork = new Map((integrationsQuery.data?.integrations ?? []).map((item) => [item.network, item]));
   const linkedin = byNetwork.get("linkedin");
   const instagram = byNetwork.get("instagram");
+  const facebook = byNetwork.get("facebook");
   const linkedinReady = Boolean(linkedin?.configured && linkedin.page_urn?.trim());
   const instagramReady = Boolean(instagram?.configured && instagram.page_urn?.trim());
+  const facebookReady = Boolean(facebook?.configured && facebook.page_urn?.trim());
   const linkedinPublication = (post?.publications ?? []).find((item) => item.network === "linkedin");
   const instagramPublication = (post?.publications ?? []).find((item) => item.network === "instagram");
+  const facebookPublication = (post?.publications ?? []).find((item) => item.network === "facebook");
   const linkedinPublished = linkedinPublication?.status === "published";
   const instagramPublished = instagramPublication?.status === "published";
+  const facebookPublished = facebookPublication?.status === "published";
   const linkedinFailed = !linkedinPublished && linkedinPublication?.status === "failed";
   const instagramFailed = !instagramPublished && instagramPublication?.status === "failed";
+  const facebookFailed = !facebookPublished && facebookPublication?.status === "failed";
   const linkedinPostedAt = formatWhen(linkedinPublication?.updated_at, format);
   const instagramPostedAt = formatWhen(instagramPublication?.updated_at, format);
+  const facebookPostedAt = formatWhen(facebookPublication?.updated_at, format);
   const linkedinCanSend = linkedinReady && !linkedinPublished;
   const instagramCanSend = instagramReady && !instagramPublished;
+  const facebookCanSend = facebookReady && !facebookPublished;
   const needsConnect = !linkedinPublished && !linkedin?.configured;
   const needsInstagramConnect = !instagramPublished && !instagram?.configured;
+  const needsFacebookConnect = !facebookPublished && !facebook?.configured;
   const needsPage = !linkedinPublished && Boolean(linkedin?.configured) && !linkedin?.page_urn?.trim();
+  const needsFacebookPage = !facebookPublished && Boolean(facebook?.configured) && !facebook?.page_urn?.trim();
   const returnTo = brandId ? `/posts/${postId}?brand=${brandId}` : `/posts/${postId}`;
 
   useEffect(() => {
@@ -469,18 +479,18 @@ function ManualDraftPage({ postId }: { postId: string }) {
     if (statusParam === "connected") {
       if (searchParams.get("need_page") === "1") {
         appToast.info(integrations("oauthNeedPage"));
-        setShowPicker(true);
+        setShowPicker("linkedin");
       } else {
         appToast.success(integrations("oauthConnected", { network: integrations("networks.linkedin") }));
       }
     } else if (statusParam === "pick") {
       appToast.info(integrations("oauthPick"));
-      setShowPicker(true);
+      setShowPicker("linkedin");
     } else if (statusParam === "error") {
       const code = searchParams.get("code") ?? "internal_error";
       appToast.error(errors(mapDraftError(new ApiError(code))));
     }
-    void queryClient.invalidateQueries({ queryKey: ["integrations", organization?.id] });
+    void queryClient.invalidateQueries({ queryKey: ["integrations", brandId] });
     const next = new URLSearchParams(searchParams.toString());
     next.delete("linkedin");
     next.delete("need_page");
@@ -501,7 +511,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
       const code = searchParams.get("code") ?? "internal_error";
       appToast.error(errors(mapDraftError(new ApiError(code))));
     }
-    void queryClient.invalidateQueries({ queryKey: ["integrations", organization?.id] });
+    void queryClient.invalidateQueries({ queryKey: ["integrations", brandId] });
     const next = new URLSearchParams(searchParams.toString());
     next.delete("instagram");
     next.delete("code");
@@ -509,21 +519,59 @@ function ManualDraftPage({ postId }: { postId: string }) {
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }, [errors, integrations, organization?.id, pathname, queryClient, router, searchParams]);
 
+  useEffect(() => {
+    const statusParam = searchParams.get("facebook");
+    if (!statusParam || facebookOAuthHandled.current) {
+      return;
+    }
+    facebookOAuthHandled.current = true;
+    if (statusParam === "connected") {
+      if (searchParams.get("need_page") === "1") {
+        appToast.info(integrations("oauthNeedFacebookPage"));
+        setShowPicker("facebook");
+      } else {
+        appToast.success(integrations("oauthConnected", { network: integrations("networks.facebook") }));
+      }
+    } else if (statusParam === "pick") {
+      appToast.info(integrations("oauthNeedFacebookPage"));
+      setShowPicker("facebook");
+    } else if (statusParam === "error") {
+      const code = searchParams.get("code") ?? "internal_error";
+      appToast.error(errors(mapDraftError(new ApiError(code))));
+    }
+    void queryClient.invalidateQueries({ queryKey: ["integrations", brandId] });
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("facebook");
+    next.delete("need_page");
+    next.delete("code");
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [brandId, errors, integrations, pathname, queryClient, router, searchParams]);
+
   const connect = useMutation({
     mutationFn: () => {
-      if (!organization?.id) {
+      if (!brandId) {
         throw new ApiError("invalid_input");
       }
-      return startSocialOAuth(organization.id, "linkedin", returnTo);
+      return startSocialOAuth(brandId, "linkedin", returnTo);
     },
     onError: (error) => appToast.error(errors(mapDraftError(error))),
   });
   const connectInstagram = useMutation({
     mutationFn: () => {
-      if (!organization?.id) {
+      if (!brandId) {
         throw new ApiError("invalid_input");
       }
-      return startSocialOAuth(organization.id, "instagram", returnTo);
+      return startSocialOAuth(brandId, "instagram", returnTo);
+    },
+    onError: (error) => appToast.error(errors(mapDraftError(error))),
+  });
+  const connectFacebook = useMutation({
+    mutationFn: () => {
+      if (!brandId) {
+        throw new ApiError("invalid_input");
+      }
+      return startSocialOAuth(brandId, "facebook", returnTo);
     },
     onError: (error) => appToast.error(errors(mapDraftError(error))),
   });
@@ -542,6 +590,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
       const networks = [
         ...(linkedinCanSend ? (["linkedin"] as const) : []),
         ...(instagramCanSend ? (["instagram"] as const) : []),
+        ...(facebookCanSend ? (["facebook"] as const) : []),
       ];
       return api<{ post: Post }>(`/v1/brands/${brandId}/posts/${postId}/publish`, {
         method: "POST",
@@ -555,7 +604,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
     onError: (error) => appToast.error(errors(mapDraftError(error))),
   });
   const canPublish =
-    status === "draft" && !publish.isPending && (linkedinCanSend || instagramCanSend);
+    status === "draft" && !publish.isPending && (linkedinCanSend || instagramCanSend || facebookCanSend);
   const alreadyPosted =
     status === "published" ||
     status === "publishing" ||
@@ -653,19 +702,14 @@ function ManualDraftPage({ postId }: { postId: string }) {
             {needsConnect ? (
               <button
                 type="button"
-                className="flex min-h-11 w-full items-start gap-3 rounded-xl border border-input px-3 py-3 text-left"
+                className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl bg-[#0A66C2] px-4 text-sm font-medium text-white hover:bg-[#004182] disabled:opacity-50"
                 disabled={connect.isPending}
                 onClick={() => connect.mutate()}
               >
-                <div className="min-w-0 flex-1 space-y-1">
-                  <p className="text-sm font-medium">{t("manualPublishNetworks.linkedin")}</p>
-                  <p className="text-xs text-ink/60">
-                    {connect.isPending ? t("viewConnecting") : t("manualPublishNeedCredential")}
-                  </p>
-                </div>
-                <span className="shrink-0 rounded-md border border-input px-2 py-0.5 text-[10px] font-medium text-ink/60">
-                  {t("viewConnect")}
-                </span>
+                <LinkedInIcon className="size-5 shrink-0" />
+                {connect.isPending
+                  ? t("viewConnecting")
+                  : integrations("connect", { network: integrations("networks.linkedin") })}
               </button>
             ) : (
               <div className="flex min-h-11 items-start gap-3 rounded-xl border border-input px-3 py-3">
@@ -702,21 +746,14 @@ function ManualDraftPage({ postId }: { postId: string }) {
             {needsInstagramConnect ? (
               <button
                 type="button"
-                className="flex min-h-11 w-full items-start gap-3 rounded-xl border border-input px-3 py-3 text-left"
+                className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl bg-[#111111] px-4 text-sm font-medium text-white hover:bg-black disabled:opacity-50"
                 disabled={connectInstagram.isPending}
                 onClick={() => connectInstagram.mutate()}
               >
-                <div className="min-w-0 flex-1 space-y-1">
-                  <p className="text-sm font-medium">{t("manualPublishNetworks.instagram")}</p>
-                  <p className="text-xs text-ink/60">
-                    {connectInstagram.isPending
-                      ? t("viewConnectingInstagram")
-                      : t("manualPublishNeedInstagramCredential")}
-                  </p>
-                </div>
-                <span className="shrink-0 rounded-md border border-input px-2 py-0.5 text-[10px] font-medium text-ink/60">
-                  {t("viewConnect")}
-                </span>
+                <InstagramIcon className="size-5 shrink-0" />
+                {connectInstagram.isPending
+                  ? t("viewConnectingInstagram")
+                  : integrations("connect", { network: integrations("networks.instagram") })}
               </button>
             ) : (
               <div className="flex min-h-11 items-start gap-3 rounded-xl border border-input px-3 py-3">
@@ -752,15 +789,81 @@ function ManualDraftPage({ postId }: { postId: string }) {
                 </span>
               </div>
             )}
+            {needsFacebookConnect ? (
+              <button
+                type="button"
+                className={cn(
+                  "flex min-h-12 w-full items-center justify-center gap-3 rounded-xl px-4 text-sm font-medium text-white disabled:opacity-50",
+                  socialConnectClass("facebook"),
+                )}
+                disabled={connectFacebook.isPending}
+                onClick={() => connectFacebook.mutate()}
+              >
+                <FacebookIcon className="size-5 shrink-0" />
+                {connectFacebook.isPending
+                  ? t("viewConnectingFacebook")
+                  : integrations("connect", { network: integrations("networks.facebook") })}
+              </button>
+            ) : (
+              <div className="flex min-h-11 items-start gap-3 rounded-xl border border-input px-3 py-3">
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="text-sm font-medium">{t("manualPublishNetworks.facebook")}</p>
+                  {publish.isPending && facebookCanSend ? (
+                    <p className="text-xs text-ink/70">{t("manualPublishPublishing")}</p>
+                  ) : facebookPublished ? (
+                    <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                      {facebookPostedAt ? t("viewPostedAt", { date: facebookPostedAt }) : t("viewPosted")}
+                    </p>
+                  ) : facebookFailed ? (
+                    <p className="text-xs text-red-700 dark:text-red-400">{t("manualPublishNetworkFailed")}</p>
+                  ) : needsFacebookPage ? (
+                    <p className="text-xs text-ink/60">{integrations("oauthNeedFacebookPage")}</p>
+                  ) : (
+                    <p className="text-xs text-ink/60">
+                      {facebook?.account_label
+                        ? `${facebook.account_label} · ${t("viewNotPosted")}`
+                        : t("viewNotPosted")}
+                    </p>
+                  )}
+                </div>
+                <span
+                  className={cn(
+                    "shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-medium",
+                    facebookPublished
+                      ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
+                      : facebookFailed
+                        ? "border-destructive/40 text-destructive"
+                        : "border-input text-ink/60",
+                  )}
+                >
+                  {facebookPublished ? t("viewPosted") : t("viewNotPosted")}
+                </span>
+              </div>
+            )}
           </div>
-          {needsPage || showPicker ? (
-            organization?.id ? (
+          {needsPage || showPicker === "linkedin" ? (
+            brandId ? (
               <LinkedInPagePicker
-                organizationID={organization.id}
+                brandID={brandId}
+                network="linkedin"
                 onSaved={() => {
-                  setShowPicker(false);
+                  setShowPicker(null);
                   appToast.success(integrations("pageSaved"));
-                  void queryClient.invalidateQueries({ queryKey: ["integrations", organization.id] });
+                  void queryClient.invalidateQueries({ queryKey: ["integrations", brandId] });
+                }}
+                onError={(error) => appToast.error(errors(mapDraftError(error)))}
+              />
+            ) : null
+          ) : null}
+          {needsFacebookPage || showPicker === "facebook" ? (
+            brandId ? (
+              <LinkedInPagePicker
+                brandID={brandId}
+                network="facebook"
+                onSaved={() => {
+                  setShowPicker(null);
+                  appToast.success(integrations("facebookPageSaved"));
+                  void queryClient.invalidateQueries({ queryKey: ["integrations", brandId] });
                 }}
                 onError={(error) => appToast.error(errors(mapDraftError(error)))}
               />
@@ -849,6 +952,8 @@ function mapDraftError(error: unknown) {
     "linkedin_denied",
     "instagram_failed",
     "instagram_denied",
+    "facebook_failed",
+    "facebook_denied",
     "invalid_state",
     "network_unavailable",
   ] as const;

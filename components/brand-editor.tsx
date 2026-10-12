@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Suspense } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { BrandWorkspace } from "@/components/brand-workspace";
@@ -49,5 +50,9 @@ function BrandEditorBody({ brandId }: { brandId: string }) {
     return <p className="text-sm text-ink/70">{errors("not_found")}</p>;
   }
 
-  return <BrandWorkspace brand={brandQuery.data.brand} segments={segmentsQuery.data?.segments ?? []} />;
+  return (
+    <Suspense>
+      <BrandWorkspace brand={brandQuery.data.brand} segments={segmentsQuery.data?.segments ?? []} />
+    </Suspense>
+  );
 }

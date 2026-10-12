@@ -274,7 +274,8 @@
     "saved": "Salvo.",
     "sections": {
       "profile": "Perfil da marca",
-      "visual": "Identidade visual"
+      "visual": "Identidade visual",
+      "networks": "Redes"
     }
   },
   "visual": {
@@ -418,7 +419,8 @@
     "manualPublishLead": "Escolha em quais redes enviar este rascunho.",
     "manualPublishNetworks": {
       "linkedin": "LinkedIn",
-      "instagram": "Instagram"
+      "instagram": "Instagram",
+      "facebook": "Facebook"
     },
     "manualPublishComingSoon": "Em breve",
     "manualPublishNeedCredential": "Toque aqui para conectar o LinkedIn e publicar nesta rede.",
@@ -427,6 +429,7 @@
     "viewConnect": "Conectar",
     "viewConnecting": "Abrindo o LinkedIn…",
     "viewConnectingInstagram": "Abrindo o Instagram…",
+    "viewConnectingFacebook": "Abrindo o Facebook…",
     "manualPublishReadOnly": "Este post já foi publicado e não pode ser editado.",
     "manualPublishNetworkPublished": "Publicado nesta rede.",
     "manualPublishNetworkFailed": "Não deu para publicar nesta rede.",
@@ -947,6 +950,8 @@
     "linkedin_denied": "A autorização no LinkedIn foi cancelada.",
     "instagram_failed": "O Instagram recusou publicar. Confira a conta profissional, o app na Meta e se as imagens estão em um endereço HTTPS público, e tente de novo.",
     "instagram_denied": "A autorização no Instagram foi cancelada.",
+    "facebook_failed": "O Facebook recusou publicar. Confira a Página, as permissões no app da Meta e se as imagens estão em um endereço HTTPS público, e tente de novo.",
+    "facebook_denied": "A autorização no Facebook foi cancelada.",
     "invalid_state": "A conexão expirou. Tente conectar de novo.",
     "network_unavailable": "Essa rede ainda não publica nesta versão."
   },
@@ -1052,33 +1057,38 @@
   },
   "integrations": {
     "title": "Integrações",
-    "lead": "Guarde o acesso das redes da sua empresa. Ele fica protegido.",
-    "publishingHint": "Com o LinkedIn conectado e a página da empresa escolhida, você publica os rascunhos. O Instagram conecta a conta da empresa; a publicação ainda não está nesta versão.",
-    "empty": "Nenhum acesso salvo.",
+    "lead": "Conecte o LinkedIn, o Instagram e o Facebook desta marca. Um toque e pronto.",
+    "publishingHint": "Com a rede conectada nesta marca, os rascunhos dela podem ser publicados nela. Outra marca precisa da própria conexão.",
+    "empty": "Não conectado.",
     "account": "Nome da conta",
     "token": "Código de acesso",
     "pageUrn": "Número da página",
     "pageUrnHint": "Ex.: urn:li:organization:123456 ou só o número da página da empresa.",
     "save": "Salvar acesso",
-    "remove": "Remover",
-    "removeConfirm": "Remover este acesso da rede?",
+    "remove": "Desconectar",
+    "removeConfirm": "Desconectar esta rede desta marca?",
     "cancel": "Cancelar",
-    "connect": "Conectar {network}",
-    "reconnect": "Reconectar {network}",
+    "connect": "Conectar com {network}",
+    "connecting": "Abrindo o {network}…",
+    "reconnect": "Trocar conta",
+    "connected": "Conectado",
     "manualFallback": "Colar o código na mão",
     "oauthConnected": "{network} conectado.",
     "accountSelected": "Conta",
-    "oauthNeedPage": "LinkedIn conectado. Escolha a página da empresa ou informe o número dela.",
-    "oauthPick": "LinkedIn conectado. Escolha a página da empresa.",
-    "choosePage": "Página da empresa",
+    "oauthNeedPage": "LinkedIn conectado. Toque na página da empresa.",
+    "oauthPick": "LinkedIn conectado. Toque na página da empresa.",
+    "choosePage": "Qual página desta marca?",
     "loadingPages": "Carregando páginas…",
-    "pagesFailed": "Não deu para listar as páginas. Confira as permissões no LinkedIn ou informe o número da página.",
+    "pagesFailed": "Não deu para listar as páginas. Troque a conta e tente de novo.",
     "savePage": "Usar esta página",
     "pageSaved": "Página do LinkedIn salva.",
+    "facebookPageSaved": "Página do Facebook salva.",
+    "oauthNeedFacebookPage": "Facebook conectado. Toque na Página.",
     "pageSelected": "Página",
     "networks": {
       "linkedin": "LinkedIn",
-      "instagram": "Instagram"
+      "instagram": "Instagram",
+      "facebook": "Facebook"
     }
   },
   "presets": {
