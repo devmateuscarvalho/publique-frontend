@@ -3,6 +3,12 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
+const apiProxy = (
+  process.env.API_PROXY_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.VERCEL ? "http://85.239.240.59:8080" : "http://127.0.0.1:8080")
+).replace(/\/$/, "");
+
 const nextConfig: NextConfig = {
   reactCompiler: true,
   // Quick Cloudflare tunnels (scripts/share-local.ps1) load this dev server from another host.
@@ -11,7 +17,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/v1/:path*",
-        destination: "http://127.0.0.1:8080/v1/:path*",
+        destination: `${apiProxy}/v1/:path*`,
       },
     ];
   },
