@@ -868,6 +868,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
                   void queryClient.invalidateQueries({ queryKey: ["integrations", brandId] });
                 }}
                 onError={(error) => appToast.error(errors(mapDraftError(error)))}
+                onReconnect={() => connectFacebook.mutate()}
               />
             ) : null
           ) : null}

@@ -13,11 +13,13 @@ export function LinkedInPagePicker({
   network = "linkedin",
   onSaved,
   onError,
+  onReconnect,
 }: {
   brandID: string;
   network?: "linkedin" | "facebook";
   onSaved: () => void;
   onError: (error: unknown) => void;
+  onReconnect?: () => void;
 }) {
   const t = useTranslations("integrations");
 
@@ -47,6 +49,20 @@ export function LinkedInPagePicker({
       <p className="text-sm font-medium">{t("choosePage")}</p>
       {pagesQuery.isLoading ? <p className="text-sm text-ink/70">{t("loadingPages")}</p> : null}
       {pagesQuery.isError ? <p className="text-sm text-ink/70">{t("pagesFailed")}</p> : null}
+      {!pagesQuery.isLoading && !pagesQuery.isError && pages.length === 0 ? (
+        <div className="space-y-2">
+          <p className="text-sm text-ink/70">{t("pagesEmpty")}</p>
+          {onReconnect ? (
+            <button
+              type="button"
+              className="flex min-h-11 w-full items-center justify-center rounded-xl border border-input px-3 text-sm font-medium hover:bg-accent"
+              onClick={onReconnect}
+            >
+              {t("reconnect")}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       {pages.map((page) => (
         <button
           key={page.urn}

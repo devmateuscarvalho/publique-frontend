@@ -254,6 +254,7 @@ function NetworkRow({
           network={id}
           onSaved={() => void onPageSaved()}
           onError={onError}
+          onReconnect={() => connect.mutate()}
         />
       ) : null}
     </div>

@@ -1080,6 +1080,7 @@
     "choosePage": "Qual página desta marca?",
     "loadingPages": "Carregando páginas…",
     "pagesFailed": "Não deu para listar as páginas. Troque a conta e tente de novo.",
+    "pagesEmpty": "Nenhuma Página veio neste login. Reconecte e, no Facebook, escolha a Página da marca.",
     "savePage": "Usar esta página",
     "pageSaved": "Página do LinkedIn salva.",
     "facebookPageSaved": "Página do Facebook salva.",

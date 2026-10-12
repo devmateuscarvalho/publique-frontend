@@ -1080,6 +1080,7 @@
     "choosePage": "Which page is this brand?",
     "loadingPages": "Loading pages…",
     "pagesFailed": "Could not list the pages. Switch the account and try again.",
+    "pagesEmpty": "No Page came with this login. Reconnect and choose the brand Page on Facebook.",
     "savePage": "Use this page",
     "pageSaved": "LinkedIn page saved.",
     "facebookPageSaved": "Facebook Page saved.",
