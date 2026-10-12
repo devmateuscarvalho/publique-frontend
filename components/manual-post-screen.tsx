@@ -604,7 +604,9 @@ function ManualDraftPage({ postId }: { postId: string }) {
     onError: (error) => appToast.error(errors(mapDraftError(error))),
   });
   const canPublish =
-    status === "draft" && !publish.isPending && (linkedinCanSend || instagramCanSend || facebookCanSend);
+    (status === "draft" || status === "published") &&
+    !publish.isPending &&
+    (linkedinCanSend || instagramCanSend || facebookCanSend);
   const alreadyPosted =
     status === "published" ||
     status === "publishing" ||
