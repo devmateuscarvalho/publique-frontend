@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { z } from "zod";
 
+import { ThemeSwitch } from "@/components/theme-switch";
 import { ApiError, api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -64,14 +65,17 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
           <img src="/symbol.svg" alt="" width={160} height={120} />
           <span className="m-brand-name">Publique</span>
         </Link>
-        <div className="m-locale" role="group" aria-label={nav("language")}>
-          <button type="button" aria-pressed={locale === "pt-BR"} onClick={() => chooseLocale("pt-BR")}>
-            PT
-          </button>
-          <span aria-hidden>/</span>
-          <button type="button" aria-pressed={locale === "en"} onClick={() => chooseLocale("en")}>
-            EN
-          </button>
+        <div className="m-prefs">
+          <ThemeSwitch />
+          <div className="m-locale" role="group" aria-label={nav("language")}>
+            <button type="button" aria-pressed={locale === "pt-BR"} onClick={() => chooseLocale("pt-BR")}>
+              PT
+            </button>
+            <span aria-hidden>/</span>
+            <button type="button" aria-pressed={locale === "en"} onClick={() => chooseLocale("en")}>
+              EN
+            </button>
+          </div>
         </div>
       </header>
 

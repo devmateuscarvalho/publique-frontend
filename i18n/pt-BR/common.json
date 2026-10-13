@@ -1477,8 +1477,8 @@
   },
   "marketing": {
     "meta": {
-      "title": "Publique — Da ideia à publicação",
-      "description": "Configure a marca uma vez e mantenha Instagram, LinkedIn, Facebook e TikTok em movimento. Imagens e legendas com IA, no mesmo lugar."
+      "title": "Publique | Redes que não param",
+      "description": "Configure a marca uma vez e deixe a Publique criar e publicar no Instagram, LinkedIn, Facebook e TikTok. Imagens e legendas com a cara do negócio, no piloto automático."
     },
     "brand": "Publique",
     "skip": "Ir para o conteúdo",
@@ -1487,49 +1487,67 @@
       "features": "Funcionalidades",
       "plans": "Planos",
       "how": "Como funciona",
+      "trust": "Controle",
       "start": "Começar",
       "login": "Entrar",
       "signup": "Comece agora",
-      "openApp": "Abrir o app",
+      "openApp": "Abrir o painel",
+      "accessPlatform": "Acessar a plataforma",
       "menu": "Abrir menu",
       "close": "Fechar menu",
       "language": "Idioma",
       "sections": "Seções"
     },
     "hero": {
-      "kicker": "Conteúdo para redes sociais",
-      "eyebrow": "Piloto de conteúdo",
+      "kicker": "Conteúdo para redes profissionais",
+      "eyebrow": "Marketing contínuo para marcas",
       "line1": "Redes que não param.",
       "line2": "Você liga. A marca fala.",
       "folio": "produto",
-      "lead": "Configure uma vez. A Publique cria, agenda e mantém Instagram, LinkedIn, Facebook e TikTok em movimento.",
-      "primary": "Conheça os planos",
-      "secondary": "Veja os planos",
-      "deviceCaption": "Exemplo: conteúdo gerado com a identidade da marca, no ritmo que você configurou.",
+      "lead": "Configure a marca uma vez. A Publique cria e publica conteúdo com a cara da sua marca no Instagram, LinkedIn, Facebook e TikTok, sem depender de um social media em tempo integral.",
+      "primary": "Acessar a plataforma",
+      "secondary": "Ver planos",
+      "trust": "Piloto automático com controle: pause, edite ou aprove quando quiser.",
+      "networksLabel": "Redes suportadas",
+      "networks": ["Instagram", "LinkedIn", "Facebook", "TikTok"],
+      "imageAlt": "Celular mostrando o perfil de um negócio no Instagram com posts criados pela Publique, ao lado do calendário semanal de publicações.",
+      "deviceCaption": "Exemplo: rascunho e calendário da marca no painel Publique.",
       "deviceWord": "Publicar."
+    },
+    "carousel": {
+      "prev": "Anterior",
+      "next": "Próximo",
+      "how": "Passos: como funciona",
+      "plans": "Planos disponíveis"
     },
     "how": {
       "title": "Três passos.",
+      "lead": "Do site da marca à publicação, no automático.",
       "steps": {
         "1": {
           "title": "Conecte a marca",
-          "body": "Site e redes. Montamos o perfil e a identidade visual."
+          "body": "Site e Páginas profissionais. Montamos o perfil e a identidade visual."
         },
         "2": {
           "title": "Escolha o ritmo",
-          "body": "Visual, dia e redes. A geração segue o que você configurou."
+          "body": "Visual, dia e redes. A geração segue o que o negócio configurou."
         },
         "3": {
-          "title": "Revise e publique",
-          "body": "Rascunhos com a cara da marca. Você decide o que sai."
+          "title": "Deixe no piloto",
+          "body": "A Publique gera e publica no ritmo configurado. Você acompanha pelo painel e intervém só se quiser."
         }
       }
+    },
+    "trust": {
+      "kicker": "Controle",
+      "title": "Piloto ligado. Você no comando.",
+      "body": "A IA gera imagem e legenda só com fatos da marca. Nunca inventa preço, depoimento ou promessa. Tudo fica visível no painel: pause a automação, edite um post ou exija aprovação quando fizer sentido para o seu negócio."
     },
     "ticker": "Crie. Publique. Cresça.",
     "product": {
       "kicker": "01 / Produto",
       "title": "O estúdio, sem o estúdio.",
-      "lead": "Configure uma vez e tenha as redes movimentadas sozinhas. Marca, visual e ritmo — o resto segue no automático.",
+      "lead": "Configure uma vez e tenha as redes movimentadas sozinhas. Marca, visual e ritmo. O resto segue no automático.",
       "createEyebrow": "Começar a criar",
       "createTitle": "Marca e tipo",
       "draftCaption": "Conteúdo gerado com a identidade da marca. As redes seguem no ritmo que você configurou.",
@@ -1543,6 +1561,7 @@
       "lookTopic": "Tema de mercado",
       "lookTopicLead": "Ensine um tema que a marca já cobre.",
       "networks": "Instagram · LinkedIn · Facebook · TikTok",
+      "networksShort": "IG · LI · FB · TT",
       "days": "D S T Q Q S S"
     },
     "features": {
@@ -1551,7 +1570,7 @@
       "brandBody": "Nos informe suas redes: fazemos a leitura e a configuração da sua marca e identidade visual, e então já estaremos prontos para criar e movimentar suas redes.",
       "looksKicker": "Visuais",
       "looksTitle": "Você não monta o modelo.",
-      "looksBody": "Escolha um visual publicado: pessoa, produto ou tema de mercado — peça única ou carrossel. A receita do laboratório gera a imagem e a legenda com os dados da sua marca.",
+      "looksBody": "Escolha um visual publicado: pessoa, produto ou tema de mercado, em peça única ou carrossel. A receita do laboratório gera a imagem e a legenda com os dados da sua marca.",
       "draftKicker": "Ritmo",
       "draftTitle": "Você configura. O resto segue.",
       "draftBody": "A IA gera imagem e legenda com os fatos da marca. Você acerta o ritmo uma vez; as redes não ficam paradas.",
@@ -1564,52 +1583,52 @@
     },
     "plans": {
       "title": "Escolha o plano.",
-      "lead": "Presença profissional, fluxo completo ou mais capacidade criativa — sempre com créditos inclusos.",
+      "lead": "Presença profissional ou fluxo completo para um negócio ativo, sempre com créditos inclusos.",
       "billingLabel": "Ciclo de cobrança",
       "monthly": "Mensal",
       "annual": "Anual",
       "save": "1 mês grátis",
       "perMonth": "/mês",
       "billedAnnually": "{total}/ano com 1 mês grátis",
-      "recommended": "Recomendado",
+      "recommended": "Mais escolhido",
       "cta": "Começar com este plano",
-      "note": "Preços ilustrativos — cobrança ainda não está ativa.",
+      "note": "Preços ilustrativos. A cobrança ainda não está ativa.",
       "tiers": {
         "starter": {
           "name": "Starter",
           "summary": "Presença profissional para um negócio.",
           "features": [
             "1 marca",
-            "2 perfis sociais conectados",
-            "Inteligência de marca e presets criativos principais",
+            "Até 2 Páginas/perfis profissionais",
+            "Inteligência de marca e looks principais",
             "300 créditos/mês",
-            "Biblioteca de conteúdo e calendário de planejamento",
-            "Geração de imagem padrão"
+            "Calendário de planejamento",
+            "Geração de imagem"
           ]
         },
         "pro": {
           "name": "Pro",
-          "summary": "Fluxo completo de conteúdo para um negócio ativo.",
+          "summary": "Fluxo completo para um negócio ativo.",
           "features": [
             "1 marca com customização avançada",
-            "Até 5 perfis sociais conectados",
+            "Até 5 Páginas/perfis profissionais",
             "1.200 créditos/mês",
             "Planejamento semanal automatizado",
-            "Agendamento e publicação",
-            "Geração avançada de imagem e vídeo limitado",
-            "Relatórios básicos de desempenho"
+            "Publicação em LinkedIn, Instagram e Facebook",
+            "Geração avançada de imagem",
+            "Relatórios básicos (em breve)"
           ]
         },
         "premium": {
           "name": "Premium",
-          "summary": "Mais capacidade de conteúdo e flexibilidade criativa.",
+          "summary": "Mais capacidade de conteúdo para a marca.",
           "features": [
-            "1 marca com maior capacidade de conteúdo",
-            "Até 8 perfis sociais conectados",
+            "1 marca com maior capacidade",
+            "Até 8 Páginas/perfis profissionais",
             "2.500 créditos/mês",
             "Fluxos criativos mais avançados",
-            "Maior franquia de vídeo",
-            "Insights de desempenho mais detalhados",
+            "Vídeo (em breve)",
+            "Insights mais detalhados (em breve)",
             "Processamento e suporte prioritários"
           ]
         }
@@ -1618,7 +1637,7 @@
     "close": {
       "line1": "Sua marca tem o que dizer.",
       "line2": "Liga o piloto.",
-      "cta": "Comece agora"
+      "cta": "Acessar a plataforma"
     },
     "footer": {
       "product": "Produto",

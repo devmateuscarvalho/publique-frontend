@@ -10,7 +10,7 @@ export default function AppleIcon() {
         style={{
           width: "100%",
           height: "100%",
-          background: "#E3D898",
+          background: "#FAF8F5",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -21,7 +21,7 @@ export default function AppleIcon() {
             style={{
               width: 48,
               height: 78,
-              background: "#F10239",
+              background: "#D95C5C",
               transform: "skewY(-8deg)",
             }}
           />
@@ -29,7 +29,7 @@ export default function AppleIcon() {
             style={{
               width: 48,
               height: 70,
-              background: "#181818",
+              background: "#F8D7D7",
               transform: "skewY(-8deg)",
               marginTop: -10,
             }}

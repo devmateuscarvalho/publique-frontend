@@ -1,1 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 190" role="img" aria-labelledby="title"><title id="title">Publique logo horizontal</title><g transform="translate(10 34) scale(.72)"><path d="M12 20 75 5Q80 4 80 10V91Q80 96 75 98L12 115Q8 116 8 111V26Q8 22 12 20Z" fill="#F10239"/><path d="M88 13 147 0Q152 -1 152 5V82Q152 87 147 89L88 103V13Z" fill="#E3D898"/></g><text x="140" y="111" font-family="Anton, Impact, 'Arial Narrow', sans-serif" font-size="88" font-weight="900" letter-spacing="-2.2" fill="#181818">PUBLI</text><text x="399" y="111" font-family="Anton, Impact, 'Arial Narrow', sans-serif" font-size="88" font-weight="900" letter-spacing="-2.2" fill="#F10239">QUE</text><text x="145" y="145" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="4" fill="#181818">CRIE. PUBLIQUE. CRESÇA.</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 220" role="img" aria-label="Logo Publique horizontal">
+<g transform="translate(10 48) scale(1.0)"><g id="symbol">
+<path d="M8 25 L72 0 Q78 -2 78 6 L78 106 Q78 111 73 108 L8 81 Q3 79 3 73 L3 32 Q3 27 8 25 Z" fill="#D95C5C"/>
+<path d="M82 17 L135 39 Q140 41 140 47 L140 88 Q140 93 135 91 L82 70 Z" fill="#F8D7D7"/>
+</g></g>
+<text x="170" y="135" font-family="Sora, Inter, Arial, sans-serif" font-size="108" font-weight="700" letter-spacing="-6" fill="#1F1F1F">Publique</text>
+<text x="177" y="178" font-family="Inter, Arial, sans-serif" font-size="15" letter-spacing="4" fill="#1F1F1F">CONTEÚDO QUE FAZ SUA MARCA CRESCER.</text></svg>

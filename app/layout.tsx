@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Inter, Oswald } from "next/font/google";
+import { Inter, Sora } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 
@@ -8,14 +8,9 @@ import { themeBootScript } from "@/lib/theme";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const geist = Geist({
-  variable: "--font-geist-sans",
+const sora = Sora({
   subsets: ["latin"],
-});
-
-const oswald = Oswald({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["600", "700"],
   variable: "--font-display",
   display: "swap",
 });
@@ -62,7 +57,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang={locale}
-      className={`${geist.variable} ${oswald.variable} ${inter.variable} h-full antialiased`}
+      className={`${sora.variable} ${inter.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full font-sans text-ink">

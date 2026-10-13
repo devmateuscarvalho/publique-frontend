@@ -1,17 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
-<title id="title">Publique social cover</title>
-<desc id="desc">Publique brand identity using Signal Red, Paper Yellow, Ink Black, and Soft Paper.</desc>
-<rect width="1200" height="630" fill="#F7F2E4"/>
-<path d="M0 0 H480 C360 160 330 330 470 630 H0 Z" fill="#F10239"/>
-<path d="M1200 0 H930 C790 160 840 420 1010 630 H1200 Z" fill="#E3D898"/>
-<g transform="translate(445 150) scale(1.35)">
-<g id="publique-symbol">
-  <path d="M 20 180 V 55 C 20 25 42 8 72 8 H 126 C 166 8 190 31 190 65 C 190 98 167 120 132 120 H 91 V 180 Z"
-        fill="#F10239"/>
-  <path d="M 91 55 H 125 C 140 55 150 63 150 75 C 150 87 140 95 125 95 H 91 Z"
-        fill="#E3D898"/>
-</g>
-</g>
-<text x="600" y="475" text-anchor="middle" font-family="Inter, Arial, Helvetica, sans-serif" font-size="90" font-weight="800" letter-spacing="-4" fill="#181818">Publique</text>
-<circle cx="765" cy="405" r="7" fill="#F10239"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+<rect width="1200" height="630" fill="#F4E7D6"/><circle cx="1080" cy="70" r="300" fill="#F8D7D7"/>
+<circle cx="120" cy="650" r="260" fill="#A7C7B8" opacity=".7"/>
+<g transform="translate(80 130) scale(1.25)"><g id="symbol">
+<path d="M8 25 L72 0 Q78 -2 78 6 L78 106 Q78 111 73 108 L8 81 Q3 79 3 73 L3 32 Q3 27 8 25 Z" fill="#D95C5C"/>
+<path d="M82 17 L135 39 Q140 41 140 47 L140 88 Q140 93 135 91 L82 70 Z" fill="#F8D7D7"/>
+</g></g>
+<text x="80" y="430" font-family="Sora, Inter, Arial, sans-serif" font-size="72" font-weight="700" fill="#1F1F1F">Ideias em movimento.</text>
+<text x="84" y="490" font-family="Inter, Arial, sans-serif" font-size="28" fill="#1F1F1F">Conteúdo com personalidade, do planejamento à publicação.</text></svg>

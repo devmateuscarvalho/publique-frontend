@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
   <title id="title">Publique</title>
-  <rect width="128" height="128" rx="25" fill="#E3D898"/>
-  <g transform="translate(13 16) scale(.68)">
-    <path d="M12 20 75 5Q80 4 80 10V91Q80 96 75 98L12 115Q8 116 8 111V26Q8 22 12 20Z" fill="#F10239"/>
-    <path d="M88 13 147 0Q152 -1 152 5V82Q152 87 147 89L88 103V13Z" fill="#E3D898"/>
+  <rect width="128" height="128" rx="25" fill="#FAF8F5"/>
+  <g transform="translate(18 22) scale(.62)">
+    <path d="M8 25 L72 0 Q78 -2 78 6 L78 106 Q78 111 73 108 L8 81 Q3 79 3 73 L3 32 Q3 27 8 25 Z" fill="#D95C5C"/>
+    <path d="M82 17 L135 39 Q140 41 140 47 L140 88 Q140 93 135 91 L82 70 Z" fill="#F8D7D7"/>
   </g>
 </svg>

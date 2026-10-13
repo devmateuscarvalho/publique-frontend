@@ -1,0 +1,32 @@
+:root,
+html.light {
+  --publique-ruby: #d95c5c;
+  --publique-pink: #f8d7d7;
+  --publique-sand: #f4e7d6;
+  --publique-graphite: #1f1f1f;
+  --publique-neutral: #e7e2dd;
+  --publique-sage: #a7c7b8;
+  --publique-paper: #faf8f5;
+  --publique-bg: #faf8f5;
+  --publique-surface: #ffffff;
+  --publique-text: #1f1f1f;
+  --publique-muted: #69625e;
+  --publique-border: #e7e2dd;
+  --publique-on-dark: #faf8f5;
+}
+
+html.dark {
+  --publique-ruby: #d95c5c;
+  --publique-pink: #f8d7d7;
+  --publique-sand: #2a2623;
+  --publique-graphite: #1f1f1f;
+  --publique-neutral: #393431;
+  --publique-sage: #a7c7b8;
+  --publique-paper: #171717;
+  --publique-bg: #171717;
+  --publique-surface: #222222;
+  --publique-text: #faf8f5;
+  --publique-muted: #b9b3ae;
+  --publique-border: #393431;
+  --publique-on-dark: #faf8f5;
+}

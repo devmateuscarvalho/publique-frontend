@@ -150,9 +150,10 @@ function ShellFrame({
           <Link
             href="/brands"
             onClick={() => setOpenMobile(false)}
-            className="min-w-0 flex-1 truncate px-2 text-base font-semibold tracking-tight text-sidebar-foreground group-data-[collapsible=icon]:hidden"
+            className="flex min-w-0 flex-1 items-center gap-2 truncate px-2 text-sidebar-foreground group-data-[collapsible=icon]:hidden"
           >
-            {appName}
+            <img src="/symbol.svg" alt="" width={28} height={21} className="h-6 w-auto shrink-0" />
+            <span className="font-display truncate text-base font-bold tracking-wide uppercase">{appName}</span>
           </Link>
           <SidebarTrigger className="shrink-0" aria-label={t("menu")} />
         </SidebarHeader>
@@ -307,7 +308,9 @@ function ShellFrame({
         >
           <header className="mb-6 flex items-center gap-3 pb-1">
             <SidebarTrigger className="md:hidden" aria-label={t("menu")} />
-            <h1 className="min-w-0 flex-1 truncate border-l-2 border-pine pl-3 text-xl font-semibold tracking-tight">{title}</h1>
+            <h1 className="font-display min-w-0 flex-1 truncate border-l-2 border-ruby pl-3 text-xl font-bold tracking-tight uppercase">
+              {title}
+            </h1>
             {action}
           </header>
           {children}
@@ -315,7 +318,7 @@ function ShellFrame({
         {showCreateFab ? (
           <Link
             href="/create"
-            className="fixed top-4 right-4 z-40 inline-flex min-h-11 items-center gap-2 rounded-full bg-pine px-4 py-2.5 text-sm font-medium text-white shadow-md transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pine focus-visible:ring-offset-2 md:top-6 md:right-6"
+            className="fixed top-4 right-4 z-40 inline-flex min-h-11 items-center gap-2 rounded-none border-2 border-blush bg-blush px-4 py-2.5 text-xs font-bold tracking-widest text-[#1f1f1f] uppercase shadow-md transition hover:border-ruby hover:bg-ruby hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ruby focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-ruby dark:bg-ruby dark:text-white dark:hover:border-blush dark:hover:bg-blush dark:hover:text-[#1f1f1f] md:top-6 md:right-6"
             aria-label={t("startCreating")}
           >
             <WandSparkles className="size-4 shrink-0" aria-hidden />

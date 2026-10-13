@@ -12,8 +12,8 @@ export default function OpenGraphImage() {
           width: "100%",
           height: "100%",
           display: "flex",
-          background: "#F10239",
-          color: "#E3D898",
+          background: "#171717",
+          color: "#FAF8F5",
         }}
       >
         <div
@@ -32,6 +32,7 @@ export default function OpenGraphImage() {
               letterSpacing: 8,
               fontFamily: "Arial, sans-serif",
               fontWeight: 700,
+              color: "#D95C5C",
             }}
           >
             USE PUBLIQUE
@@ -41,7 +42,8 @@ export default function OpenGraphImage() {
               fontSize: 78,
               lineHeight: 0.86,
               marginTop: 28,
-              fontFamily: "Impact, Arial Black, sans-serif",
+              fontFamily: "Arial, sans-serif",
+              fontWeight: 700,
               textTransform: "uppercase",
             }}
           >
@@ -52,12 +54,13 @@ export default function OpenGraphImage() {
           style={{
             width: "42%",
             height: "100%",
-            background: "#E3D898",
-            color: "#181818",
+            background: "#222222",
+            color: "#FAF8F5",
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
             padding: 56,
+            borderLeft: "1px solid #393431",
           }}
         >
           <div
@@ -66,6 +69,7 @@ export default function OpenGraphImage() {
               letterSpacing: 6,
               fontFamily: "Arial, sans-serif",
               fontWeight: 700,
+              color: "#F8D7D7",
             }}
           >
             001 / PRODUTO
@@ -74,7 +78,8 @@ export default function OpenGraphImage() {
             style={{
               fontSize: 58,
               lineHeight: 0.86,
-              fontFamily: "Impact, Arial Black, sans-serif",
+              fontFamily: "Arial, sans-serif",
+              fontWeight: 700,
               textTransform: "uppercase",
             }}
           >
