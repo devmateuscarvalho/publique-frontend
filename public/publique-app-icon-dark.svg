@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+<title id="title">Publique dark app icon</title>
+<desc id="desc">Publique brand identity using Signal Red, Paper Yellow, Ink Black, and Soft Paper.</desc>
+<rect width="512" height="512" rx="112" fill="#181818"/>
+<g transform="translate(145 143) scale(1.12)">
+  <path d="M 20 180 V 55 C 20 25 42 8 72 8 H 126 C 166 8 190 31 190 65 C 190 98 167 120 132 120 H 91 V 180 Z" fill="#F10239"/>
+  <path d="M 91 55 H 125 C 140 55 150 63 150 75 C 150 87 140 95 125 95 H 91 Z" fill="#F7F2E4"/>
+</g>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="480" viewBox="0 0 900 240" role="img" aria-labelledby="title desc">
+<title id="title">Publique monochrome logo</title>
+<desc id="desc">Publique brand identity using Signal Red, Paper Yellow, Ink Black, and Soft Paper.</desc>
+<rect width="900" height="240" fill="#F7F2E4"/>
+<g transform="translate(40 25) scale(0.92)"><g id="publique-symbol">
+  <path d="M 20 180 V 55 C 20 25 42 8 72 8 H 126 C 166 8 190 31 190 65 C 190 98 167 120 132 120 H 91 V 180 Z" fill="#181818"/>
+  <path d="M 91 55 H 125 C 140 55 150 63 150 75 C 150 87 140 95 125 95 H 91 Z" fill="#F7F2E4"/>
+</g></g>
+<text x="250" y="158" font-family="Inter, Arial, Helvetica, sans-serif" font-size="112" font-weight="800" letter-spacing="-5" fill="#181818">Publique</text>
+</svg>

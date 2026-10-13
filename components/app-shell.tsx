@@ -113,6 +113,7 @@ function ShellFrame({
   children: ReactNode;
 }) {
   const t = useTranslations("nav");
+  const appName = useTranslations()("appName");
   const dashboard = useTranslations("dashboard");
   const router = useRouter();
   const pathname = usePathname();
@@ -151,7 +152,7 @@ function ShellFrame({
             onClick={() => setOpenMobile(false)}
             className="min-w-0 flex-1 truncate px-2 text-base font-semibold tracking-tight text-sidebar-foreground group-data-[collapsible=icon]:hidden"
           >
-            Marketing Autopilot
+            {appName}
           </Link>
           <SidebarTrigger className="shrink-0" aria-label={t("menu")} />
         </SidebarHeader>

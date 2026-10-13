@@ -1,5 +1,5 @@
 {
-  "appName": "Marketing Autopilot",
+  "appName": "Publique",
   "language": "Language",
   "lists": {
     "search": "Search by name",
@@ -20,19 +20,10 @@
   },
   "login": {
     "title": "Sign in",
-    "subtitle": "Your marketing, on autopilot.",
+    "subtitle": "Create and publish your brand’s content.",
     "email": "Email",
     "password": "Password",
-    "submit": "Sign in",
-    "register": "Create account"
-  },
-  "register": {
-    "title": "Create account",
-    "subtitle": "It takes a minute, with no long form.",
-    "email": "Email",
-    "password": "Password",
-    "submit": "Create account",
-    "login": "I already have an account"
+    "submit": "Sign in"
   },
   "nav": {
     "menu": "Menu",
@@ -487,13 +478,13 @@
       "7": "Sunday"
     },
     "weekdaysShort": {
-      "7": "SUN",
       "1": "MON",
       "2": "TUE",
       "3": "WED",
       "4": "THU",
       "5": "FRI",
-      "6": "SAT"
+      "6": "SAT",
+      "7": "SUN"
     },
     "automationDetails": "Scheduled time",
     "automationClose": "Close",
@@ -1482,6 +1473,160 @@
         "scene": "Scene",
         "sceneBlurb": "Editorial scene for the topic."
       }
+    }
+  },
+  "marketing": {
+    "meta": {
+      "title": "Publique — From idea to published",
+      "description": "Set up the brand once and keep Instagram, LinkedIn, Facebook, and TikTok moving. AI images and captions, in one place."
+    },
+    "brand": "Publique",
+    "skip": "Skip to content",
+    "nav": {
+      "product": "Product",
+      "features": "Features",
+      "plans": "Plans",
+      "how": "How it works",
+      "start": "Get started",
+      "login": "Log in",
+      "signup": "Start now",
+      "openApp": "Open the app",
+      "menu": "Open menu",
+      "close": "Close menu",
+      "language": "Language",
+      "sections": "Sections"
+    },
+    "hero": {
+      "kicker": "Social content, in one place",
+      "eyebrow": "Content autopilot",
+      "line1": "Networks that keep moving.",
+      "line2": "You switch it on. The brand speaks.",
+      "folio": "product",
+      "lead": "Set up once. Publique creates, schedules, and keeps Instagram, LinkedIn, Facebook, and TikTok moving.",
+      "primary": "See the plans",
+      "secondary": "See the plans",
+      "deviceCaption": "Sample: content generated from the brand identity, on the cadence you set.",
+      "deviceWord": "Publish."
+    },
+    "how": {
+      "title": "Three steps.",
+      "steps": {
+        "1": {
+          "title": "Connect the brand",
+          "body": "Website and networks. We build the profile and visual identity."
+        },
+        "2": {
+          "title": "Set the cadence",
+          "body": "Look, day, and networks. Generation follows what you configured."
+        },
+        "3": {
+          "title": "Review and publish",
+          "body": "Drafts that look like the brand. You decide what goes out."
+        }
+      }
+    },
+    "ticker": "Create. Publish. Grow.",
+    "product": {
+      "kicker": "01 / Product",
+      "title": "The studio, without the studio.",
+      "lead": "Set up once and let the networks keep moving. Brand, look, and cadence — the rest runs on its own.",
+      "createEyebrow": "Start creating",
+      "createTitle": "Brand and type",
+      "draftCaption": "Content generated with the brand identity. The networks follow the cadence you set.",
+      "draftHandle": "your.brand",
+      "weekEyebrow": "Automation",
+      "weekTitle": "Brand week",
+      "lookAvatar": "Person / avatar",
+      "lookAvatarLead": "Speak as someone from the brand.",
+      "lookProduct": "Product",
+      "lookProductLead": "Show a product or service with brand facts.",
+      "lookTopic": "Market topic",
+      "lookTopicLead": "Teach a topic the brand already covers.",
+      "networks": "Instagram · LinkedIn · Facebook · TikTok",
+      "days": "S M T W T F S"
+    },
+    "features": {
+      "brandKicker": "Brand",
+      "brandTitle": "Your brand, with memory.",
+      "brandBody": "Tell us your networks. We read and set up your brand and visual identity, and then we are ready to create and keep your networks moving.",
+      "looksKicker": "Looks",
+      "looksTitle": "You do not build the model.",
+      "looksBody": "Pick a published look: person, product, or market topic — single piece or carousel. The lab recipe generates the image and caption with your brand’s data.",
+      "draftKicker": "Cadence",
+      "draftTitle": "You set it up. The rest keeps going.",
+      "draftBody": "AI generates the image and caption from brand facts. You set the cadence once; the networks do not sit still.",
+      "publishKicker": "Networks",
+      "publishTitle": "Instagram, LinkedIn, Facebook, TikTok.",
+      "publishBody": "Four networks, one place. The brand shows up with the same face on all of them.",
+      "autoKicker": "Autopilot",
+      "autoTitle": "Set up once. The networks do not stop.",
+      "autoBody": "Brand, look, and cadence. Then autopilot keeps Instagram, LinkedIn, Facebook, and TikTok moving."
+    },
+    "plans": {
+      "title": "Pick a plan.",
+      "lead": "A professional presence, a full content workflow, or more creative capacity — always with credits included.",
+      "billingLabel": "Billing cycle",
+      "monthly": "Monthly",
+      "annual": "Annual",
+      "save": "1 month free",
+      "perMonth": "/mo",
+      "billedAnnually": "{total}/year with 1 month free",
+      "recommended": "Recommended",
+      "cta": "Start with this plan",
+      "note": "Illustrative pricing — billing is not live yet.",
+      "tiers": {
+        "starter": {
+          "name": "Starter",
+          "summary": "A professional presence for one business.",
+          "features": [
+            "1 brand",
+            "2 connected social profiles",
+            "Brand intelligence and core creative presets",
+            "300 credits/month",
+            "Content library and planning calendar",
+            "Standard image generation"
+          ]
+        },
+        "pro": {
+          "name": "Pro",
+          "summary": "A complete content workflow for an active business.",
+          "features": [
+            "1 brand with more advanced customization",
+            "Up to 5 connected social profiles",
+            "1,200 credits/month",
+            "Automated weekly content planning",
+            "Scheduling and publishing",
+            "Advanced image generation and limited video generation",
+            "Basic performance reporting"
+          ]
+        },
+        "premium": {
+          "name": "Premium",
+          "summary": "More content capacity and creative flexibility.",
+          "features": [
+            "1 business brand with expanded content capacity",
+            "Up to 8 connected social profiles",
+            "2,500 credits/month",
+            "More advanced creative workflows",
+            "Higher video allowance",
+            "More detailed performance insights",
+            "Priority processing and support"
+          ]
+        }
+      }
+    },
+    "close": {
+      "line1": "Your brand has something to say.",
+      "line2": "Turn on autopilot.",
+      "cta": "Start now"
+    },
+    "footer": {
+      "product": "Product",
+      "features": "Features",
+      "plans": "Plans",
+      "login": "Log in",
+      "networks": "Networks",
+      "copyright": "Copyright © 2026 Publique"
     }
   }
 }

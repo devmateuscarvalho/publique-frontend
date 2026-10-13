@@ -26,6 +26,14 @@ export function FacebookIcon({ className }: { className?: string }) {
   );
 }
 
+export function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden fill="currentColor">
+      <path d="M14.2 3c.5 2.5 2.1 4.3 4.8 4.6v3c-1.6.1-3.1-.4-4.4-1.3v6.6c0 3.5-2.7 6.3-6.4 6.3S2 19.4 2 15.9s2.7-6.3 6.4-6.3c.5 0 .9.1 1.4.2v3.2c-.4-.2-.9-.3-1.4-.3-1.8 0-3.2 1.5-3.2 3.2 0 1.8 1.4 3.2 3.2 3.2s3.2-1.4 3.2-3.2V3h2.6Z" />
+    </svg>
+  );
+}
+
 export function SocialNetworkIcon({ id, className }: { id: SocialNetworkID; className?: string }) {
   if (id === "linkedin") {
     return <LinkedInIcon className={className} />;

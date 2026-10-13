@@ -22,6 +22,7 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      { source: "/register", destination: "/login", permanent: false },
       { source: "/create/manual", destination: "/posts", permanent: false },
       { source: "/create/manual/:postId", destination: "/posts/:postId", permanent: false },
       { source: "/create/automation", destination: "/posts/automate", permanent: false },
