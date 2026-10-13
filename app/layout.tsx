@@ -45,7 +45,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description: t("description"),
     },
     icons: {
-      icon: [{ url: "/app-icon.svg", type: "image/svg+xml" }],
+      icon: [{ url: "/publique-symbol.svg", type: "image/svg+xml" }],
     },
   };
 }
