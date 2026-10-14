@@ -1408,10 +1408,10 @@ html.dark .marketing {
   margin: 0;
   font-family: var(--m-display);
   font-size: clamp(2.4rem, 7vw, 3.5rem);
-  font-weight: 600;
-  letter-spacing: -0.04em;
-  line-height: 0.9;
-  text-transform: none;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-transform: uppercase;
   color: var(--m-on-dark);
 }
 
@@ -1439,8 +1439,11 @@ html.dark .marketing {
 
 .m-footer-copy {
   margin: 0.4rem 0 0;
-  font-size: 0.72rem;
-  letter-spacing: 0.02em;
+  font-family: var(--m-sans);
+  font-size: 0.82rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.5;
   text-transform: none;
   color: color-mix(in srgb, var(--m-on-dark) 62%, transparent);
 }
@@ -1459,7 +1462,8 @@ html.dark .marketing {
 
 .m-footer-simple .m-footer-mark {
   margin: 0;
-  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-size: clamp(1.15rem, 2.8vw, 1.35rem);
+  letter-spacing: 0.02em;
 }
 
 .m-footer-simple .m-footer-nav {
