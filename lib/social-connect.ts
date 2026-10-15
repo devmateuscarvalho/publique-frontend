@@ -2,7 +2,7 @@ import { api } from "@/lib/api";
 
 export function startSocialOAuth(
   brandID: string,
-  network: "linkedin" | "instagram" | "facebook",
+  network: "linkedin" | "instagram" | "facebook" | "tiktok",
   returnTo: string,
 ) {
   const qs = new URLSearchParams();

@@ -13,7 +13,13 @@ import { BrandFilter, CreationFrame, useBrandQuery } from "@/components/creation
 import { FilterPills, type ListFilter } from "@/components/data-table";
 import { InstagramPhonePreview } from "@/components/instagram-phone-preview";
 import { LinkedInPagePicker } from "@/components/linkedin-page-picker";
-import { FacebookIcon, InstagramIcon, LinkedInIcon, socialConnectClass } from "@/components/social-network-icons";
+import {
+  FacebookIcon,
+  InstagramIcon,
+  LinkedInIcon,
+  TikTokIcon,
+  socialConnectClass,
+} from "@/components/social-network-icons";
 import { useAccount } from "@/components/use-account";
 import { PostCreatingWait } from "@/components/post-creating-wait";
 import { PostGeneratingCaptionLine, PostGeneratingStudio } from "@/components/post-generating-studio";
@@ -424,6 +430,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
   const oauthHandled = useRef(false);
   const instagramOAuthHandled = useRef(false);
   const facebookOAuthHandled = useRef(false);
+  const tiktokOAuthHandled = useRef(false);
   const [showPicker, setShowPicker] = useState<"linkedin" | "facebook" | null>(null);
 
   const postQuery = useQuery({
@@ -461,27 +468,35 @@ function ManualDraftPage({ postId }: { postId: string }) {
   const linkedin = byNetwork.get("linkedin");
   const instagram = byNetwork.get("instagram");
   const facebook = byNetwork.get("facebook");
+  const tiktok = byNetwork.get("tiktok");
   const linkedinReady = Boolean(linkedin?.configured && linkedin.page_urn?.trim());
   const instagramReady = Boolean(instagram?.configured && instagram.page_urn?.trim());
   const facebookReady = Boolean(facebook?.configured && facebook.page_urn?.trim());
+  const tiktokReady = Boolean(tiktok?.configured && tiktok.page_urn?.trim());
   const linkedinPublication = (post?.publications ?? []).find((item) => item.network === "linkedin");
   const instagramPublication = (post?.publications ?? []).find((item) => item.network === "instagram");
   const facebookPublication = (post?.publications ?? []).find((item) => item.network === "facebook");
+  const tiktokPublication = (post?.publications ?? []).find((item) => item.network === "tiktok");
   const linkedinPublished = linkedinPublication?.status === "published";
   const instagramPublished = instagramPublication?.status === "published";
   const facebookPublished = facebookPublication?.status === "published";
+  const tiktokPublished = tiktokPublication?.status === "published";
   const linkedinFailed = !linkedinPublished && linkedinPublication?.status === "failed";
   const instagramFailed = !instagramPublished && instagramPublication?.status === "failed";
   const facebookFailed = !facebookPublished && facebookPublication?.status === "failed";
+  const tiktokFailed = !tiktokPublished && tiktokPublication?.status === "failed";
   const linkedinPostedAt = formatWhen(linkedinPublication?.updated_at, format);
   const instagramPostedAt = formatWhen(instagramPublication?.updated_at, format);
   const facebookPostedAt = formatWhen(facebookPublication?.updated_at, format);
+  const tiktokPostedAt = formatWhen(tiktokPublication?.updated_at, format);
   const linkedinCanSend = linkedinReady && !linkedinPublished;
   const instagramCanSend = instagramReady && !instagramPublished;
   const facebookCanSend = facebookReady && !facebookPublished;
+  const tiktokCanSend = tiktokReady && !tiktokPublished;
   const needsConnect = !linkedinPublished && !linkedin?.configured;
   const needsInstagramConnect = !instagramPublished && !instagram?.configured;
   const needsFacebookConnect = !facebookPublished && !facebook?.configured;
+  const needsTikTokConnect = !tiktokPublished && !tiktok?.configured;
   const needsPage = !linkedinPublished && Boolean(linkedin?.configured) && !linkedin?.page_urn?.trim();
   const needsFacebookPage = !facebookPublished && Boolean(facebook?.configured) && !facebook?.page_urn?.trim();
   const returnTo = brandId ? `/posts/${postId}?brand=${brandId}` : `/posts/${postId}`;
@@ -564,6 +579,26 @@ function ManualDraftPage({ postId }: { postId: string }) {
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }, [brandId, errors, integrations, pathname, queryClient, router, searchParams]);
 
+  useEffect(() => {
+    const statusParam = searchParams.get("tiktok");
+    if (!statusParam || tiktokOAuthHandled.current) {
+      return;
+    }
+    tiktokOAuthHandled.current = true;
+    if (statusParam === "connected") {
+      appToast.success(integrations("oauthConnected", { network: integrations("networks.tiktok") }));
+    } else if (statusParam === "error") {
+      const code = searchParams.get("code") ?? "internal_error";
+      appToast.error(errors(mapDraftError(new ApiError(code))));
+    }
+    void queryClient.invalidateQueries({ queryKey: ["integrations", brandId] });
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("tiktok");
+    next.delete("code");
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [brandId, errors, integrations, pathname, queryClient, router, searchParams]);
+
   const connect = useMutation({
     mutationFn: () => {
       if (!brandId) {
@@ -591,6 +626,15 @@ function ManualDraftPage({ postId }: { postId: string }) {
     },
     onError: (error) => appToast.error(errors(mapDraftError(error))),
   });
+  const connectTikTok = useMutation({
+    mutationFn: () => {
+      if (!brandId) {
+        throw new ApiError("invalid_input");
+      }
+      return startSocialOAuth(brandId, "tiktok", returnTo);
+    },
+    onError: (error) => appToast.error(errors(mapDraftError(error))),
+  });
 
   const regenerate = useMutation({
     mutationFn: () =>
@@ -607,6 +651,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
         ...(linkedinCanSend ? (["linkedin"] as const) : []),
         ...(instagramCanSend ? (["instagram"] as const) : []),
         ...(facebookCanSend ? (["facebook"] as const) : []),
+        ...(tiktokCanSend ? (["tiktok"] as const) : []),
       ];
       return api<{ post: Post }>(`/v1/brands/${brandId}/posts/${postId}/publish`, {
         method: "POST",
@@ -622,7 +667,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
   const canPublish =
     (status === "draft" || status === "published") &&
     !publish.isPending &&
-    (linkedinCanSend || instagramCanSend || facebookCanSend);
+    (linkedinCanSend || instagramCanSend || facebookCanSend || tiktokCanSend);
   const alreadyPosted =
     status === "published" ||
     status === "publishing" ||
@@ -866,6 +911,53 @@ function ManualDraftPage({ postId }: { postId: string }) {
                 </span>
               </div>
             )}
+            {needsTikTokConnect ? (
+              <button
+                type="button"
+                className={cn(
+                  "flex min-h-12 w-full items-center justify-center gap-3 rounded-xl px-4 text-sm font-medium text-white disabled:opacity-50",
+                  socialConnectClass("tiktok"),
+                )}
+                disabled={connectTikTok.isPending}
+                onClick={() => connectTikTok.mutate()}
+              >
+                <TikTokIcon className="size-5 shrink-0" />
+                {connectTikTok.isPending
+                  ? t("viewConnectingTikTok")
+                  : integrations("connect", { network: integrations("networks.tiktok") })}
+              </button>
+            ) : (
+              <div className="flex min-h-11 items-start gap-3 rounded-xl border border-input px-3 py-3">
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="text-sm font-medium">{t("manualPublishNetworks.tiktok")}</p>
+                  {publish.isPending && tiktokCanSend ? (
+                    <p className="text-xs text-ink/70">{t("manualPublishPublishing")}</p>
+                  ) : tiktokPublished ? (
+                    <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                      {tiktokPostedAt ? t("viewPostedAt", { date: tiktokPostedAt }) : t("viewPosted")}
+                    </p>
+                  ) : tiktokFailed ? (
+                    <p className="text-xs text-red-700 dark:text-red-400">{t("manualPublishNetworkFailed")}</p>
+                  ) : (
+                    <p className="text-xs text-ink/60">
+                      {[tiktok?.account_label, t("viewNotPosted")].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
+                </div>
+                <span
+                  className={cn(
+                    "shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-medium",
+                    tiktokPublished
+                      ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
+                      : tiktokFailed
+                        ? "border-destructive/40 text-destructive"
+                        : "border-input text-ink/60",
+                  )}
+                >
+                  {tiktokPublished ? t("viewPosted") : t("viewNotPosted")}
+                </span>
+              </div>
+            )}
           </div>
           {needsPage || showPicker === "linkedin" ? (
             brandId ? (
@@ -998,6 +1090,8 @@ function mapDraftError(error: unknown) {
     "instagram_denied",
     "facebook_failed",
     "facebook_denied",
+    "tiktok_failed",
+    "tiktok_denied",
     "invalid_state",
     "network_unavailable",
   ] as const;

@@ -33,7 +33,10 @@ export function BrandWorkspace({
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const networkReturn = Boolean(
-    searchParams.get("linkedin") || searchParams.get("instagram") || searchParams.get("facebook"),
+    searchParams.get("linkedin") ||
+      searchParams.get("instagram") ||
+      searchParams.get("facebook") ||
+      searchParams.get("tiktok"),
   );
   const defaultTab = networkReturn ? "networks" : "profile";
 

@@ -469,7 +469,8 @@
     "manualPublishNetworks": {
       "linkedin": "LinkedIn",
       "instagram": "Instagram",
-      "facebook": "Facebook"
+      "facebook": "Facebook",
+      "tiktok": "TikTok"
     },
     "manualPublishAsStory": "Vai como Story (some em 24h)",
     "manualPublishLinkedInFeedNote": "LinkedIn não tem Story de Página — publica no feed",
@@ -481,6 +482,7 @@
     "viewConnecting": "Abrindo o LinkedIn…",
     "viewConnectingInstagram": "Abrindo o Instagram…",
     "viewConnectingFacebook": "Abrindo o Facebook…",
+    "viewConnectingTikTok": "Abrindo o TikTok…",
     "manualPublishReadOnly": "Este post já foi publicado e não pode ser editado.",
     "manualPublishNetworkPublished": "Publicado nesta rede.",
     "manualPublishNetworkFailed": "Não deu para publicar nesta rede.",
@@ -1026,6 +1028,8 @@
     "instagram_denied": "A autorização no Instagram foi cancelada.",
     "facebook_failed": "O Facebook recusou publicar. Confira a Página, as permissões no app da Meta e se as imagens estão em um endereço HTTPS público, e tente de novo.",
     "facebook_denied": "A autorização no Facebook foi cancelada.",
+    "tiktok_failed": "O TikTok recusou publicar. Confira a conta conectada, os escopos no app e se as imagens estão em um endereço HTTPS público verificado, e tente de novo.",
+    "tiktok_denied": "A autorização no TikTok foi cancelada.",
     "invalid_state": "A conexão expirou. Tente conectar de novo.",
     "network_unavailable": "Essa rede ainda não publica nesta versão."
   },
@@ -1163,7 +1167,8 @@
     "networks": {
       "linkedin": "LinkedIn",
       "instagram": "Instagram",
-      "facebook": "Facebook"
+      "facebook": "Facebook",
+      "tiktok": "TikTok"
     }
   },
   "presets": {

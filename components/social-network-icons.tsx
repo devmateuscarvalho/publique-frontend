@@ -1,4 +1,4 @@
-export type SocialNetworkID = "linkedin" | "instagram" | "facebook";
+export type SocialNetworkID = "linkedin" | "instagram" | "facebook" | "tiktok";
 
 export function LinkedInIcon({ className }: { className?: string }) {
   return (
@@ -41,6 +41,9 @@ export function SocialNetworkIcon({ id, className }: { id: SocialNetworkID; clas
   if (id === "facebook") {
     return <FacebookIcon className={className} />;
   }
+  if (id === "tiktok") {
+    return <TikTokIcon className={className} />;
+  }
   return <InstagramIcon className={className} />;
 }
 
@@ -51,6 +54,9 @@ export function socialConnectClass(id: SocialNetworkID) {
   if (id === "facebook") {
     return "bg-[#1877F2] hover:bg-[#0d65d9]";
   }
+  if (id === "tiktok") {
+    return "bg-[#111111] hover:bg-black";
+  }
   return "bg-[#111111] hover:bg-black";
 }
 
@@ -60,6 +66,9 @@ export function socialMarkClass(id: SocialNetworkID) {
   }
   if (id === "facebook") {
     return "bg-[#1877F2]";
+  }
+  if (id === "tiktok") {
+    return "bg-[#111111]";
   }
   return "bg-[linear-gradient(135deg,#f58529_0%,#dd2a7b_50%,#8134af_100%)]";
 }

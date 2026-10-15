@@ -15,7 +15,7 @@ import { appToast } from "@/lib/app-toast";
 import { startSocialOAuth } from "@/lib/social-connect";
 import { cn } from "@/lib/utils";
 
-const networks = ["linkedin", "instagram", "facebook"] as const;
+const networks = ["linkedin", "instagram", "facebook", "tiktok"] as const;
 const pageNetworks = ["linkedin", "facebook"] as const;
 const errorKeys = [
   "invalid_input",
@@ -29,6 +29,8 @@ const errorKeys = [
   "instagram_denied",
   "facebook_failed",
   "facebook_denied",
+  "tiktok_failed",
+  "tiktok_denied",
   "invalid_state",
   "internal_error",
 ] as const;
@@ -65,7 +67,8 @@ export function BrandIntegrations({ brandId }: { brandId: string }) {
     const linkedin = searchParams.get("linkedin");
     const instagram = searchParams.get("instagram");
     const facebook = searchParams.get("facebook");
-    if (!linkedin && !instagram && !facebook) {
+    const tiktok = searchParams.get("tiktok");
+    if (!linkedin && !instagram && !facebook && !tiktok) {
       return;
     }
     if (linkedin) {
@@ -106,10 +109,17 @@ export function BrandIntegrations({ brandId }: { brandId: string }) {
         appToast.error(errorText(errors, new ApiError(code)));
       }
     }
+    if (tiktok === "connected") {
+      appToast.success(t("oauthConnected", { network: t("networks.tiktok") }));
+    } else if (tiktok === "error") {
+      const code = searchParams.get("code") ?? "internal_error";
+      appToast.error(errorText(errors, new ApiError(code)));
+    }
     const next = new URLSearchParams(searchParams.toString());
     next.delete("linkedin");
     next.delete("instagram");
     next.delete("facebook");
+    next.delete("tiktok");
     next.delete("need_page");
     next.delete("code");
     const query = next.toString();

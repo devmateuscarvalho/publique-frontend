@@ -23,7 +23,7 @@ import { usePresetCopy } from "@/lib/preset-i18n";
 import { cn } from "@/lib/utils";
 
 const weekdays = [1, 2, 3, 4, 5, 6, 7] as const;
-const networkChoices = ["linkedin", "instagram", "facebook"] as const;
+const networkChoices = ["linkedin", "instagram", "facebook", "tiktok"] as const;
 const calendarDays = [7, 1, 2, 3, 4, 5, 6] as const;
 const calendarHours = Array.from({ length: 24 }, (_, hour) => hour);
 

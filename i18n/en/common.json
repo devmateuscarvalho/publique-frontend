@@ -469,7 +469,8 @@
     "manualPublishNetworks": {
       "linkedin": "LinkedIn",
       "instagram": "Instagram",
-      "facebook": "Facebook"
+      "facebook": "Facebook",
+      "tiktok": "TikTok"
     },
     "manualPublishAsStory": "Posts as a Story (24 hours)",
     "manualPublishLinkedInFeedNote": "LinkedIn Pages have no Stories — publishes to the feed",
@@ -481,6 +482,7 @@
     "viewConnecting": "Opening LinkedIn…",
     "viewConnectingInstagram": "Opening Instagram…",
     "viewConnectingFacebook": "Opening Facebook…",
+    "viewConnectingTikTok": "Opening TikTok…",
     "manualPublishReadOnly": "This ad is already published and cannot be edited.",
     "manualPublishNetworkPublished": "Published on this network.",
     "manualPublishNetworkFailed": "This network could not be published.",
@@ -1026,6 +1028,8 @@
     "instagram_denied": "Instagram authorization was cancelled.",
     "facebook_failed": "Facebook refused to publish. Check the Page, the Meta app permissions, and that images are on a public HTTPS URL, then try again.",
     "facebook_denied": "Facebook authorization was cancelled.",
+    "tiktok_failed": "TikTok refused to publish. Check the connected account, app scopes, and that images are on a verified public HTTPS URL, then try again.",
+    "tiktok_denied": "TikTok authorization was cancelled.",
     "invalid_state": "The connection expired. Try connecting again.",
     "network_unavailable": "That network cannot publish in this version yet."
   },
@@ -1163,7 +1167,8 @@
     "networks": {
       "linkedin": "LinkedIn",
       "instagram": "Instagram",
-      "facebook": "Facebook"
+      "facebook": "Facebook",
+      "tiktok": "TikTok"
     }
   },
   "presets": {
