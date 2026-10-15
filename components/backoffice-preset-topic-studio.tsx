@@ -3,56 +3,50 @@
 import type { RefObject } from "react";
 import { useTranslations } from "next-intl";
 
-import { BrandTokenButtons, LogoPlacementGrid, ResolvedPromptDisclosure } from "@/components/backoffice-preset-widgets";
+import {
+  BrandTokenButtons,
+  EffectivePromptPanel,
+  type EffectivePrompt,
+} from "@/components/backoffice-preset-widgets";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { type BrandToken, type LogoPlacement, DECK_TOKENS, setScriptKey } from "@/lib/backoffice-preset-shared";
-import { logoPlacements } from "@/lib/post-template";
+import { type BrandToken, DECK_TOKENS, setScriptKey } from "@/lib/backoffice-preset-shared";
 
 export function BackofficePresetTopicStudio({
   isNew,
   promptImage,
   promptImageRef,
-  labVisualFormat,
   labTheme,
+  labLayout,
   labTopicTitle,
   labTopicAngle,
   labSlideCount,
-  includeLogo,
-  logoPlacement,
   resultText,
   unknownImageTokens,
-  resolvedScript,
+  effectivePrompts,
   onPromptImage,
-  onFormat,
   onTheme,
-  onIncludeLogo,
-  onLogoPlacement,
+  onLayout,
   onInsertToken,
 }: {
   isNew: boolean;
   promptImage: string;
   promptImageRef: RefObject<HTMLTextAreaElement | null>;
-  labVisualFormat: "single" | "carousel";
   labTheme: "light" | "dark" | "random";
+  labLayout: "editorial" | "statement" | "steps";
   labTopicTitle: string;
   labTopicAngle: string;
   labSlideCount: number;
-  includeLogo: boolean;
-  logoPlacement: LogoPlacement;
   resultText: string;
   unknownImageTokens: string[];
-  resolvedScript: string;
+  effectivePrompts: readonly EffectivePrompt[];
   onPromptImage: (value: string) => void;
-  onFormat: (value: "single" | "carousel") => void;
   onTheme: (value: "light" | "dark" | "random") => void;
-  onIncludeLogo: (value: boolean) => void;
-  onLogoPlacement: (value: LogoPlacement) => void;
+  onLayout: (value: "editorial" | "statement" | "steps") => void;
   onInsertToken: (token: BrandToken) => void;
 }) {
   const t = useTranslations("backoffice");
-  const creation = useTranslations("creation");
 
   return (
     <div className="space-y-5">
@@ -62,23 +56,26 @@ export function BackofficePresetTopicStudio({
           <p className="text-sm text-ink/70">{t("labTopicAutoHint")}</p>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="lab-visual-format">{t("labVisualFormat")}</Label>
+          <Label htmlFor="lab-layout">{t("labLayout")}</Label>
+          <p className="text-sm text-ink/70">{t("labLayoutHint")}</p>
           <Select
-            value={labVisualFormat}
+            value={labLayout}
             onValueChange={(value) => {
-              const next = value === "single" ? "single" : "carousel";
-              onFormat(next);
+              const next =
+                value === "statement" || value === "steps" ? value : "editorial";
+              onLayout(next);
               if (promptImage.trim()) {
-                onPromptImage(setScriptKey(promptImage, "format", next));
+                onPromptImage(setScriptKey(promptImage, "layout", next));
               }
             }}
           >
-            <SelectTrigger id="lab-visual-format" className="min-h-11">
+            <SelectTrigger id="lab-layout" className="min-h-11">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="carousel">{t("labVisualFormatCarousel")}</SelectItem>
-              <SelectItem value="single">{t("labVisualFormatSingle")}</SelectItem>
+              <SelectItem value="editorial">{t("labLayoutEditorial")}</SelectItem>
+              <SelectItem value="statement">{t("labLayoutStatement")}</SelectItem>
+              <SelectItem value="steps">{t("labLayoutSteps")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -115,7 +112,7 @@ export function BackofficePresetTopicStudio({
                 {t("labTopicAngle")}: {labTopicAngle}
               </p>
             ) : null}
-            {labVisualFormat === "carousel" && labSlideCount >= 3 ? (
+            {labSlideCount >= 3 ? (
               <p className="text-ink/55">
                 {t("labSlideCount")}: {labSlideCount}
               </p>
@@ -125,43 +122,6 @@ export function BackofficePresetTopicStudio({
           <p className="text-sm text-ink/55">{t("labTopicEmptyResult")}</p>
         )}
       </div>
-
-      {labVisualFormat === "single" ? (
-        <div className="space-y-3 rounded-xl border border-border p-3">
-          <label className="flex min-h-11 items-center gap-3 text-sm">
-            <input
-              id="preset-include-logo"
-              type="checkbox"
-              className="size-5"
-              checked={includeLogo}
-              onChange={(event) => onIncludeLogo(event.target.checked)}
-            />
-            <span>
-              <span className="font-medium">{t("includeLogo")}</span>
-              <span className="mt-0.5 block text-ink/70">{t("includeLogoSingleHint")}</span>
-            </span>
-          </label>
-          {includeLogo ? (
-            <div className="space-y-2 border-t border-border pt-3">
-              <Label>{t("logoPlacement")}</Label>
-              <p className="text-sm text-ink/70">{t("logoPlacementSingleHint")}</p>
-              <Select value={logoPlacement} onValueChange={(value) => onLogoPlacement(value as LogoPlacement)}>
-                <SelectTrigger className="min-h-11">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {logoPlacements.map((item) => (
-                    <SelectItem key={item} value={item}>
-                      {creation(`logoPlacements.${item}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <LogoPlacementGrid value={logoPlacement} onChange={onLogoPlacement} />
-            </div>
-          ) : null}
-        </div>
-      ) : null}
 
       {promptImage.trim() ? (
         <div className="space-y-3 rounded-xl border border-border p-4">
@@ -180,11 +140,16 @@ export function BackofficePresetTopicStudio({
           {unknownImageTokens.length ? (
             <p className="text-sm text-destructive">{t("unknownTokens", { tokens: unknownImageTokens.join(", ") })}</p>
           ) : null}
-          <ResolvedPromptDisclosure value={resolvedScript} />
+          <EffectivePromptPanel prompts={effectivePrompts} />
         </div>
       ) : !isNew ? (
-        <p className="text-sm text-ink/55">{t("labDeckScriptEmpty")}</p>
-      ) : null}
+        <>
+          <p className="text-sm text-ink/55">{t("labDeckScriptEmpty")}</p>
+          <EffectivePromptPanel prompts={effectivePrompts} />
+        </>
+      ) : (
+        <EffectivePromptPanel prompts={effectivePrompts} />
+      )}
 
       {resultText.trim() ? (
         <div className="space-y-2">

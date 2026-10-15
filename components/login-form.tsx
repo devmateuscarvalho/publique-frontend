@@ -45,7 +45,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
         }),
       });
     },
-    onSuccess: () => router.push("/brands"),
+    onSuccess: () => router.push("/create"),
     onError: (error) => {
       const code = error instanceof ApiError ? error.code : "internal_error";
       setFormError(errors(code as "invalid_input"));

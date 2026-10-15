@@ -32,7 +32,7 @@ function useIsDesktopLayout() {
 export function MarketingSite() {
   const t = useTranslations("marketing");
   const { signedIn } = useOptionalSession();
-  const accessHref = signedIn ? "/brands" : "/login";
+  const accessHref = signedIn ? "/create" : "/login";
   const accessLabel = signedIn ? t("nav.openApp") : t("nav.accessPlatform");
 
   return (
@@ -40,7 +40,7 @@ export function MarketingSite() {
       <a className="m-skip" href="#conteudo">
         {t("skip")}
       </a>
-      <MarketingNav ctaHref={accessHref} ctaLabel={accessLabel} />
+      <MarketingNav brandHref={signedIn ? "/create" : "/"} ctaHref={accessHref} ctaLabel={accessLabel} />
       <main id="conteudo">
         <Hero accessHref={accessHref} accessLabel={accessLabel} signedIn={signedIn} />
         <How />
@@ -70,11 +70,19 @@ function useOptionalSession() {
   return { signedIn: Boolean(me.data?.user) };
 }
 
-function MarketingNav({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: string }) {
+function MarketingNav({
+  brandHref,
+  ctaHref,
+  ctaLabel,
+}: {
+  brandHref: string;
+  ctaHref: string;
+  ctaLabel: string;
+}) {
   return (
     <header className="m-nav">
       <div className="m-wrap m-nav-inner">
-        <Link className="m-brand" href="/">
+        <Link className="m-brand" href={brandHref}>
           <img src="/symbol.svg" alt="" width={160} height={120} />
           <span className="m-brand-name">Publique</span>
         </Link>

@@ -296,6 +296,11 @@ function DraftFeedCard({
   const image = post.assets?.[0];
   const pending = post.status === "queued" || post.status === "generating";
   const failed = post.status === "failed";
+  const [logoFailed, setLogoFailed] = useState(false);
+  useEffect(() => {
+    setLogoFailed(false);
+  }, [logoUrl]);
+  const showLogo = Boolean(logoUrl) && !logoFailed;
 
   return (
     <Link
@@ -305,9 +310,14 @@ function DraftFeedCard({
       <div className="overflow-hidden rounded-2xl">
         <div className="flex items-center gap-2 border-b border-input/70 px-3 py-2.5">
           <span className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-semibold text-ink/80">
-            {logoUrl ? (
+            {showLogo ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt="" className="size-full object-contain p-1" />
+              <img
+                src={logoUrl}
+                alt=""
+                className="size-full object-contain p-1"
+                onError={() => setLogoFailed(true)}
+              />
             ) : (
               brandInitial(brandName)
             )}

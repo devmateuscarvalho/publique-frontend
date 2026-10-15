@@ -11,7 +11,13 @@ import { type RefObject, useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { BackofficePresetProductFields } from "@/components/backoffice-preset-product-fields";
 import { BackofficePresetTopicStudio } from "@/components/backoffice-preset-topic-studio";
-import { BrandTokenButtons, LogoPlacementGrid, ResolvedPromptDisclosure } from "@/components/backoffice-preset-widgets";
+import { ConfirmAlertDialog } from "@/components/confirm-alert-dialog";
+import {
+  BrandTokenButtons,
+  EffectivePromptPanel,
+  LogoPlacementGrid,
+  type EffectivePrompt,
+} from "@/components/backoffice-preset-widgets";
 import { InstagramPhonePreview } from "@/components/instagram-phone-preview";
 import { useAccount } from "@/components/use-account";
 import {
@@ -53,6 +59,12 @@ import {
   scriptKey,
   slugFileBase,
 } from "@/lib/backoffice-preset-shared";
+import {
+  type ContentFormat,
+  defaultSubjectForFormat,
+  presetLabEditPath,
+  presetLabPathFromPreset,
+} from "@/lib/content-format";
 import { logoPlacements } from "@/lib/post-template";
 
 function imageExtension(url: string, contentType: string): string {
@@ -88,10 +100,19 @@ async function downloadImagesAsZip(urls: string[], zipName: string, fileBase: st
   URL.revokeObjectURL(objectUrl);
 }
 
-export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; kind?: string }) {
+export function BackofficePresetEditor({
+  presetId,
+  kind,
+  format,
+}: {
+  presetId?: string;
+  kind?: string;
+  format?: ContentFormat;
+}) {
   const t = useTranslations("backoffice");
   const creation = useTranslations("creation");
   const messages = useTranslations();
+  const errors = useTranslations("errors");
   const router = useRouter();
   const queryClient = useQueryClient();
   const { me, loading } = useAccount();
@@ -118,7 +139,14 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
     enabled: isSuperAdmin && Boolean(presetId),
   });
 
-  const [outputKind, setOutputKind] = useState(() => kind?.trim() || "product");
+  const [contentFormat, setContentFormat] = useState<ContentFormat>(() => format ?? "image");
+  const [outputKind, setOutputKind] = useState(() => {
+    const subject = kind?.trim();
+    if (subject) {
+      return subject;
+    }
+    return defaultSubjectForFormat(format ?? "image");
+  });
   const [name, setName] = useState("");
   const [blurb, setBlurb] = useState("");
   const [promptImage, setPromptImage] = useState("");
@@ -134,11 +162,13 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
   const [labTopicAngle, setLabTopicAngle] = useState("");
   const [labTopicMood, setLabTopicMood] = useState("");
   const [labSlideCount, setLabSlideCount] = useState(4);
-  const [labVisualFormat, setLabVisualFormat] = useState<"single" | "carousel">("carousel");
+  const [labVisualFormat, setLabVisualFormat] = useState<"carousel">("carousel");
   const [labTheme, setLabTheme] = useState<"light" | "dark" | "random">("dark");
+  const [labLayout, setLabLayout] = useState<"editorial" | "statement" | "steps">("editorial");
   const [carouselSlideIndex, setCarouselSlideIndex] = useState(0);
-  const [resolvedImagePrompt, setResolvedImagePrompt] = useState("");
-  const [resolvedTextPrompt, setResolvedTextPrompt] = useState("");
+  const [effectiveImage, setEffectiveImage] = useState<EffectivePrompt | null>(null);
+  const [effectiveCaption, setEffectiveCaption] = useState<EffectivePrompt | null>(null);
+  const [effectivePrompts, setEffectivePrompts] = useState<EffectivePrompt[]>([]);
   const [includeLogo, setIncludeLogo] = useState(true);
   const [logoPlacement, setLogoPlacement] = useState<LogoPlacement>("bottom_right");
   const [resultText, setResultText] = useState("");
@@ -160,22 +190,51 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
     if (!isNew) {
       return;
     }
+    if (format === "image" || format === "carousel") {
+      setContentFormat(format);
+    }
     const next = kind?.trim() ?? "";
     if (next) {
       setOutputKind(next);
+    } else if (format) {
+      setOutputKind(defaultSubjectForFormat(format));
     }
-  }, [isNew, kind]);
+  }, [isNew, kind, format]);
 
   useEffect(() => {
-    if (!isNew || !kindsQuery.isSuccess) {
+    if (!isNew) {
       return;
     }
-    const next = kind?.trim() ?? "";
-    const exists = (kindsQuery.data?.output_kinds ?? []).some((item) => item.code === next);
-    if (!exists) {
+    if (format !== "image" && format !== "carousel") {
       router.replace("/backoffice/presets/new");
     }
-  }, [isNew, kind, kindsQuery.data?.output_kinds, kindsQuery.isSuccess, router]);
+  }, [isNew, format, router]);
+
+  // Keep the URL format segment aligned with the stored content_format.
+  useEffect(() => {
+    if (isNew || !presetId || !format) {
+      return;
+    }
+    const preset = presetQuery.data?.prompt_preset;
+    if (!preset) {
+      return;
+    }
+    const canonical = presetLabPathFromPreset(preset);
+    const current = presetLabEditPath(format, presetId);
+    if (canonical !== current) {
+      router.replace(canonical);
+    }
+  }, [isNew, presetId, format, presetQuery.data?.prompt_preset, router]);
+
+  useEffect(() => {
+    if (!isNew || !kindsQuery.isSuccess || contentFormat !== "image") {
+      return;
+    }
+    const kinds = (kindsQuery.data?.output_kinds ?? []).filter((item) => item.code !== "market_topic");
+    if (!kinds.some((item) => item.code === outputKind) && kinds[0]) {
+      setOutputKind(kinds[0].code);
+    }
+  }, [isNew, contentFormat, kindsQuery.data?.output_kinds, kindsQuery.isSuccess, outputKind]);
 
   useEffect(() => {
     return () => {
@@ -194,6 +253,15 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
       return;
     }
     setOutputKind(preset.output_kind);
+    setContentFormat(
+      preset.content_format === "carousel" ||
+        preset.content_format === "video" ||
+        preset.content_format === "image"
+        ? preset.content_format
+        : preset.output_kind === "market_topic"
+          ? "carousel"
+          : "image",
+    );
     setName(preset.name);
     setBlurb(preset.blurb || "");
     setPromptImage(preset.prompt_image || preset.example_prompt || "");
@@ -217,10 +285,14 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
         ? preset.lab_slide_count
         : 4,
     );
-    setLabVisualFormat(preset.lab_visual_format === "single" ? "single" : "carousel");
+    setLabVisualFormat("carousel");
     const scriptTheme = scriptKey(preset.prompt_image || "", "theme");
     setLabTheme(
       scriptTheme === "light" || scriptTheme === "random" ? scriptTheme : "dark",
+    );
+    const scriptLayout = scriptKey(preset.prompt_image || "", "layout");
+    setLabLayout(
+      scriptLayout === "statement" || scriptLayout === "steps" ? scriptLayout : "editorial",
     );
     setCarouselSlideIndex(0);
     const placement = preset.logo_placement;
@@ -249,11 +321,55 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
   const contextQuery = useQuery({
     queryKey: ["backoffice-brand-prompt-context", labBrandId],
     queryFn: () =>
-      api<{ tokens: Record<string, string>; logo_url?: string; logo_inverted_url?: string }>(
-        `/v1/backoffice/brands/${labBrandId}/prompt-context`,
-      ),
+      api<{
+        tokens: Record<string, string>;
+        logo_url?: string;
+        logo_inverted_url?: string;
+        envelopes?: Record<string, string>;
+      }>(`/v1/backoffice/brands/${labBrandId}/prompt-context`),
     enabled: isSuperAdmin && Boolean(labBrandId),
   });
+
+  const [previewDebounced, setPreviewDebounced] = useState({
+    promptImage: "",
+    promptText: "",
+    includeLogo: true,
+    logoPlacement: "bottom_right" as LogoPlacement,
+    labProductName: "",
+    labProductPrice: "",
+    labProductDescription: "",
+    labTopicTitle: "",
+    labTopicAngle: "",
+    labTopicMood: "",
+  });
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      setPreviewDebounced({
+        promptImage,
+        promptText,
+        includeLogo,
+        logoPlacement,
+        labProductName,
+        labProductPrice,
+        labProductDescription,
+        labTopicTitle,
+        labTopicAngle,
+        labTopicMood,
+      });
+    }, 400);
+    return () => window.clearTimeout(handle);
+  }, [
+    promptImage,
+    promptText,
+    includeLogo,
+    logoPlacement,
+    labProductName,
+    labProductPrice,
+    labProductDescription,
+    labTopicTitle,
+    labTopicAngle,
+    labTopicMood,
+  ]);
 
   const locationAssets = useMemo(
     () => (assets ?? []).filter((item) => isLocationRole(item.role)),
@@ -265,6 +381,43 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
   );
   const personCount = peopleAssets.length + pendingPeopleFiles.length;
   const hasLocationRef = locationAssets.length > 0 || Boolean(pendingLocationFile);
+
+  const previewPromptsQuery = useQuery({
+    queryKey: [
+      "backoffice-preview-prompts",
+      presetId,
+      labBrandId,
+      previewDebounced,
+      contentFormat,
+      peopleAssets.length,
+      locationAssets.length,
+      resultText,
+    ],
+    queryFn: () =>
+      api<{
+        image?: EffectivePrompt;
+        caption?: EffectivePrompt;
+        effective_prompts?: EffectivePrompt[];
+      }>(`/v1/backoffice/prompt-presets/${presetId}/preview-prompts`, {
+        method: "POST",
+        body: JSON.stringify({
+          brand_id: labBrandId,
+          prompt_image: previewDebounced.promptImage,
+          prompt_text: previewDebounced.promptText,
+          include_logo: previewDebounced.includeLogo,
+          logo_placement: previewDebounced.logoPlacement,
+          lab_product_name: previewDebounced.labProductName,
+          lab_product_price: previewDebounced.labProductPrice,
+          lab_product_description: previewDebounced.labProductDescription,
+          lab_topic_title: previewDebounced.labTopicTitle,
+          lab_topic_angle: previewDebounced.labTopicAngle,
+          lab_topic_mood: previewDebounced.labTopicMood,
+          previous_caption: resultText,
+        }),
+      }),
+    enabled: isSuperAdmin && !isNew && Boolean(labBrandId) && Boolean(presetId),
+    retry: 1,
+  });
   const canAddPerson = personCount < 3;
   const canAddLocation = !hasLocationRef;
   const imageTokens = useMemo(() => filterKindTokens(IMAGE_TOKENS, outputKind), [outputKind]);
@@ -277,6 +430,139 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
         .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
     [assets],
   );
+
+  const promptTokens = useMemo(
+    () => ({
+      ...(contextQuery.data?.tokens ?? {}),
+      "product.name": labProductName,
+      "product.price": labProductPrice,
+      "product.description": labProductDescription,
+      "topic.title": labTopicTitle,
+      "topic.angle": labTopicAngle,
+      "topic.image_mood": labTopicMood,
+    }),
+    [
+      contextQuery.data?.tokens,
+      labProductName,
+      labProductPrice,
+      labProductDescription,
+      labTopicTitle,
+      labTopicAngle,
+      labTopicMood,
+    ],
+  );
+
+  // Live client fallback when preview-prompts is unavailable (or still loading).
+  const liveImageEffective = useMemo((): EffectivePrompt | null => {
+    if (contentFormat !== "image" || !promptImage.trim() || !labBrandId) {
+      return null;
+    }
+    const recipe = resolveTemplate(promptImage, promptTokens);
+    if (!recipe.trim()) {
+      return null;
+    }
+    const withRefs = appendReferenceSceneGuidance(
+      recipe,
+      outputKind,
+      personCount,
+      hasLocationRef,
+    );
+    const withLogo = appendLogoClearZone(withRefs, includeLogo, logoPlacement);
+    const quality = contextQuery.data?.envelopes?.image_quality_appendix?.trim() ?? "";
+    const sent = quality ? `${withLogo.trim()}\n\n${quality}` : withLogo.trim();
+    return { kind: "image", recipe, user: sent, sent };
+  }, [
+    contentFormat,
+    promptImage,
+    promptTokens,
+    labBrandId,
+    outputKind,
+    personCount,
+    hasLocationRef,
+    includeLogo,
+    logoPlacement,
+    contextQuery.data?.envelopes?.image_quality_appendix,
+  ]);
+
+  const liveCaptionEffective = useMemo((): EffectivePrompt | null => {
+    if (contentFormat !== "image" || !promptText.trim() || !labBrandId) {
+      return null;
+    }
+    const recipe = resolveTemplate(promptText, promptTokens);
+    if (!recipe.trim()) {
+      return null;
+    }
+    const system =
+      contextQuery.data?.envelopes?.caption_system?.trim() ||
+      "You write premium social captions from a curated brand recipe.";
+    const brandName = promptTokens["brand.name"] || promptTokens.name || "";
+    const user = [
+      "Brand brief:",
+      brandName ? `Brand name: ${brandName}` : null,
+      "",
+      "Caption recipe (follow this):",
+      recipe,
+      "",
+      "Write one Instagram caption that meets the quality bar and does not repeat a prior subject.",
+    ]
+      .filter((line) => line !== null)
+      .join("\n");
+    return {
+      kind: "caption",
+      recipe,
+      system,
+      user,
+      sent: `=== SYSTEM ===\n${system}\n\n=== USER ===\n${user}`,
+    };
+  }, [
+    contentFormat,
+    promptText,
+    promptTokens,
+    labBrandId,
+    contextQuery.data?.envelopes?.caption_system,
+  ]);
+
+  const liveCarouselEffective = useMemo((): EffectivePrompt[] => {
+    if (contentFormat !== "carousel" || !labBrandId) {
+      return [];
+    }
+    const envelopes = contextQuery.data?.envelopes ?? {};
+    const out: EffectivePrompt[] = [];
+    const researchSystem = envelopes.carousel_research_system?.trim();
+    if (researchSystem) {
+      out.push({
+        kind: "research",
+        system: researchSystem,
+        user: "(user message is built at generate time from brand brief + live web snippets)",
+        sent: `=== SYSTEM ===\n${researchSystem}\n\n=== USER ===\n(user message is built at generate time from brand brief + live web snippets)`,
+      });
+    }
+    const deckSystem = envelopes.carousel_deck_system?.trim();
+    if (deckSystem) {
+      out.push({
+        kind: "deck",
+        system: deckSystem,
+        user: "(user message is built at generate time from topic brief + key points + brand style)",
+        sent: `=== SYSTEM ===\n${deckSystem}\n\n=== USER ===\n(user message is built at generate time from topic brief + key points + brand style)`,
+      });
+    }
+    if (promptImage.trim()) {
+      const resolved = resolveTemplate(promptImage, promptTokens);
+      out.push({
+        kind: "carousel_script",
+        recipe: promptImage,
+        user: resolved,
+        sent: `=== LOCAL RENDER (not sent to an image model) ===\n${resolved}`,
+      });
+    }
+    return out;
+  }, [
+    contentFormat,
+    labBrandId,
+    contextQuery.data?.envelopes,
+    promptImage,
+    promptTokens,
+  ]);
 
   const clearPendingLocation = () => {
     if (pendingLocationPreview) {
@@ -345,69 +631,18 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
     return data;
   };
 
-  const promptTokens = useMemo(
-    () => ({
-      ...(contextQuery.data?.tokens ?? {}),
-      "product.name": labProductName,
-      "product.price": labProductPrice,
-      "product.description": labProductDescription,
-      "topic.title": labTopicTitle,
-      "topic.angle": labTopicAngle,
-      "topic.image_mood": labTopicMood,
-    }),
-    [
-      contextQuery.data?.tokens,
-      labProductName,
-      labProductPrice,
-      labProductDescription,
-      labTopicTitle,
-      labTopicAngle,
-      labTopicMood,
-    ],
-  );
-
-  const liveResolvedImage = useMemo(() => {
-    const withRefs = appendReferenceSceneGuidance(
-      resolveTemplate(promptImage, promptTokens),
-      outputKind,
-      personCount,
-      hasLocationRef,
-    );
-    return appendLogoClearZone(withRefs, includeLogo, logoPlacement);
-  }, [promptTokens, promptImage, includeLogo, logoPlacement, personCount, hasLocationRef, outputKind]);
-
   useEffect(() => {
-    setResolvedImagePrompt("");
-  }, [
-    promptImage,
-    includeLogo,
-    logoPlacement,
-    personCount,
-    hasLocationRef,
-    labBrandId,
-    outputKind,
-    labProductName,
-    labProductPrice,
-    labProductDescription,
-    labTopicTitle,
-    labTopicAngle,
-    labTopicMood,
-  ]);
+    // Brand change invalidates last-generate payloads; live preview covers edits.
+    setEffectiveImage(null);
+    setEffectiveCaption(null);
+    setEffectivePrompts([]);
+  }, [labBrandId]);
 
   const unknownImageTokens = useMemo(() => findUnknownTokens(promptImage), [promptImage]);
   const unknownTextTokens = useMemo(() => findUnknownTokens(promptText), [promptText]);
   const unknownTokens = useMemo(
     () => [...new Set([...unknownImageTokens, ...unknownTextTokens])],
     [unknownImageTokens, unknownTextTokens],
-  );
-  const liveResolvedText = useMemo(
-    () => resolveTemplate(promptText, promptTokens),
-    [promptTokens, promptText],
-  );
-  // Market topic: the "image prompt" is the deck script; no scene/logo guidance is appended.
-  const liveResolvedScript = useMemo(
-    () => resolveTemplate(promptImage, promptTokens),
-    [promptTokens, promptImage],
   );
 
   const selectLabBrand = (id: string) => {
@@ -452,7 +687,8 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
         throw new ApiError("invalid_input");
       }
       const body = {
-        output_kind: outputKind,
+        output_kind: contentFormat === "carousel" ? "market_topic" : outputKind,
+        content_format: contentFormat,
         name,
         blurb,
         prompt_image: promptImage,
@@ -465,7 +701,7 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
         lab_topic_angle: labTopicAngle,
         lab_topic_mood: labTopicMood,
         lab_slide_count: labSlideCount,
-        lab_visual_format: labVisualFormat,
+        lab_visual_format: contentFormat === "carousel" ? "carousel" : labVisualFormat,
         include_logo: includeLogo,
         logo_placement: logoPlacement,
         enabled,
@@ -502,7 +738,7 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
       if (isNew) {
         clearPendingLocation();
         clearPendingPeople();
-        router.replace(`/backoffice/presets/${data.prompt_preset.id}`);
+        router.replace(presetLabPathFromPreset(data.prompt_preset));
         return;
       }
       await queryClient.invalidateQueries({ queryKey: ["backoffice-prompt-preset", presetId] });
@@ -515,7 +751,8 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
 
   const generate = useMutation({
     mutationFn: async () => {
-      if (outputKind === "market_topic") {
+      appToast.info(contentFormat === "carousel" ? t("generatingCarousel") : t("generating"));
+      if (contentFormat === "carousel") {
         // One shot: research → deck script + caption → render slides.
         const carousel = await api<{
           prompt_preset: PromptPreset;
@@ -525,48 +762,54 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
           lab_visual_format?: string;
           lab_topic_title?: string;
           lab_topic_angle?: string;
+          effective_prompt?: EffectivePrompt;
+          effective_prompts?: EffectivePrompt[];
         }>(`/v1/backoffice/prompt-presets/${presetId}/generate-carousel`, {
           method: "POST",
           body: JSON.stringify({
             brand_id: labBrandId,
             include_logo: includeLogo,
             logo_placement: logoPlacement,
-            lab_visual_format: labVisualFormat,
+            lab_visual_format: "carousel",
             lab_theme: labTheme,
+            lab_layout: labLayout,
           }),
         });
         return { mode: "carousel" as const, carousel };
       }
-      const [image, text] = await Promise.all([
-        api<{ prompt_preset: PromptPreset; resolved_prompt: string }>(
-          `/v1/backoffice/prompt-presets/${presetId}/generate-image`,
-          {
-            method: "POST",
-            body: JSON.stringify({
-              prompt_image: promptImage,
-              brand_id: labBrandId,
-              include_logo: includeLogo,
-              logo_placement: logoPlacement,
-              lab_product_name: labProductName,
-              lab_product_price: labProductPrice,
-              lab_product_description: labProductDescription,
-            }),
-          },
-        ),
-        api<{ prompt_preset: PromptPreset; resolved_prompt: string; result_text: string }>(
-          `/v1/backoffice/prompt-presets/${presetId}/generate-text`,
-          {
-            method: "POST",
-            body: JSON.stringify({
-              prompt_text: promptText,
-              brand_id: labBrandId,
-              lab_product_name: labProductName,
-              lab_product_price: labProductPrice,
-              lab_product_description: labProductDescription,
-            }),
-          },
-        ),
-      ]);
+      // Sequential: image then caption. Parallel calls often competed for the same
+      // OpenAI image/chat quota and surfaced as a bare provider_unavailable 409.
+      const image = await api<{ prompt_preset: PromptPreset; resolved_prompt: string; effective_prompt?: EffectivePrompt }>(
+        `/v1/backoffice/prompt-presets/${presetId}/generate-image`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            prompt_image: promptImage,
+            brand_id: labBrandId,
+            include_logo: includeLogo,
+            logo_placement: logoPlacement,
+            lab_product_name: labProductName,
+            lab_product_price: labProductPrice,
+            lab_product_description: labProductDescription,
+          }),
+        },
+      );
+      const text = await api<{
+        prompt_preset: PromptPreset;
+        resolved_prompt: string;
+        result_text: string;
+        effective_prompt?: EffectivePrompt;
+        effective_prompts?: EffectivePrompt[];
+      }>(`/v1/backoffice/prompt-presets/${presetId}/generate-text`, {
+        method: "POST",
+        body: JSON.stringify({
+          prompt_text: promptText,
+          brand_id: labBrandId,
+          lab_product_name: labProductName,
+          lab_product_price: labProductPrice,
+          lab_product_description: labProductDescription,
+        }),
+      });
       return { mode: "single" as const, image, text };
     },
     onSuccess: async (result) => {
@@ -578,36 +821,42 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
         setResultText(carousel.result_text || preset.result_text || "");
         setPromptImage(preset.prompt_image || "");
         setPromptText(preset.prompt_text || promptText);
-        setResolvedImagePrompt(carousel.resolved_prompt ?? "");
-        setResolvedTextPrompt("");
+        setEffectiveImage(carousel.effective_prompt ?? null);
+        setEffectiveCaption(null);
+        setEffectivePrompts(carousel.effective_prompts ?? []);
         setLabTopicTitle(carousel.lab_topic_title || preset.lab_topic_title || "");
         setLabTopicAngle(carousel.lab_topic_angle || preset.lab_topic_angle || "");
         setLabTopicMood(preset.lab_topic_mood || "");
         setLabSlideCount(preset.lab_slide_count || carousel.slide_count || labSlideCount);
-        setLabVisualFormat(
-          carousel.lab_visual_format === "single" || preset.lab_visual_format === "single"
-            ? "single"
-            : "carousel",
-        );
+        setLabVisualFormat("carousel");
         const nextTheme = scriptKey(preset.prompt_image || "", "theme");
         setLabTheme(nextTheme === "light" || nextTheme === "random" ? nextTheme : "dark");
+        const nextLayout = scriptKey(preset.prompt_image || "", "layout");
+        setLabLayout(
+          nextLayout === "statement" || nextLayout === "steps" ? nextLayout : "editorial",
+        );
         setCarouselSlideIndex(0);
       } else {
         const { image, text } = result;
         setPreviewPath(image.prompt_preset.preview_path);
         setAssets(image.prompt_preset.assets ?? []);
         setPromptImage(image.prompt_preset.prompt_image || image.prompt_preset.example_prompt || promptImage);
-        setResolvedImagePrompt(image.resolved_prompt ?? "");
         setPromptText(text.prompt_preset.prompt_text || promptText);
         setResultText(text.result_text || text.prompt_preset.result_text || "");
-        setResolvedTextPrompt(text.resolved_prompt ?? "");
+        setEffectiveImage(image.effective_prompt ?? null);
+        setEffectiveCaption(text.effective_prompt ?? null);
+        setEffectivePrompts([
+          ...(image.effective_prompt ? [image.effective_prompt] : []),
+          ...(text.effective_prompt ? [text.effective_prompt] : []),
+        ]);
       }
       await queryClient.invalidateQueries({ queryKey: ["backoffice-prompt-preset", presetId] });
       await queryClient.invalidateQueries({ queryKey: ["backoffice-prompt-presets"] });
       appToast.success("ok");
     },
     onError: (err) => {
-      appToast.error(err instanceof ApiError ? err.code : "error");
+      const code = err instanceof ApiError ? err.code : "error";
+      appToast.error(errors.has(code) ? errors(code) : code);
     },
   });
 
@@ -673,11 +922,11 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
   });
 
   const downloadUrls = useMemo(() => {
-    if (outputKind === "market_topic" && carouselSlides.length > 0) {
+    if (contentFormat === "carousel" && carouselSlides.length > 0) {
       return carouselSlides.map((slide) => slide.url).filter(Boolean);
     }
     return previewPath ? [previewPath] : [];
-  }, [outputKind, carouselSlides, previewPath]);
+  }, [contentFormat, carouselSlides, previewPath]);
 
   const downloadGeneratedImages = async () => {
     if (downloadUrls.length === 0 || generate.isPending || downloadingImages) {
@@ -695,6 +944,28 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
     }
   };
 
+  // Prefer server preview → last generate → live client resolve (always something visible).
+  const previewImageEff =
+    previewPromptsQuery.data?.image ?? effectiveImage ?? liveImageEffective;
+  const previewCaptionEff =
+    previewPromptsQuery.data?.caption ?? effectiveCaption ?? liveCaptionEffective;
+  const previewCarouselEffs = useMemo(() => {
+    const fromPreview = previewPromptsQuery.data?.effective_prompts ?? [];
+    const fromLive = liveCarouselEffective;
+    if (effectivePrompts.length === 0) {
+      return fromPreview.length > 0 ? fromPreview : fromLive;
+    }
+    // Keep research/deck/caption from last generate; refresh script from live/server when editing.
+    const scriptFromPreview =
+      fromPreview.find((item) => item.kind === "carousel_script") ??
+      fromLive.find((item) => item.kind === "carousel_script");
+    return effectivePrompts.map((item) =>
+      item.kind === "carousel_script" && scriptFromPreview ? scriptFromPreview : item,
+    );
+  }, [effectivePrompts, previewPromptsQuery.data?.effective_prompts, liveCarouselEffective]);
+  const imagePanelPrompts = previewImageEff ? [previewImageEff] : [];
+  const captionPanelPrompts = previewCaptionEff ? [previewCaptionEff] : [];
+
   if (loading || me.isLoading) {
     return null;
   }
@@ -707,8 +978,6 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
     );
   }
 
-  const resolvedImageDisplay = resolvedImagePrompt || liveResolvedImage;
-  const resolvedTextDisplay = resolvedTextPrompt || liveResolvedText;
   const labBrand = brands.find((item) => item.id === labBrandId);
   const previewBrandName = labBrand?.name || name || t("previewBrandFallback");
   const safeCarouselIndex =
@@ -716,7 +985,7 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
       ? Math.min(carouselSlideIndex, carouselSlides.length - 1)
       : 0;
   const previewImageUrl =
-    outputKind === "market_topic" && carouselSlides.length > 0
+    contentFormat === "carousel" && carouselSlides.length > 0
       ? carouselSlides[safeCarouselIndex]?.url || previewPath
       : previewPath;
   const busy = generate.isPending;
@@ -724,19 +993,26 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
     !isNew &&
     !busy &&
     Boolean(labBrandId) &&
-    (outputKind === "market_topic" ||
+    (contentFormat === "carousel" ||
       (unknownTokens.length === 0 && Boolean(promptImage.trim()) && Boolean(promptText.trim())));
   const canDownloadImages = downloadUrls.length > 0 && !busy && !downloadingImages;
-  const kindLabel = creation.has(`outputKinds.${outputKind}`)
-    ? creation(`outputKinds.${outputKind}`)
-    : outputKind;
+  const formatLabel = t(`formats.${contentFormat}.title`);
+  const imageSubjects = (kindsQuery.data?.output_kinds ?? []).filter(
+    (item) => item.code !== "market_topic",
+  );
 
   return (
-    <AppShell title={isNew ? t("newWithKind", { kind: kindLabel }) : t("editWithKind", { kind: kindLabel })}>
+    <AppShell title={isNew ? t("newWithFormat", { format: formatLabel }) : t("editWithFormat", { format: formatLabel })}>
       <div className="mx-auto w-full max-w-6xl space-y-5">
         <Button asChild variant="outline" className="min-h-11">
-          <Link href={isNew ? "/backoffice/presets/new" : "/backoffice/presets"}>
-            {isNew ? t("backToKinds") : t("backToList")}
+          <Link
+            href={
+              isNew
+                ? "/backoffice/presets/new"
+                : `/backoffice/presets?content_format=${encodeURIComponent(contentFormat)}`
+            }
+          >
+            {isNew ? t("backToFormats") : t("backToList")}
           </Link>
         </Button>
 
@@ -778,7 +1054,28 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
               </Select>
             </div>
 
-            {outputKind === "product" ? (
+            {contentFormat === "image" ? (
+              <div className="space-y-2">
+                <Label>{t("subjectTag")}</Label>
+                <p className="text-sm text-ink/70">{t("subjectTagHint")}</p>
+                <Select value={outputKind} onValueChange={setOutputKind}>
+                  <SelectTrigger className="min-h-11">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {imageSubjects.map((item) => (
+                      <SelectItem key={item.code} value={item.code}>
+                        {creation.has(`outputKinds.${item.code}`)
+                          ? creation(`outputKinds.${item.code}`)
+                          : item.code}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
+
+            {contentFormat === "image" ? (
               <BackofficePresetProductFields
                 name={labProductName}
                 price={labProductPrice}
@@ -789,26 +1086,22 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
               />
             ) : null}
 
-            {outputKind === "market_topic" ? (
+            {contentFormat === "carousel" ? (
               <BackofficePresetTopicStudio
                 isNew={isNew}
                 promptImage={promptImage}
                 promptImageRef={promptImageRef}
-                labVisualFormat={labVisualFormat}
                 labTheme={labTheme}
+                labLayout={labLayout}
                 labTopicTitle={labTopicTitle}
                 labTopicAngle={labTopicAngle}
                 labSlideCount={labSlideCount}
-                includeLogo={includeLogo}
-                logoPlacement={logoPlacement}
                 resultText={resultText}
                 unknownImageTokens={unknownImageTokens}
-                resolvedScript={resolvedImagePrompt || liveResolvedScript}
+                effectivePrompts={previewCarouselEffs}
                 onPromptImage={setPromptImage}
-                onFormat={setLabVisualFormat}
                 onTheme={setLabTheme}
-                onIncludeLogo={setIncludeLogo}
-                onLogoPlacement={setLogoPlacement}
+                onLayout={setLabLayout}
                 onInsertToken={insertImageToken}
               />
             ) : (
@@ -876,7 +1169,7 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
                       {t("unknownTokens", { tokens: unknownImageTokens.join(", ") })}
                     </p>
                   ) : null}
-                  <ResolvedPromptDisclosure value={resolvedImageDisplay} />
+                  <EffectivePromptPanel prompts={imagePanelPrompts} />
                 </div>
 
                 <div className="space-y-5">
@@ -985,20 +1278,8 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
 
                   <div className="space-y-3">
                     <div>
-                      <p className="text-sm font-medium">
-                        {outputKind === "avatar"
-                          ? t("refPeopleAvatar")
-                          : outputKind === "product"
-                            ? t("refProducts")
-                            : t("refPeople")}
-                      </p>
-                      <p className="text-sm text-ink/70">
-                        {outputKind === "avatar"
-                          ? t("refPeopleHintAvatar")
-                          : outputKind === "product"
-                            ? t("refProductsHint")
-                            : t("refPeopleHint")}
-                      </p>
+                      <p className="text-sm font-medium">{t("refSubjects")}</p>
+                      <p className="text-sm text-ink/70">{t("refSubjectsHint")}</p>
                     </div>
                     <AttachmentGroup className="gap-3">
                       {canAddPerson && !(upload.isPending && uploadingRole === "person") ? (
@@ -1013,13 +1294,7 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
                             </AttachmentDescription>
                           </AttachmentContent>
                           <AttachmentTrigger
-                            aria-label={
-                              outputKind === "avatar"
-                                ? t("refPeopleAvatar")
-                                : outputKind === "product"
-                                  ? t("refProducts")
-                                  : t("refPeople")
-                            }
+                            aria-label={t("refSubjects")}
                             className="min-h-11"
                             disabled={upload.isPending || save.isPending}
                             onClick={() => peopleFileRef.current?.click()}
@@ -1033,20 +1308,12 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
                             <img src={pendingPeoplePreviews[index]} alt="" />
                           </AttachmentMedia>
                           <AttachmentContent>
-                            <AttachmentTitle>
-                              {outputKind === "avatar" || outputKind === "product"
-                                ? t("refAvatarPhotoN", { n: index + 1 })
-                                : t("refPersonN", { n: index + 1 })}
-                            </AttachmentTitle>
+                            <AttachmentTitle>{t("refSubjectN", { n: index + 1 })}</AttachmentTitle>
                             <AttachmentDescription>{formatFileMeta(file)}</AttachmentDescription>
                           </AttachmentContent>
                           <AttachmentActions>
                             <AttachmentAction
-                              aria-label={
-                                outputKind === "avatar" || outputKind === "product"
-                                  ? t("refRemoveAvatarPhoto")
-                                  : t("refRemovePerson")
-                              }
+                              aria-label={t("refRemoveSubject")}
                               onClick={() => removePendingPerson(index)}
                             >
                               <X />
@@ -1072,27 +1339,13 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
                             <img src={asset.url} alt="" />
                           </AttachmentMedia>
                           <AttachmentContent>
-                            <AttachmentTitle>
-                              {outputKind === "avatar" || outputKind === "product"
-                                ? t("refAvatarPhotoN", { n: index + 1 })
-                                : t("refPersonN", { n: index + 1 })}
-                            </AttachmentTitle>
-                            <AttachmentDescription>
-                              {outputKind === "avatar"
-                                ? t("refAvatarSamePerson")
-                                : outputKind === "product"
-                                  ? t("refProductSameHint")
-                                  : t("refPersonOneHint")}
-                            </AttachmentDescription>
+                            <AttachmentTitle>{t("refSubjectN", { n: index + 1 })}</AttachmentTitle>
+                            <AttachmentDescription>{t("refSubjectHint")}</AttachmentDescription>
                           </AttachmentContent>
                           {!isNew ? (
                             <AttachmentActions>
                               <AttachmentAction
-                                aria-label={
-                                  outputKind === "avatar" || outputKind === "product"
-                                    ? t("refRemoveAvatarPhoto")
-                                    : t("refRemovePerson")
-                                }
+                                aria-label={t("refRemoveSubject")}
                                 disabled={removeAsset.isPending}
                                 onClick={() => removeAsset.mutate(asset.id)}
                               >
@@ -1129,7 +1382,7 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
                       {t("unknownTokens", { tokens: unknownTextTokens.join(", ") })}
                     </p>
                   ) : null}
-                  <ResolvedPromptDisclosure value={resolvedTextDisplay} />
+                  <EffectivePromptPanel prompts={captionPanelPrompts} />
                 </div>
                 {resultText.trim() ? (
                   <div className="space-y-2">
@@ -1157,13 +1410,13 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
               logoInvertedUrl={contextQuery.data?.logo_inverted_url}
               imageUrl={previewImageUrl || undefined}
               imageUrls={
-                outputKind === "market_topic" && carouselSlides.length > 1
+                contentFormat === "carousel" && carouselSlides.length > 1
                   ? carouselSlides.map((slide) => slide.url)
                   : undefined
               }
               activeIndex={safeCarouselIndex}
               onActiveIndexChange={setCarouselSlideIndex}
-              aspect={outputKind === "market_topic" ? "portrait" : "square"}
+              aspect={contentFormat === "carousel" ? "portrait" : "square"}
               caption={resultText}
               captionPending={generate.isPending}
               emptyImageLabel={t("phoneEmptyImage")}
@@ -1174,7 +1427,7 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
             {busy ? (
               <p className="flex items-center gap-2 text-sm text-ink/70">
                 <Loader2 className="size-4 animate-spin" aria-hidden />
-                {outputKind === "market_topic" ? t("generatingCarousel") : t("generating")}
+                {contentFormat === "carousel" ? t("generatingCarousel") : t("generating")}
               </p>
             ) : null}
             {downloadUrls.length > 0 ? (
@@ -1249,22 +1502,30 @@ export function BackofficePresetEditor({ presetId, kind }: { presetId?: string; 
                     onClick={() => generate.mutate()}
                   >
                     {generate.isPending
-                      ? outputKind === "market_topic"
+                      ? contentFormat === "carousel"
                         ? t("generatingCarousel")
                         : t("generating")
                       : t("generate")}
                   </Button>
                 ) : null}
                 {!isNew ? (
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    className="min-h-11"
-                    disabled={remove.isPending || busy}
-                    onClick={() => remove.mutate()}
-                  >
-                    {t("delete")}
-                  </Button>
+                  <ConfirmAlertDialog
+                    title={t("delete")}
+                    description={t("deleteConfirm")}
+                    cancelLabel={t("cancel")}
+                    confirmLabel={t("delete")}
+                    onConfirm={() => remove.mutate()}
+                    trigger={
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        className="min-h-11"
+                        disabled={remove.isPending || busy}
+                      >
+                        {t("delete")}
+                      </Button>
+                    }
+                  />
                 ) : null}
               </div>
             </div>

@@ -148,12 +148,15 @@ function ShellFrame({
       <Sidebar collapsible="icon">
         <SidebarHeader className="flex-row items-center gap-2 group-data-[collapsible=icon]:justify-center">
           <Link
-            href="/brands"
+            href="/create"
             onClick={() => setOpenMobile(false)}
-            className="flex min-w-0 flex-1 items-center gap-2 truncate px-2 text-sidebar-foreground group-data-[collapsible=icon]:hidden"
+            aria-label={appName}
+            className="flex min-h-11 min-w-0 flex-1 items-center gap-2 truncate px-2 text-sidebar-foreground group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
           >
             <img src="/symbol.svg" alt="" width={28} height={21} className="h-6 w-auto shrink-0" />
-            <span className="font-display truncate text-base font-bold tracking-wide uppercase">{appName}</span>
+            <span className="font-display truncate text-base font-bold tracking-wide uppercase group-data-[collapsible=icon]:hidden">
+              {appName}
+            </span>
           </Link>
           <SidebarTrigger className="shrink-0" aria-label={t("menu")} />
         </SidebarHeader>

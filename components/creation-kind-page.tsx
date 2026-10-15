@@ -9,7 +9,15 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
 import { WizardLookPreview } from "@/components/wizard-look-preview";
 import { WizardPresetCarousel } from "@/components/wizard-preset-carousel";
-import { WizardPrepare, wizardScreenKind, type WizardProduct } from "@/components/wizard-prepare";
+import {
+  WizardPrepare,
+  wizardScreenKind,
+  type WizardAspect,
+  type WizardCarouselLayout,
+  type WizardCarouselTheme,
+  type WizardMood,
+  type WizardProduct,
+} from "@/components/wizard-prepare";
 import { type WizardLocalRef } from "@/components/wizard-refs";
 import { WizardStepper } from "@/components/wizard-stepper";
 import { Button } from "@/components/ui/button";
@@ -26,7 +34,16 @@ import {
   type VisualResponse,
 } from "@/lib/api";
 import { appToast } from "@/lib/app-toast";
+import { type LogoPlacement } from "@/lib/backoffice-preset-shared";
+import { logoPlacements } from "@/lib/post-template";
 import { usePresetCopy } from "@/lib/preset-i18n";
+
+function normalizeLogoPlacement(value?: string): LogoPlacement {
+  if (value && (logoPlacements as readonly string[]).includes(value)) {
+    return value as LogoPlacement;
+  }
+  return "bottom_right";
+}
 
 function WizardActions({ children }: { children: ReactNode }) {
   return (
@@ -58,8 +75,13 @@ export function CreationKindPage() {
   const [selectedRecipeId, setSelectedRecipeId] = useState("");
   const [modelName, setModelName] = useState("");
   const [includeLogo, setIncludeLogo] = useState(true);
+  const [logoPlacement, setLogoPlacement] = useState<LogoPlacement>("bottom_right");
   const [localRefs, setLocalRefs] = useState<WizardLocalRef[]>([]);
   const [product, setProduct] = useState<WizardProduct>({ name: "", price: "", description: "" });
+  const [carouselTheme, setCarouselTheme] = useState<WizardCarouselTheme>("dark");
+  const [carouselLayout, setCarouselLayout] = useState<WizardCarouselLayout>("editorial");
+  const [mood, setMood] = useState<WizardMood>("");
+  const [aspect, setAspect] = useState<WizardAspect>("1:1");
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const publishedQuery = useQuery({
@@ -105,7 +127,18 @@ export function CreationKindPage() {
     setSelectedRecipeId(recipe.id);
     setModelName(presetCopy.name(recipe));
     setIncludeLogo(recipe.include_logo);
+    setLogoPlacement(normalizeLogoPlacement(recipe.logo_placement));
     setProduct({ name: "", price: "", description: "" });
+    setMood("");
+    setAspect("1:1");
+    const key = (recipe.style_key || "").toLowerCase();
+    if (key.includes("myth")) {
+      setCarouselLayout("statement");
+    } else if (key.includes("checklist") || key.includes("steps")) {
+      setCarouselLayout("steps");
+    } else {
+      setCarouselLayout("editorial");
+    }
     setLocalRefs((current) => {
       current.forEach((item) => URL.revokeObjectURL(item.url));
       return [];
@@ -168,6 +201,7 @@ export function CreationKindPage() {
           prompt_preset_id: selectedRecipe.id,
           name,
           include_logo: includeLogo,
+          logo_placement: logoPlacement,
         }),
       });
       for (const ref of localRefs) {
@@ -181,6 +215,9 @@ export function CreationKindPage() {
         method: "POST",
         body: JSON.stringify({
           post_model_id: modelResult.model.id,
+          ...(screen === "carousel"
+            ? { theme: carouselTheme, layout: carouselLayout }
+            : { mood: mood || undefined, aspect }),
           ...(screen === "product"
             ? {
                 product: {
@@ -320,11 +357,21 @@ export function CreationKindPage() {
                 recipe={selectedRecipe}
                 includeLogo={includeLogo}
                 onIncludeLogo={setIncludeLogo}
+                logoPlacement={logoPlacement}
+                onLogoPlacement={setLogoPlacement}
                 refs={localRefs}
                 onAdd={addLocalRef}
                 onRemove={removeLocalRef}
                 product={product}
                 onProduct={setProduct}
+                carouselTheme={carouselTheme}
+                onCarouselTheme={setCarouselTheme}
+                carouselLayout={carouselLayout}
+                onCarouselLayout={setCarouselLayout}
+                mood={mood}
+                onMood={setMood}
+                aspect={aspect}
+                onAspect={setAspect}
               />
             ) : (
               <div className="space-y-1.5 rounded-2xl border border-dashed border-input bg-card p-5">

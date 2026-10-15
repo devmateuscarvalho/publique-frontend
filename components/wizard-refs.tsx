@@ -25,24 +25,12 @@ export type WizardLocalRef = {
 
 type WizardRefsProps = {
   outputKind: string;
-  includeLogo: boolean;
-  onIncludeLogo: (value: boolean) => void;
   refs: WizardLocalRef[];
   onAdd: (role: "person" | "location", file: File) => void;
   onRemove: (key: string) => void;
-  showLogo?: boolean;
 };
 
-export function WizardRefs({
-  outputKind,
-  includeLogo,
-  onIncludeLogo,
-  refs,
-  onAdd,
-  onRemove,
-  showLogo = true,
-}: WizardRefsProps) {
-  const t = useTranslations("wizard");
+export function WizardRefs({ outputKind, refs, onAdd, onRemove }: WizardRefsProps) {
   const lab = useTranslations("backoffice");
   const locationRef = useRef<HTMLInputElement>(null);
   const peopleRef = useRef<HTMLInputElement>(null);
@@ -65,21 +53,6 @@ export function WizardRefs({
 
   return (
     <div className="space-y-5">
-      {showLogo ? (
-        <label className="flex min-h-11 items-start gap-3 rounded-2xl border border-input bg-card px-3 py-3 text-sm shadow-sm">
-          <input
-            type="checkbox"
-            className="mt-1 size-4 rounded border-input"
-            checked={includeLogo}
-            onChange={(event) => onIncludeLogo(event.target.checked)}
-          />
-          <span>
-            <span className="block font-medium">{t("includeLogo")}</span>
-            <span className="mt-0.5 block text-ink/70">{lab("includeLogoHint")}</span>
-          </span>
-        </label>
-      ) : null}
-
       <input
         ref={locationRef}
         type="file"

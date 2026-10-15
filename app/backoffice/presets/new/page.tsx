@@ -1,5 +1,5 @@
-import { BackofficePresetKindHub } from "@/components/backoffice-preset-kind-hub";
+import { BackofficePresetFormatHub } from "@/components/backoffice-preset-format-hub";
 
 export default function NewBackofficePresetPage() {
-  return <BackofficePresetKindHub />;
+  return <BackofficePresetFormatHub />;
 }

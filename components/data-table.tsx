@@ -35,7 +35,7 @@ export type ListFilter = {
   options: { value: string; label: string }[];
 };
 
-const pageSize = 20;
+const defaultPageSize = 20;
 
 function paramName(prefix: string, name: string) {
   return prefix ? `${prefix}_${name}` : name;
@@ -46,11 +46,13 @@ export function useListQuery({
   defaultSort,
   defaultOrder = "asc",
   filterKeys = [],
+  pageSize = defaultPageSize,
 }: {
   prefix?: string;
   defaultSort: string;
   defaultOrder?: SortOrder;
   filterKeys?: string[];
+  pageSize?: number;
 }) {
   const params = useSearchParams();
   const pathname = usePathname();
@@ -123,7 +125,7 @@ export function useListQuery({
       }
     }
     return search.toString();
-  }, [filters, order, page, q, sort]);
+  }, [filters, order, page, pageSize, q, sort]);
 
   const filtering = Boolean(q) || Object.values(filters).some(Boolean);
 
@@ -148,6 +150,42 @@ export function useListQuery({
       replace({ sort: column, order: "asc" }, true);
     },
   };
+}
+
+export function ListPagination({
+  list,
+  total,
+}: {
+  list: Pick<ReturnType<typeof useListQuery>, "page" | "pageSize" | "setPage">;
+  total: number;
+}) {
+  const t = useTranslations("lists");
+  const pages = Math.max(1, Math.ceil(total / list.pageSize));
+  if (total <= list.pageSize) {
+    return null;
+  }
+  const page = Math.min(list.page, pages);
+  return (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious disabled={page <= 1} onClick={() => list.setPage(page - 1)}>
+            {t("previous")}
+          </PaginationPrevious>
+        </PaginationItem>
+        <PaginationItem>
+          <span className="inline-flex min-h-11 items-center px-2 text-sm text-ink/70">
+            {t("page", { page, pages })}
+          </span>
+        </PaginationItem>
+        <PaginationItem>
+          <PaginationNext disabled={page >= pages} onClick={() => list.setPage(page + 1)}>
+            {t("next")}
+          </PaginationNext>
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  );
 }
 
 export function FilterPills({
@@ -236,7 +274,6 @@ export function DataTable<T extends { id: string }>({
   onRowClick?: (row: T) => void;
 }) {
   const t = useTranslations("lists");
-  const pages = Math.max(1, Math.ceil(total / list.pageSize));
   const searchId = `${controlsId}-search`;
 
   return (
@@ -337,27 +374,7 @@ export function DataTable<T extends { id: string }>({
         </Table>
       ) : null}
 
-      {!loading && total > list.pageSize ? (
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious disabled={list.page <= 1} onClick={() => list.setPage(list.page - 1)}>
-                {t("previous")}
-              </PaginationPrevious>
-            </PaginationItem>
-            <PaginationItem>
-              <span className="inline-flex min-h-11 items-center px-2 text-sm text-ink/70">
-                {t("page", { page: Math.min(list.page, pages), pages })}
-              </span>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext disabled={list.page >= pages} onClick={() => list.setPage(list.page + 1)}>
-                {t("next")}
-              </PaginationNext>
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      ) : null}
+      {!loading ? <ListPagination list={list} total={total} /> : null}
     </div>
   );
 }

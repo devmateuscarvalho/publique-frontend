@@ -128,6 +128,7 @@ export type CreativeRecipe = {
   id: string;
   segment_id: string;
   output_kind: "product" | "avatar" | "market_topic" | string;
+  content_format?: "image" | "carousel" | "video" | string;
   style_key: string;
   name?: string;
   blurb?: string;
@@ -139,6 +140,7 @@ export type CreativeRecipe = {
   result_text?: string;
   preview_caption?: string;
   include_logo: boolean;
+  logo_placement?: string;
   lab_visual_format?: "single" | "carousel" | string;
   guidance_do?: string;
   guidance_dont?: string;
@@ -149,6 +151,7 @@ export type PromptPreset = {
   id: string;
   segment_id?: string;
   output_kind: "product" | "avatar" | "market_topic" | string;
+  content_format?: "image" | "carousel" | "video" | string;
   style_key: string;
   name: string;
   blurb: string;

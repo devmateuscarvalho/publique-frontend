@@ -22,6 +22,11 @@ export function presetBlurbKey(styleKey: string): string {
   return `presets.${styleKey.trim()}-blurb`;
 }
 
+/**
+ * Resolve gallery/lab copy from the stored name/blurb i18n key.
+ * When a key is stored, never fall back to style_key — that hid author edits
+ * (e.g. renaming presets.avatar → presets.foo still showed "Avatar").
+ */
 export function resolvePresetCopy(
   t: Messages,
   raw: string | undefined,
@@ -29,13 +34,17 @@ export function resolvePresetCopy(
   kind: "name" | "blurb",
 ): string {
   const stored = (raw || "").trim();
-  const derived = styleKey ? (kind === "name" ? presetNameKey(styleKey) : presetBlurbKey(styleKey)) : "";
-  for (const key of [stored, derived]) {
-    if (key && t.has(key)) {
-      return t(key);
+  if (stored) {
+    if (t.has(stored)) {
+      return t(stored);
     }
+    return stored;
   }
-  return stored || derived;
+  const derived = styleKey ? (kind === "name" ? presetNameKey(styleKey) : presetBlurbKey(styleKey)) : "";
+  if (derived && t.has(derived)) {
+    return t(derived);
+  }
+  return derived;
 }
 
 export function usePresetCopy() {
