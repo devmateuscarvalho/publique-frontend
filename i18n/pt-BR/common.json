@@ -1744,7 +1744,117 @@
       "plans": "Planos",
       "login": "Entrar",
       "networks": "Redes",
+      "privacy": "Política de privacidade",
+      "legalNav": "Informações legais",
       "copyright": "Copyright © 2026 Publique"
+    }
+  },
+  "privacy": {
+    "meta": {
+      "title": "Política de privacidade",
+      "description": "Como a Publique trata dados pessoais sob a LGPD. Controlador: Mateus Carvalho Vieira Ltda - ME."
+    },
+    "title": "Política de privacidade",
+    "updated": "Atualizado em 15 de outubro de 2026",
+    "intro": "Esta política explica como a Publique, produto operado por Mateus Carvalho Vieira Ltda - ME, trata dados pessoais quando você usa o site e a plataforma.",
+    "disclaimer": "Texto informativo alinhado à Lei Geral de Proteção de Dados (LGPD). Não substitui assessoria jurídica. Em caso de dúvida sobre o seu caso, consulte um profissional habilitado.",
+    "controller": {
+      "legalName": "Razão social",
+      "taxId": "CNPJ",
+      "address": "Endereço",
+      "product": "Produto"
+    },
+    "contact": {
+      "email": "E-mail",
+      "phone": "Telefone"
+    },
+    "sections": {
+      "controller": {
+        "title": "1. Quem controla os dados",
+        "body": [
+          "O controlador dos dados pessoais tratados no âmbito da Publique é a empresa abaixo. Em regras de proteção de dados, o controlador decide as finalidades e os meios do tratamento."
+        ]
+      },
+      "dataCollected": {
+        "title": "2. Dados que coletamos",
+        "body": [
+          "Conta e autenticação: nome, e-mail, senha (armazenada de forma segura), preferências de aparência e idioma, e metadados de sessão.",
+          "Organização e marcas: dados da organização, usuários convidados, perfil de marca, textos e preferências que você cadastra, e conteúdo obtido quando você autoriza a análise do site da marca (crawl).",
+          "Identidade visual: logos, imagens de referência, identidades e arquivos de mídia que você envia ou que o serviço gera para previews e posts.",
+          "Conteúdo gerado: rascunhos de posts, legendas, imagens compostas, prompts usados na geração e metadados técnicos da geração (modelo, versão de prompt, uso).",
+          "Redes sociais: tokens e identificadores de contas conectadas (por exemplo LinkedIn, Instagram e Facebook), armazenados de forma criptografada, e registros de publicação iniciada por você.",
+          "Dados técnicos: logs de acesso e erro, endereço IP, user-agent, e sinais necessários para segurança, diagnóstico e operação do serviço."
+        ]
+      },
+      "purposes": {
+        "title": "3. Finalidades",
+        "body": [
+          "Prestar o serviço: criar conta, gerenciar organizações e marcas, gerar e armazenar rascunhos, exibir mídia e permitir publicação nas redes que você conectar.",
+          "Operar integrações: autenticar com provedores sociais via OAuth e enviar conteúdo quando você solicita publicação.",
+          "Melhorar o produto: entender falhas, desempenho e uso agregado, sem transformar isso em perfilagem invasiva fora do serviço.",
+          "Segurança e conformidade: prevenir abuso, investigar incidentes e cumprir obrigações legais quando aplicável."
+        ]
+      },
+      "legalBases": {
+        "title": "4. Bases legais (LGPD)",
+        "body": [
+          "Execução de contrato ou de procedimentos preliminares: quando o tratamento é necessário para prestar a Publique a você ou à sua organização.",
+          "Legítimo interesse: quando cabível para segurança, prevenção a fraude, melhoria operacional e suporte, sempre com avaliação de impacto aos direitos do titular.",
+          "Consentimento: quando exigido por lei ou quando uma funcionalidade específica depender de consentimento explícito (por exemplo, cookies não essenciais, se forem adotados no futuro).",
+          "Cumprimento de obrigação legal ou regulatória: quando a lei exigir conservação ou fornecimento de informações."
+        ]
+      },
+      "sharing": {
+        "title": "5. Compartilhamento e subprocessadores",
+        "body": [
+          "Não vendemos dados pessoais. Compartilhamos dados somente na medida necessária para operar a Publique, com provedores sob contrato ou termos de serviço, ou quando você autoriza (por exemplo, ao conectar uma rede social).",
+          "OpenAI: processamento de texto e imagem para geração de conteúdo conforme as funcionalidades que você usa.",
+          "Meta (Instagram / Facebook) e LinkedIn: autenticação OAuth e publicação do conteúdo que você envia para essas plataformas.",
+          "Infraestrutura: hospedagem e armazenamento com provedores como AWS (incluindo S3 para mídia), Vercel (frontend) e Contabo (API e banco em produção), além de CDN ou DNS quando usados para entrega do site.",
+          "Autoridades: somente quando houver obrigação legal válida, ou para proteger direitos, segurança e integridade do serviço."
+        ]
+      },
+      "storage": {
+        "title": "6. Armazenamento e retenção",
+        "body": [
+          "Dados de conta, organização, marcas e posts ficam em banco de dados gerenciado pela operação da Publique. Arquivos de mídia (marcas, posts e assets de plataforma) podem ser armazenados em buckets privados na AWS S3; a API continua a servir a mídia por meio de endpoint autenticado ou público conforme o caso de uso.",
+          "Mantemos os dados enquanto sua conta e organização estiverem ativas e pelo tempo necessário às finalidades descritas, à resolução de disputas e a obrigações legais. Após encerramento, podemos reter registros mínimos exigidos por lei ou necessários à defesa de direitos.",
+          "Credenciais de redes sociais são criptografadas em repouso. Logs técnicos são retidos por períodos limitados compatíveis com diagnóstico e segurança."
+        ]
+      },
+      "rights": {
+        "title": "7. Direitos do titular",
+        "body": [
+          "Nos termos da LGPD, você pode solicitar confirmação de tratamento, acesso, correção, anonimização, bloqueio ou eliminação de dados desnecessários, portabilidade quando aplicável, informação sobre compartilhamentos, e revogação de consentimento quando essa for a base usada.",
+          "Para exercer direitos, envie um e-mail ao contato indicado nesta política, identificando-se e descrevendo o pedido. Podemos solicitar informações adicionais para confirmar a identidade e proteger a conta da organização.",
+          "Se entender que o tratamento viola a LGPD, você também pode apresentar reclamação à Autoridade Nacional de Proteção de Dados (ANPD)."
+        ]
+      },
+      "cookies": {
+        "title": "8. Cookies e preferências locais",
+        "body": [
+          "Usamos cookies e armazenamento local essenciais ao funcionamento: preferência de idioma (locale), sessão autenticada e preferência de tema (claro/escuro/sistema).",
+          "Esses itens não são usados para publicidade de terceiros. Se no futuro adotarmos cookies analíticos ou de marketing não essenciais, atualizaremos esta política e, quando exigido, pediremos consentimento."
+        ]
+      },
+      "children": {
+        "title": "9. Crianças e adolescentes",
+        "body": [
+          "A Publique é um serviço B2B voltado a negócios e profissionais. Não direcionamos o produto a crianças. Se soubermos que coletamos dados de menor de forma indevida, tomaremos medidas razoáveis para excluí-los."
+        ]
+      },
+      "changes": {
+        "title": "10. Alterações desta política",
+        "body": [
+          "Podemos atualizar esta política para refletir mudanças no produto, na infraestrutura ou na legislação. A data de atualização aparece no topo da página. Em mudanças relevantes, podemos avisar pela própria plataforma ou por e-mail cadastrado, quando adequado."
+        ]
+      },
+      "contact": {
+        "title": "11. Contato",
+        "body": [
+          "Para dúvidas sobre privacidade ou para exercer direitos do titular, fale conosco pelos canais abaixo."
+        ]
+      }
     }
   }
 }

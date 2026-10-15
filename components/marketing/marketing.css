@@ -1466,12 +1466,133 @@ html.dark .marketing {
   letter-spacing: 0.02em;
 }
 
+.m-footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.15rem 1.4rem;
+}
+
+.m-footer-nav a {
+  color: color-mix(in srgb, var(--m-on-dark) 72%, transparent);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  font-size: 0.92rem;
+}
+
+.m-footer-nav a:hover {
+  color: var(--m-on-dark);
+}
+
 .m-footer-simple .m-footer-nav {
   gap: 0.15rem 1.4rem;
 }
 
 .m-footer-simple .m-footer-copy {
   margin: 0;
+}
+
+.m-legal {
+  padding: 2.4rem var(--m-gutter) 4rem;
+}
+
+.m-legal-doc {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.m-legal-head {
+  margin-bottom: 2.4rem;
+}
+
+.m-legal-title {
+  margin: 0 0 0.6rem;
+  font-size: clamp(1.75rem, 4.5vw, 2.35rem);
+  line-height: 1.15;
+}
+
+.m-legal-updated {
+  margin: 0 0 1.2rem;
+  font-size: 0.9rem;
+  color: color-mix(in srgb, var(--m-ink) 58%, transparent);
+}
+
+.m-legal-intro {
+  margin: 0 0 1rem;
+}
+
+.m-legal-disclaimer {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border-left: 3px solid color-mix(in srgb, var(--m-red) 70%, transparent);
+  background: color-mix(in srgb, var(--m-sand) 88%, transparent);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--m-ink) 78%, transparent);
+}
+
+.m-legal-section {
+  margin: 0 0 2rem;
+}
+
+.m-legal-section-title {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.m-legal-p {
+  margin: 0 0 0.75rem;
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: color-mix(in srgb, var(--m-ink) 88%, transparent);
+}
+
+.m-legal-p:last-child {
+  margin-bottom: 0;
+}
+
+.m-legal-facts {
+  margin: 1rem 0 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.m-legal-facts div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.m-legal-facts dt {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--m-ink) 55%, transparent);
+}
+
+.m-legal-facts dd {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.m-legal-contact {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.m-legal-contact a {
+  color: var(--m-red);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
 @media (min-width: 720px) {

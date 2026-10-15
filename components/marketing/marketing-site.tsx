@@ -2,15 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
-import { ThemeSwitch } from "@/components/theme-switch";
 import { Iphone } from "@/components/ui/iphone";
 import { api } from "@/lib/api";
 
 import { MarketingCarousel } from "./marketing-carousel";
+import { MarketingShell } from "./marketing-shell";
 import "./marketing.css";
 
 const DESKTOP_MQ = "(min-width: 900px)";
@@ -36,20 +35,13 @@ export function MarketingSite() {
   const accessLabel = signedIn ? t("nav.openApp") : t("nav.accessPlatform");
 
   return (
-    <div className="marketing">
-      <a className="m-skip" href="#conteudo">
-        {t("skip")}
-      </a>
-      <MarketingNav brandHref={signedIn ? "/create" : "/"} ctaHref={accessHref} ctaLabel={accessLabel} />
-      <main id="conteudo">
-        <Hero accessHref={accessHref} accessLabel={accessLabel} signedIn={signedIn} />
-        <How />
-        <Trust />
-        <Plans ctaHref={accessHref} ctaLabel={accessLabel} />
-        <Close ctaHref={accessHref} ctaLabel={accessLabel} />
-      </main>
-      <Footer />
-    </div>
+    <MarketingShell>
+      <Hero accessHref={accessHref} accessLabel={accessLabel} signedIn={signedIn} />
+      <How />
+      <Trust />
+      <Plans ctaHref={accessHref} ctaLabel={accessLabel} />
+      <Close ctaHref={accessHref} ctaLabel={accessLabel} />
+    </MarketingShell>
   );
 }
 
@@ -68,59 +60,6 @@ function useOptionalSession() {
   });
 
   return { signedIn: Boolean(me.data?.user) };
-}
-
-function MarketingNav({
-  brandHref,
-  ctaHref,
-  ctaLabel,
-}: {
-  brandHref: string;
-  ctaHref: string;
-  ctaLabel: string;
-}) {
-  return (
-    <header className="m-nav">
-      <div className="m-wrap m-nav-inner">
-        <Link className="m-brand" href={brandHref}>
-          <img src="/symbol.svg" alt="" width={160} height={120} />
-          <span className="m-brand-name">Publique</span>
-        </Link>
-        <div className="m-nav-end">
-          <div className="m-prefs">
-            <ThemeSwitch />
-            <MarketingLocale />
-          </div>
-          <Link className="m-btn m-nav-cta" href={ctaHref}>
-            {ctaLabel}
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
-}
-
-function MarketingLocale() {
-  const locale = useLocale();
-  const router = useRouter();
-  const t = useTranslations("marketing.nav");
-
-  function choose(next: "pt-BR" | "en") {
-    document.cookie = `locale=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
-    router.refresh();
-  }
-
-  return (
-    <div className="m-locale" role="group" aria-label={t("language")}>
-      <button type="button" aria-pressed={locale === "pt-BR"} onClick={() => choose("pt-BR")}>
-        PT
-      </button>
-      <span aria-hidden>/</span>
-      <button type="button" aria-pressed={locale === "en"} onClick={() => choose("en")}>
-        EN
-      </button>
-    </div>
-  );
 }
 
 function Hero({
@@ -513,15 +452,3 @@ function Close({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: string }) {
   );
 }
 
-function Footer() {
-  const t = useTranslations("marketing.footer");
-
-  return (
-    <footer className="m-footer m-footer-simple">
-      <div className="m-wrap m-footer-simple-inner">
-        <p className="m-footer-mark">Publique</p>
-        <p className="m-footer-copy">{t("copyright")}</p>
-      </div>
-    </footer>
-  );
-}

@@ -1743,7 +1743,117 @@
       "plans": "Plans",
       "login": "Log in",
       "networks": "Networks",
+      "privacy": "Privacy policy",
+      "legalNav": "Legal",
       "copyright": "Copyright © 2026 Publique"
+    }
+  },
+  "privacy": {
+    "meta": {
+      "title": "Privacy policy",
+      "description": "How Publique handles personal data under Brazil’s LGPD. Controller: Mateus Carvalho Vieira Ltda - ME."
+    },
+    "title": "Privacy policy",
+    "updated": "Updated October 15, 2026",
+    "intro": "This policy explains how Publique, operated by Mateus Carvalho Vieira Ltda - ME, handles personal data when you use the website and the product.",
+    "disclaimer": "Informational text aligned with Brazil’s General Data Protection Law (LGPD). It is not legal advice. If you need guidance for your situation, consult a qualified professional.",
+    "controller": {
+      "legalName": "Legal name",
+      "taxId": "CNPJ (Brazilian tax ID)",
+      "address": "Address",
+      "product": "Product"
+    },
+    "contact": {
+      "email": "Email",
+      "phone": "Phone"
+    },
+    "sections": {
+      "controller": {
+        "title": "1. Who controls the data",
+        "body": [
+          "The controller of personal data processed in connection with Publique is the company below. Under data-protection rules, the controller decides the purposes and means of processing."
+        ]
+      },
+      "dataCollected": {
+        "title": "2. Data we collect",
+        "body": [
+          "Account and authentication: name, email, password (stored securely), appearance and language preferences, and session metadata.",
+          "Organization and brands: organization details, invited users, brand profiles, texts and settings you enter, and content obtained when you authorize analysis of the brand website (crawl).",
+          "Visual identity: logos, reference images, brand assets, and media files you upload or that the service generates for previews and posts.",
+          "Generated content: post drafts, captions, composed images, prompts used for generation, and technical generation metadata (model, prompt version, usage).",
+          "Social networks: tokens and account identifiers for connected accounts (for example LinkedIn, Instagram, and Facebook), stored encrypted, plus records of publishes you initiate.",
+          "Technical data: access and error logs, IP address, user-agent, and signals needed for security, diagnostics, and operating the service."
+        ]
+      },
+      "purposes": {
+        "title": "3. Purposes",
+        "body": [
+          "Provide the service: create accounts, manage organizations and brands, generate and store drafts, serve media, and publish to networks you connect.",
+          "Run integrations: authenticate with social providers via OAuth and send content when you request a publish.",
+          "Improve the product: understand failures, performance, and aggregated usage, without turning that into invasive profiling outside the service.",
+          "Security and compliance: prevent abuse, investigate incidents, and meet legal obligations when applicable."
+        ]
+      },
+      "legalBases": {
+        "title": "4. Legal bases (LGPD)",
+        "body": [
+          "Performance of a contract or pre-contractual steps: when processing is needed to provide Publique to you or your organization.",
+          "Legitimate interest: where appropriate for security, fraud prevention, operational improvement, and support, always weighing impact on data-subject rights.",
+          "Consent: when required by law or when a specific feature depends on explicit consent (for example non-essential cookies, if adopted later).",
+          "Compliance with a legal or regulatory obligation: when the law requires retention or disclosure of information."
+        ]
+      },
+      "sharing": {
+        "title": "5. Sharing and subprocessors",
+        "body": [
+          "We do not sell personal data. We share data only as needed to operate Publique, with providers under contract or terms of service, or when you authorize it (for example by connecting a social network).",
+          "OpenAI: text and image processing for content generation according to the features you use.",
+          "Meta (Instagram / Facebook) and LinkedIn: OAuth authentication and publishing of content you send to those platforms.",
+          "Infrastructure: hosting and storage with providers such as AWS (including S3 for media), Vercel (frontend), and Contabo (API and database in production), plus CDN or DNS when used to deliver the site.",
+          "Authorities: only when a valid legal obligation applies, or to protect rights, safety, and the integrity of the service."
+        ]
+      },
+      "storage": {
+        "title": "6. Storage and retention",
+        "body": [
+          "Account, organization, brand, and post data live in databases operated for Publique. Media files (brand marks, post images, and platform assets) may be stored in private AWS S3 buckets; the API still serves media through authenticated or public endpoints as the use case requires.",
+          "We keep data while your account and organization remain active and for as long as needed for the purposes above, dispute resolution, and legal obligations. After closure, we may retain minimum records required by law or needed to defend rights.",
+          "Social credentials are encrypted at rest. Technical logs are kept for limited periods suited to diagnostics and security."
+        ]
+      },
+      "rights": {
+        "title": "7. Your rights",
+        "body": [
+          "Under the LGPD, you may request confirmation of processing, access, correction, anonymization, blocking or deletion of unnecessary data, portability when applicable, information about sharing, and withdrawal of consent when that is the basis used.",
+          "To exercise rights, email the contact below, identify yourself, and describe the request. We may ask for additional information to confirm identity and protect the organization account.",
+          "If you believe processing violates the LGPD, you may also lodge a complaint with Brazil’s National Data Protection Authority (ANPD)."
+        ]
+      },
+      "cookies": {
+        "title": "8. Cookies and local preferences",
+        "body": [
+          "We use cookies and local storage that are essential to run the product: language preference (locale), authenticated session, and theme preference (light/dark/system).",
+          "These are not used for third-party advertising. If we later adopt non-essential analytics or marketing cookies, we will update this policy and, when required, ask for consent."
+        ]
+      },
+      "children": {
+        "title": "9. Children",
+        "body": [
+          "Publique is a B2B product for businesses and professionals. We do not target children. If we learn we collected a child’s data improperly, we will take reasonable steps to delete it."
+        ]
+      },
+      "changes": {
+        "title": "10. Changes to this policy",
+        "body": [
+          "We may update this policy to reflect changes in the product, infrastructure, or law. The update date appears at the top of the page. For material changes, we may notify you in the product or via the registered email when appropriate."
+        ]
+      },
+      "contact": {
+        "title": "11. Contact",
+        "body": [
+          "For privacy questions or to exercise data-subject rights, reach us through the channels below."
+        ]
+      }
     }
   }
 }
