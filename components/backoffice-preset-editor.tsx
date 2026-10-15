@@ -431,8 +431,8 @@ export function BackofficePresetEditor({
     [assets],
   );
 
-  const promptTokens = useMemo(
-    () => ({
+  const promptTokens = useMemo((): Record<string, string> => {
+    return {
       ...(contextQuery.data?.tokens ?? {}),
       "product.name": labProductName,
       "product.price": labProductPrice,
@@ -440,17 +440,16 @@ export function BackofficePresetEditor({
       "topic.title": labTopicTitle,
       "topic.angle": labTopicAngle,
       "topic.image_mood": labTopicMood,
-    }),
-    [
-      contextQuery.data?.tokens,
-      labProductName,
-      labProductPrice,
-      labProductDescription,
-      labTopicTitle,
-      labTopicAngle,
-      labTopicMood,
-    ],
-  );
+    };
+  }, [
+    contextQuery.data?.tokens,
+    labProductName,
+    labProductPrice,
+    labProductDescription,
+    labTopicTitle,
+    labTopicAngle,
+    labTopicMood,
+  ]);
 
   // Live client fallback when preview-prompts is unavailable (or still loading).
   const liveImageEffective = useMemo((): EffectivePrompt | null => {
@@ -495,7 +494,7 @@ export function BackofficePresetEditor({
     const system =
       contextQuery.data?.envelopes?.caption_system?.trim() ||
       "You write premium social captions from a curated brand recipe.";
-    const brandName = promptTokens["brand.name"] || promptTokens.name || "";
+    const brandName = promptTokens["brand.name"] || "";
     const user = [
       "Brand brief:",
       brandName ? `Brand name: ${brandName}` : null,
