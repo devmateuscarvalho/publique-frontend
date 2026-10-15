@@ -60,6 +60,59 @@ function formatLikes(likes: number): string {
   }).format(likes);
 }
 
+/** Retries once the media URL is briefly unavailable right after generation completes. */
+function PreviewMediaImg({
+  src,
+  className,
+  alt = "",
+  draggable,
+  "aria-hidden": ariaHidden,
+}: {
+  src: string;
+  className?: string;
+  alt?: string;
+  draggable?: boolean;
+  "aria-hidden"?: boolean;
+}) {
+  const [attempt, setAttempt] = useState(0);
+  const timerRef = useRef<number | null>(null);
+  useEffect(() => {
+    setAttempt(0);
+    return () => {
+      if (timerRef.current !== null) {
+        window.clearTimeout(timerRef.current);
+      }
+    };
+  }, [src]);
+  if (!src) {
+    return null;
+  }
+  const resolved =
+    attempt === 0 ? src : `${src}${src.includes("?") ? "&" : "?"}retry=${attempt}`;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      key={resolved}
+      src={resolved}
+      alt={alt}
+      draggable={draggable}
+      aria-hidden={ariaHidden}
+      className={className}
+      onError={() => {
+        if (attempt >= 4) {
+          return;
+        }
+        if (timerRef.current !== null) {
+          window.clearTimeout(timerRef.current);
+        }
+        timerRef.current = window.setTimeout(() => {
+          setAttempt((current) => current + 1);
+        }, 300 * (attempt + 1));
+      }}
+    />
+  );
+}
+
 export function InstagramPhonePreview({
   brandName,
   logoUrl,
@@ -340,12 +393,18 @@ export function InstagramPhonePreview({
               className="absolute inset-0"
             >
               {storySrc ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={storySrc}
-                  alt=""
-                  className="absolute inset-0 size-full object-cover"
-                />
+                <>
+                  {/* Blurred fill behind contain — same treatment Instagram uses for non-9:16 media. */}
+                  <PreviewMediaImg
+                    src={storySrc}
+                    aria-hidden
+                    className="absolute inset-0 size-full scale-110 object-cover opacity-70 blur-2xl"
+                  />
+                  <PreviewMediaImg
+                    src={storySrc}
+                    className="absolute inset-0 size-full object-contain"
+                  />
+                </>
               ) : (
                 <div className="flex size-full items-center justify-center bg-neutral-900 px-6 text-center text-[12px] leading-snug text-neutral-400">
                   {emptyImageLabel}
@@ -494,12 +553,10 @@ export function InstagramPhonePreview({
                   >
                     {slides.map((src, index) => (
                       <div key={`${index}-${src}`} className="relative size-full shrink-0 snap-center">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <PreviewMediaImg
                           src={src}
-                          alt=""
                           draggable={false}
-                          className="pointer-events-none absolute inset-0 size-full object-contain"
+                          className="pointer-events-none absolute inset-0 size-full object-cover"
                         />
                       </div>
                     ))}
@@ -529,8 +586,10 @@ export function InstagramPhonePreview({
                   ) : null}
                 </>
               ) : imageUrl || slides[0] ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={imageUrl || slides[0]} alt="" className="absolute inset-0 size-full object-contain" />
+                <PreviewMediaImg
+                  src={imageUrl || slides[0] || ""}
+                  className="absolute inset-0 size-full object-cover"
+                />
               ) : (
                 <div className="flex size-full items-center justify-center px-4 text-center text-[11px] leading-snug text-neutral-400 dark:text-neutral-500">
                   {emptyImageLabel}

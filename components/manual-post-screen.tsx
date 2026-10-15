@@ -958,9 +958,17 @@ function ManualDraftPage({ postId }: { postId: string }) {
 }
 
 function isStoryPost(post?: Post): boolean {
-  // Same signal the API uses for Stories publish (user_brief.aspect / format).
-  // Do not infer from JPEG size — 4:5 and 9:16 both generate 1024×1536.
-  return Boolean(post && (post.format === "story" || post.aspect === "9:16"));
+  // Same signals the API uses for Stories publish.
+  // Prefer format/aspect from user_brief — do not infer from JPEG size
+  // (4:5 and 9:16 both generate 1024×1536). Fall back to the art-direction
+  // line claim appends when an older row lost aspect in user_brief.
+  if (!post) {
+    return false;
+  }
+  if (post.format === "story" || post.aspect === "9:16") {
+    return true;
+  }
+  return /9:16\s+Stories\/Reels/i.test(post.image_prompt ?? "");
 }
 
 function previewPhoneAspect(post?: Post): "square" | "portrait" | "story" {

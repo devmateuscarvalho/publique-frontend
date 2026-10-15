@@ -151,10 +151,10 @@ function ShellFrame({
             href="/create"
             onClick={() => setOpenMobile(false)}
             aria-label={appName}
-            className="flex min-h-11 min-w-0 flex-1 items-center gap-2 truncate px-2 text-sidebar-foreground group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+            className="flex min-h-11 min-w-0 flex-1 items-center gap-2 truncate px-2 text-sidebar-foreground group-data-[collapsible=icon]:hidden"
           >
             <img src="/symbol.svg" alt="" width={28} height={21} className="h-6 w-auto shrink-0" />
-            <span className="font-display truncate text-base font-bold tracking-wide uppercase group-data-[collapsible=icon]:hidden">
+            <span className="font-display truncate text-base font-bold tracking-wide uppercase">
               {appName}
             </span>
           </Link>

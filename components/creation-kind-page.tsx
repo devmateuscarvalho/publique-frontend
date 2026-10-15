@@ -11,6 +11,7 @@ import { WizardLookPreview } from "@/components/wizard-look-preview";
 import { WizardPresetCarousel } from "@/components/wizard-preset-carousel";
 import {
   WizardPrepare,
+  aspectToAPI,
   wizardScreenKind,
   type WizardAspect,
   type WizardCarouselLayout,
@@ -81,7 +82,7 @@ export function CreationKindPage() {
   const [carouselTheme, setCarouselTheme] = useState<WizardCarouselTheme>("dark");
   const [carouselLayout, setCarouselLayout] = useState<WizardCarouselLayout>("editorial");
   const [mood, setMood] = useState<WizardMood>("");
-  const [aspect, setAspect] = useState<WizardAspect>("1:1");
+  const [aspect, setAspect] = useState<WizardAspect>("square");
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const publishedQuery = useQuery({
@@ -130,7 +131,7 @@ export function CreationKindPage() {
     setLogoPlacement(normalizeLogoPlacement(recipe.logo_placement));
     setProduct({ name: "", price: "", description: "" });
     setMood("");
-    setAspect("1:1");
+    setAspect("square");
     const key = (recipe.style_key || "").toLowerCase();
     if (key.includes("myth")) {
       setCarouselLayout("statement");
@@ -217,7 +218,7 @@ export function CreationKindPage() {
           post_model_id: modelResult.model.id,
           ...(screen === "carousel"
             ? { theme: carouselTheme, layout: carouselLayout }
-            : { mood: mood || undefined, aspect }),
+            : { mood: mood || undefined, aspect: aspectToAPI(aspect) }),
           ...(screen === "product"
             ? {
                 product: {

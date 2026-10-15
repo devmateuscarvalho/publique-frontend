@@ -21,7 +21,18 @@ export type WizardProduct = {
 export type WizardCarouselTheme = "light" | "dark" | "random";
 export type WizardCarouselLayout = "editorial" | "statement" | "steps";
 export type WizardMood = "" | "warm" | "bold" | "calm" | "casual";
-export type WizardAspect = "1:1" | "4:5" | "9:16";
+/** Prepare UI keys — mapped to API `1:1` | `4:5` | `9:16` on generate. */
+export type WizardAspect = "square" | "portrait" | "story";
+
+export function aspectToAPI(aspect: WizardAspect): "1:1" | "4:5" | "9:16" {
+  if (aspect === "portrait") {
+    return "4:5";
+  }
+  if (aspect === "story") {
+    return "9:16";
+  }
+  return "1:1";
+}
 
 export function wizardScreenKind(recipe?: CreativeRecipe | null) {
   if (!recipe) {
@@ -233,7 +244,7 @@ export function WizardPrepare({
               value={aspect}
               onValueChange={(value) => {
                 const next: WizardAspect =
-                  value === "4:5" || value === "9:16" ? value : "1:1";
+                  value === "portrait" || value === "story" ? value : "square";
                 onAspect(next);
               }}
             >
@@ -241,9 +252,9 @@ export function WizardPrepare({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1:1">{t("aspectSquare")}</SelectItem>
-                <SelectItem value="4:5">{t("aspectPortrait")}</SelectItem>
-                <SelectItem value="9:16">{t("aspectStory")}</SelectItem>
+                <SelectItem value="square">{t("aspectSquare")}</SelectItem>
+                <SelectItem value="portrait">{t("aspectPortrait")}</SelectItem>
+                <SelectItem value="story">{t("aspectStory")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
