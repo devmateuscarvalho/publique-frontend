@@ -469,6 +469,8 @@
       "instagram": "Instagram",
       "facebook": "Facebook"
     },
+    "manualPublishAsStory": "Vai como Story (some em 24h)",
+    "manualPublishLinkedInFeedNote": "LinkedIn não tem Story de Página — publica no feed",
     "manualPublishComingSoon": "Em breve",
     "manualPublishNeedCredential": "Toque aqui para conectar o LinkedIn e publicar nesta rede.",
     "manualPublishNeedInstagramCredential": "Toque aqui para conectar o Instagram e publicar nesta rede.",

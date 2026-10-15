@@ -434,6 +434,8 @@ export type Post = {
   alt_text: string;
   locale: string;
   format: string;
+  /** Customer framing from prepare: 1:1 | 4:5 | 9:16. 9:16 publishes as Stories on IG/FB. */
+  aspect?: string;
   error_code: string;
   prompt_version: string;
   model: string;

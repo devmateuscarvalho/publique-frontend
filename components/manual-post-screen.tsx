@@ -451,6 +451,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
   const imageUrls = (post?.assets ?? []).map((asset) => asset.url).filter(Boolean);
   const carousel = imageUrls.length > 1;
   const phoneAspect = previewPhoneAspect(post);
+  const isStory = isStoryPost(post);
   const byNetwork = new Map((integrationsQuery.data?.integrations ?? []).map((item) => [item.network, item]));
   const linkedin = byNetwork.get("linkedin");
   const instagram = byNetwork.get("instagram");
@@ -738,7 +739,9 @@ function ManualDraftPage({ postId }: { postId: string }) {
                   ) : needsPage ? (
                     <p className="text-xs text-ink/60">{t("manualPublishNeedPageUrn")}</p>
                   ) : (
-                    <p className="text-xs text-ink/60">{t("viewNotPosted")}</p>
+                    <p className="text-xs text-ink/60">
+                      {isStory ? t("manualPublishLinkedInFeedNote") : t("viewNotPosted")}
+                    </p>
                   )}
                 </div>
                 <span
@@ -781,9 +784,12 @@ function ManualDraftPage({ postId }: { postId: string }) {
                     <p className="text-xs text-red-700 dark:text-red-400">{t("manualPublishNetworkFailed")}</p>
                   ) : (
                     <p className="text-xs text-ink/60">
-                      {instagram?.account_label
-                        ? `${instagram.account_label} · ${t("viewNotPosted")}`
-                        : t("viewNotPosted")}
+                      {[
+                        instagram?.account_label,
+                        isStory ? t("manualPublishAsStory") : t("viewNotPosted"),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </p>
                   )}
                 </div>
@@ -832,9 +838,12 @@ function ManualDraftPage({ postId }: { postId: string }) {
                     <p className="text-xs text-ink/60">{integrations("oauthNeedFacebookPage")}</p>
                   ) : (
                     <p className="text-xs text-ink/60">
-                      {facebook?.account_label
-                        ? `${facebook.account_label} · ${t("viewNotPosted")}`
-                        : t("viewNotPosted")}
+                      {[
+                        facebook?.account_label,
+                        isStory ? t("manualPublishAsStory") : t("viewNotPosted"),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </p>
                   )}
                 </div>
@@ -943,7 +952,16 @@ function ManualDraftPage({ postId }: { postId: string }) {
   );
 }
 
+function isStoryPost(post?: Post): boolean {
+  // Same signal the API uses for Stories publish (user_brief.aspect / format).
+  // Do not infer from JPEG size — 4:5 and 9:16 both generate 1024×1536.
+  return Boolean(post && (post.format === "story" || post.aspect === "9:16"));
+}
+
 function previewPhoneAspect(post?: Post): "square" | "portrait" {
+  if (isStoryPost(post)) {
+    return "portrait";
+  }
   const first = (post?.assets ?? []).find((item) => item.width > 0 && item.height > 0);
   if (first) {
     return first.height / first.width > 1.1 ? "portrait" : "square";

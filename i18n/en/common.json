@@ -469,6 +469,8 @@
       "instagram": "Instagram",
       "facebook": "Facebook"
     },
+    "manualPublishAsStory": "Posts as a Story (24 hours)",
+    "manualPublishLinkedInFeedNote": "LinkedIn Pages have no Stories — publishes to the feed",
     "manualPublishComingSoon": "Coming soon",
     "manualPublishNeedCredential": "Tap here to connect LinkedIn and publish on this network.",
     "manualPublishNeedInstagramCredential": "Tap here to connect Instagram and publish on this network.",
