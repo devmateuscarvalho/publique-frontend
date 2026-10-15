@@ -1744,6 +1744,7 @@
       "login": "Log in",
       "networks": "Networks",
       "privacy": "Privacy policy",
+      "terms": "Terms of service",
       "legalNav": "Legal",
       "copyright": "Copyright © 2026 Publique"
     }
@@ -1852,6 +1853,146 @@
         "title": "11. Contact",
         "body": [
           "For privacy questions or to exercise data-subject rights, reach us through the channels below."
+        ]
+      }
+    }
+  },
+  "terms": {
+    "meta": {
+      "title": "Terms of service",
+      "description": "Terms of use for Publique. Provider: Mateus Carvalho Vieira Ltda - ME."
+    },
+    "title": "Terms of service",
+    "updated": "Updated October 15, 2026",
+    "intro": "These terms govern use of the Publique website and platform, operated by Mateus Carvalho Vieira Ltda - ME. By accessing or using the service, you agree to these conditions.",
+    "disclaimer": "Informational text. It is not legal advice. If you need guidance for your situation, consult a qualified professional.",
+    "privacyLink": "Privacy policy",
+    "provider": {
+      "legalName": "Legal name",
+      "taxId": "CNPJ (Brazilian tax ID)",
+      "address": "Address",
+      "product": "Product"
+    },
+    "contact": {
+      "email": "Email",
+      "phone": "Phone"
+    },
+    "sections": {
+      "acceptance": {
+        "title": "1. Acceptance",
+        "body": [
+          "By creating an account, accessing, or using Publique, you confirm that you have read and accepted these Terms of service and the Privacy policy. If you do not agree, do not use the service.",
+          "If you use Publique on behalf of an organization, you represent that you have authority to bind that organization to these terms."
+        ]
+      },
+      "provider": {
+        "title": "2. Service provider",
+        "body": [
+          "Publique is provided by the company below. References to “we”, “us”, or “Publique” in these terms mean that provider and the SaaS product under the Publique brand."
+        ]
+      },
+      "service": {
+        "title": "3. Service description",
+        "body": [
+          "Publique is a B2B platform that helps organizations manage brands, generate content drafts with AI assistance, and, when you connect accounts and request it, publish to supported social networks.",
+          "Features may evolve. Capabilities described on the marketing site (including illustrative plans, future networks, or timed autopublish) may not all be available in the current product. What applies to your contracted use is what the product actually offers in your account.",
+          "The service depends on third-party providers (for example AI generation, hosting, and social APIs). Outages or changes at those providers may affect Publique."
+        ]
+      },
+      "accounts": {
+        "title": "4. Accounts and eligibility",
+        "body": [
+          "You must provide accurate information and keep credentials confidential. Activity under your control is your responsibility.",
+          "The service is intended for professional and business use. You must have legal capacity to contract. Organization accounts may include invited users with roles defined by the organization.",
+          "We may refuse, suspend, or terminate access for breach of these terms, security risk, or abusive use."
+        ]
+      },
+      "acceptableUse": {
+        "title": "5. Acceptable use",
+        "body": [
+          "You may not use Publique for spam, fraud, harassment, illegal content, infringement of third-party rights, improper reverse engineering, intentional overload of infrastructure, or bypassing technical and security limits.",
+          "You must not publish or request generation of content that violates applicable law, the policies of connected social networks, or third-party intellectual property rights.",
+          "You may not use the service to invent facts, testimonials, certifications, pricing, statistics, or performance claims about the company or products when those facts are not true or verifiable by the organization."
+        ]
+      },
+      "content": {
+        "title": "6. Content, AI, and editorial responsibility",
+        "body": [
+          "You (and your organization) remain responsible for content you enter, brand data, uploaded materials, and any publish you initiate from Publique.",
+          "AI outputs may contain errors or inaccuracies. Treat drafts as suggestions and review them before publishing. Publique does not guarantee marketing results, reach, engagement, or automatic compliance with every industry rule.",
+          "You grant Publique a limited license to process, store, and transmit content as needed to provide the service (including generation, media composition, and publishing to networks you authorize)."
+        ]
+      },
+      "social": {
+        "title": "7. Social networks and third parties",
+        "body": [
+          "By connecting LinkedIn, Instagram, Facebook, or other supported networks, you authorize Publique to use the credentials and permissions granted via OAuth for the actions you trigger (including publishing).",
+          "Use of those platforms remains subject to their own terms and policies. Account suspension, API changes, or limits imposed by the social provider are not Publique’s responsibility when outside our reasonable control.",
+          "Publishing and scheduling depend on accounts and permissions you keep valid. Revoking access on the networks may interrupt connected features."
+        ]
+      },
+      "ip": {
+        "title": "8. Intellectual property",
+        "body": [
+          "Publique, the brand, software, interface, lab prompts, and product documentation are protected by intellectual property rights of the provider or its licensors.",
+          "Content you upload or that the organization creates remains owned by the organization or the respective rights holders, without prejudice to the operational license described in these terms.",
+          "You may not copy, resell, sublicense, or exploit Publique software outside authorized account use."
+        ]
+      },
+      "plans": {
+        "title": "9. Plans, pricing, and billing",
+        "body": [
+          "Prices and plans shown on the marketing site may be illustrative. While online billing is not active for your account, any commercial terms (if any) must be agreed in writing or through a commercial channel we designate.",
+          "When billing is available, amounts, cycle, taxes, and payment method will be disclosed at purchase or renewal. Applicable taxes may be due under law."
+        ]
+      },
+      "availability": {
+        "title": "10. Availability and warranty",
+        "body": [
+          "We use reasonable efforts to keep the service available and secure, but we do not warrant uninterrupted, error-free operation or fitness for a particular purpose that is not stated.",
+          "Maintenance, network failures, cloud, AI, or social-provider outages may cause temporary unavailability. The service is provided “as is” to the extent permitted by applicable law."
+        ]
+      },
+      "liability": {
+        "title": "11. Limitation of liability",
+        "body": [
+          "To the maximum extent permitted by applicable Brazilian law, Publique is not liable for lost profits, data loss beyond reasonable operational measures, indirect or consequential damages, or outcomes of campaigns and publishes you choose to run.",
+          "Our aggregate liability to you for matters related to these terms is limited, where allowed, to the amounts you actually paid Publique in the twelve months before the event, or to any higher mandatory floor that consumer or civil law makes non-waivable.",
+          "Nothing in these terms excludes liability for willful misconduct, gross negligence, or other grounds that the law does not allow to be limited."
+        ]
+      },
+      "termination": {
+        "title": "12. Suspension and termination",
+        "body": [
+          "You may stop using the service and request account closure through the contact channels, subject to any outstanding obligations.",
+          "We may suspend or terminate access for breach of these terms, non-payment (when billing applies), security risk, or legal requirement.",
+          "After termination, we may retain data for as long as needed for the legal and operational purposes described in the Privacy policy."
+        ]
+      },
+      "privacy": {
+        "title": "13. Privacy",
+        "body": [
+          "Personal data processing follows the Privacy policy at the page linked below. These terms and that policy should be read together."
+        ]
+      },
+      "law": {
+        "title": "14. Governing law and venue",
+        "body": [
+          "These terms are governed by the laws of the Federative Republic of Brazil.",
+          "The courts of São José/SC are elected as venue, with waiver of any other, however privileged, except where mandatory consumer-protection or other mandatory rules require a different forum favoring the weaker party."
+        ]
+      },
+      "changes": {
+        "title": "15. Changes to these terms",
+        "body": [
+          "We may update these terms to reflect changes in the product, operations, or law. The update date appears at the top of the page.",
+          "Continued use after publication of material changes constitutes acceptance of the new conditions where the law allows. For material changes, we may notify you in the product or via the registered email."
+        ]
+      },
+      "contact": {
+        "title": "16. Contact",
+        "body": [
+          "For questions about these terms, reach us through the channels below."
         ]
       }
     }

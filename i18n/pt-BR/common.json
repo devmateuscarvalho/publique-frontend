@@ -1745,6 +1745,7 @@
       "login": "Entrar",
       "networks": "Redes",
       "privacy": "Política de privacidade",
+      "terms": "Termos de serviço",
       "legalNav": "Informações legais",
       "copyright": "Copyright © 2026 Publique"
     }
@@ -1853,6 +1854,146 @@
         "title": "11. Contato",
         "body": [
           "Para dúvidas sobre privacidade ou para exercer direitos do titular, fale conosco pelos canais abaixo."
+        ]
+      }
+    }
+  },
+  "terms": {
+    "meta": {
+      "title": "Termos de serviço",
+      "description": "Condições de uso da Publique. Prestador: Mateus Carvalho Vieira Ltda - ME."
+    },
+    "title": "Termos de serviço",
+    "updated": "Atualizado em 15 de outubro de 2026",
+    "intro": "Estes termos regem o uso do site e da plataforma Publique, operada por Mateus Carvalho Vieira Ltda - ME. Ao acessar ou usar o serviço, você concorda com estas condições.",
+    "disclaimer": "Texto informativo. Não substitui assessoria jurídica. Em caso de dúvida sobre o seu caso, consulte um profissional habilitado.",
+    "privacyLink": "Política de privacidade",
+    "provider": {
+      "legalName": "Razão social",
+      "taxId": "CNPJ",
+      "address": "Endereço",
+      "product": "Produto"
+    },
+    "contact": {
+      "email": "E-mail",
+      "phone": "Telefone"
+    },
+    "sections": {
+      "acceptance": {
+        "title": "1. Aceitação",
+        "body": [
+          "Ao criar uma conta, acessar ou usar a Publique, você declara ter lido e aceito estes Termos de serviço e a Política de privacidade. Se não concordar, não use o serviço.",
+          "Se você usa a Publique em nome de uma organização, declara ter autoridade para vincular essa organização a estes termos."
+        ]
+      },
+      "provider": {
+        "title": "2. Prestador do serviço",
+        "body": [
+          "A Publique é prestada pela empresa abaixo. Referências a “nós”, “nosso” ou “Publique” nestes termos apontam para esse prestador e para o produto SaaS com a marca Publique."
+        ]
+      },
+      "service": {
+        "title": "3. Descrição do serviço",
+        "body": [
+          "A Publique é uma plataforma B2B que ajuda organizações a gerenciar marcas, gerar rascunhos de conteúdo com apoio de inteligência artificial e, quando você conectar contas e solicitar, publicar em redes sociais suportadas.",
+          "Funcionalidades podem evoluir. Recursos descritos no site de marketing (incluindo planos ilustrativos, redes futuras ou publicação automática em horário) podem não estar todos disponíveis na versão atual. O que vale para o uso contratado é o que o produto efetivamente oferece na sua conta.",
+          "O serviço depende de provedores de terceiros (por exemplo geração de IA, hospedagem e APIs de redes sociais). Interrupções ou mudanças nesses provedores podem afetar a Publique."
+        ]
+      },
+      "accounts": {
+        "title": "4. Conta e elegibilidade",
+        "body": [
+          "Você deve fornecer informações verdadeiras e manter a confidencialidade das credenciais. Atividades na conta sob seu controle são de sua responsabilidade.",
+          "O serviço destina-se a uso profissional e empresarial. Você deve ter capacidade legal para contratar. Contas de organização podem incluir usuários convidados com papéis definidos pela própria organização.",
+          "Podemos recusar, suspender ou encerrar acesso em caso de violação destes termos, risco à segurança ou uso abusivo."
+        ]
+      },
+      "acceptableUse": {
+        "title": "5. Uso aceitável",
+        "body": [
+          "É proibido usar a Publique para spam, fraude, assédio, conteúdo ilegal, violação de direitos de terceiros, engenharia reversa indevida, sobrecarga intencional da infraestrutura, ou contornar limites técnicos e de segurança.",
+          "Você não deve publicar ou solicitar geração de conteúdo que viole leis aplicáveis, políticas das redes sociais conectadas ou direitos de propriedade intelectual de terceiros.",
+          "É proibido usar o serviço para inventar fatos, depoimentos, certificações, preços, estatísticas ou alegações de desempenho sobre a empresa ou produtos quando esses dados não forem verdadeiros ou verificáveis pela organização."
+        ]
+      },
+      "content": {
+        "title": "6. Conteúdo, IA e responsabilidade editorial",
+        "body": [
+          "Você (e sua organização) permanecem responsáveis pelo conteúdo que cadastram, pelos dados da marca, pelos materiais enviados e por qualquer publicação iniciada a partir da Publique.",
+          "Saídas de IA podem conter erros ou imprecisões. Trate rascunhos como sugestões: revise antes de publicar. A Publique não garante resultados de marketing, alcance, engajamento ou conformidade automática com todas as normas setoriais.",
+          "Você concede à Publique licença limitada para processar, armazenar e transmitir o conteúdo necessário à prestação do serviço (incluindo geração, composição de mídia e publicação nas redes que você autorizar)."
+        ]
+      },
+      "social": {
+        "title": "7. Redes sociais e terceiros",
+        "body": [
+          "Ao conectar LinkedIn, Instagram, Facebook ou outras redes suportadas, você autoriza a Publique a usar as credenciais e permissões concedidas via OAuth para as finalidades que você acionar (incluindo publicação).",
+          "O uso dessas plataformas continua sujeito aos termos e políticas delas. Suspensão de conta, mudança de API ou limites do provedor social não são responsabilidade da Publique quando fora do nosso controle razoável.",
+          "Publicações e agendamentos dependem das contas e permissões que você mantém válidas. Revogar o acesso nas redes pode interromper funcionalidades conectadas."
+        ]
+      },
+      "ip": {
+        "title": "8. Propriedade intelectual",
+        "body": [
+          "A Publique, a marca, o software, a interface, os prompts de laboratório e a documentação do produto são protegidos por direitos de propriedade intelectual do prestador ou de licenciadores.",
+          "Conteúdo que você envia ou que a organização cria permanece de titularidade da organização ou dos respectivos titulares, sem prejuízo da licença operacional descrita nestes termos.",
+          "Não é permitido copiar, revender, sublicenciar ou explorar o software da Publique fora do uso autorizado da conta."
+        ]
+      },
+      "plans": {
+        "title": "9. Planos, preços e cobrança",
+        "body": [
+          "Preços e planos exibidos no site de marketing podem ser ilustrativos. Enquanto a cobrança online não estiver ativa para a sua conta, condições comerciais específicas (se houver) devem ser acordadas por escrito ou por canal comercial indicado por nós.",
+          "Quando a cobrança estiver disponível, valores, ciclo, impostos e forma de pagamento serão informados no momento da contratação ou renovação. Impostos aplicáveis podem ser devidos conforme a legislação."
+        ]
+      },
+      "availability": {
+        "title": "10. Disponibilidade e garantia",
+        "body": [
+          "Empregamos esforços razoáveis para manter o serviço disponível e seguro, mas não garantimos operação ininterrupta, livre de erros ou adequada a um propósito particular não declarado.",
+          "Manutenções, falhas de rede, de provedores de nuvem, de IA ou de redes sociais podem causar indisponibilidade temporária. O serviço é oferecido “no estado em que se encontra”, na medida permitida pela lei aplicável."
+        ]
+      },
+      "liability": {
+        "title": "11. Limitação de responsabilidade",
+        "body": [
+          "Na máxima extensão permitida pela lei brasileira aplicável, a Publique não responde por lucros cessantes, perda de dados além das medidas razoáveis de operação, danos indiretos ou consequenciais, ou resultados de campanhas e publicações que você decidir realizar.",
+          "Nossa responsabilidade total perante você, por fatos relacionados a estes termos, limita-se, quando cabível, ao montante efetivamente pago por você à Publique nos doze meses anteriores ao evento, ou a outro limite que a lei de consumo ou civil imponha como inafastável.",
+          "Nada nestes termos exclui responsabilidade por dolo, culpa grave ou outras hipóteses que a lei não permita limitar."
+        ]
+      },
+      "termination": {
+        "title": "12. Suspensão e encerramento",
+        "body": [
+          "Você pode deixar de usar o serviço e solicitar o encerramento da conta pelos canais de contato, observadas obrigações pendentes.",
+          "Podemos suspender ou encerrar o acesso em caso de violação destes termos, inadimplência (quando houver cobrança), risco à segurança, ou exigência legal.",
+          "Após o encerramento, podemos reter dados pelo tempo necessário às finalidades legais e operacionais descritas na Política de privacidade."
+        ]
+      },
+      "privacy": {
+        "title": "13. Privacidade",
+        "body": [
+          "O tratamento de dados pessoais segue a Política de privacidade, disponível na página indicada abaixo. Estes termos e a política devem ser lidos em conjunto."
+        ]
+      },
+      "law": {
+        "title": "14. Lei aplicável e foro",
+        "body": [
+          "Estes termos são regidos pelas leis da República Federativa do Brasil.",
+          "Fica eleito o foro da comarca de São José/SC, com renúncia a qualquer outro, por mais privilegiado que seja, salvo foro obrigatório previsto em lei de proteção ao consumidor ou norma cogente que favoreça a parte vulnerável."
+        ]
+      },
+      "changes": {
+        "title": "15. Alterações destes termos",
+        "body": [
+          "Podemos atualizar estes termos para refletir mudanças no produto, na operação ou na legislação. A data de atualização aparece no topo da página.",
+          "O uso continuado após a publicação de alterações relevantes constitui aceitação das novas condições, quando a lei permitir. Em mudanças materiais, podemos avisar na plataforma ou por e-mail cadastrado."
+        ]
+      },
+      "contact": {
+        "title": "16. Contato",
+        "body": [
+          "Para dúvidas sobre estes termos, fale conosco pelos canais abaixo."
         ]
       }
     }

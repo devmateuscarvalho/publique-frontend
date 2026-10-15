@@ -117,6 +117,7 @@ export function MarketingFooter() {
         <p className="m-footer-mark">Publique</p>
         <nav className="m-footer-nav" aria-label={t("legalNav")}>
           <Link href="/privacy">{t("privacy")}</Link>
+          <Link href="/terms">{t("terms")}</Link>
         </nav>
         <p className="m-footer-copy">{t("copyright")}</p>
       </div>
