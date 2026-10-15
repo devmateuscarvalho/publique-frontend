@@ -6,14 +6,23 @@ import { useTranslations } from "next-intl";
 import { Iphone } from "@/components/ui/iphone";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 const BEAT_KEYS = ["0", "1", "2", "3", "4", "5"] as const;
 
-export function PostCreatingWait({ brandName }: { brandName: string }) {
+export function PostCreatingWait({
+  brandName,
+  aspect = "square",
+}: {
+  brandName: string;
+  /** Match the finished phone preview framing while the ad generates. */
+  aspect?: "square" | "portrait" | "story";
+}) {
   const t = useTranslations("creation");
   const brand = brandName.trim() || t("manualUntitled");
   const [beatIndex, setBeatIndex] = useState(0);
   const [progress, setProgress] = useState(8);
+  const isStory = aspect === "story";
 
   useEffect(() => {
     const started = Date.now();
@@ -32,47 +41,93 @@ export function PostCreatingWait({ brandName }: { brandName: string }) {
   return (
     <section aria-busy="true" aria-live="polite" aria-label={t("creatingNoticeTitle")}>
       <Iphone>
-        <div className="flex size-full flex-col bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50">
-          <div className="flex shrink-0 items-end justify-between px-5 pb-1.5 pt-3 text-[10px] font-semibold">
-            <span>9:41</span>
-            <div className="flex items-center gap-1">
-              <span className="h-2 w-4 rounded-sm bg-neutral-900/80 dark:bg-neutral-100/80" />
-              <span className="h-2.5 w-5 rounded-sm bg-neutral-900/80 dark:bg-neutral-100/80" />
+        {isStory ? (
+          <div className="relative flex size-full flex-col overflow-hidden bg-black text-white">
+            <div className="absolute inset-0 bg-neutral-900" />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-28 bg-gradient-to-b from-black/55 to-transparent"
+            />
+            <div className="relative z-10 flex shrink-0 flex-col px-3 pb-2 pt-3">
+              <div className="mb-2 h-0.5 overflow-hidden rounded-full bg-white/35">
+                <div className="h-full w-[38%] rounded-full bg-white" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="size-8 shrink-0 rounded-full bg-white/20" />
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <Skeleton className="h-2.5 w-28 bg-white/25" />
+                  <Skeleton className="h-2 w-10 bg-white/15" />
+                </div>
+              </div>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2.5 px-4 py-2.5">
-            <Skeleton className="size-8 shrink-0 rounded-full" />
-            <div className="min-w-0 flex-1 space-y-1.5">
-              <Skeleton className="h-2.5 w-28" />
-              <Skeleton className="h-2 w-16" />
-            </div>
-          </div>
-
-          <div className="relative aspect-square bg-neutral-100 dark:bg-neutral-900">
-            <Skeleton className="absolute inset-0 rounded-none" />
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-white/55 px-6 text-center backdrop-blur-sm dark:bg-neutral-950/55">
+            <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
               <span className="relative grid size-12 place-items-center" aria-hidden>
-                <span className="absolute inset-0 rounded-full border-2 border-pine/15" />
-                <span className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-pine motion-reduce:animate-none" />
+                <span className="absolute inset-0 rounded-full border-2 border-white/15" />
+                <span className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-white motion-reduce:animate-none" />
               </span>
               <div className="space-y-1.5">
-                <p className="text-sm font-semibold">{t("creatingNoticeTitle")}</p>
-                <p className="text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
+                <p className="text-sm font-semibold text-white">{t("creatingNoticeTitle")}</p>
+                <p className="text-xs leading-relaxed text-white/70">
                   {t(`manualGeneratingBeats.${BEAT_KEYS[beatIndex]}`, { brand })}
                 </p>
               </div>
+              <Progress value={progress} className="mt-2 h-1 w-full max-w-[12rem] bg-white/15 [&>div]:bg-white" />
+              <p className="text-[11px] text-white/45">{t("manualGeneratingFooter")}</p>
+            </div>
+            <div className="relative z-10 mt-auto px-3 pb-4 pt-2">
+              <div className="min-h-10 rounded-full border border-white/40 bg-black/25 px-3 py-2 backdrop-blur-sm">
+                <Skeleton className="h-2.5 w-24 bg-white/20" />
+              </div>
             </div>
           </div>
+        ) : (
+          <div className="flex size-full flex-col bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50">
+            <div className="flex shrink-0 items-end justify-between px-5 pb-1.5 pt-3 text-[10px] font-semibold">
+              <span>9:41</span>
+              <div className="flex items-center gap-1">
+                <span className="h-2 w-4 rounded-sm bg-neutral-900/80 dark:bg-neutral-100/80" />
+                <span className="h-2.5 w-5 rounded-sm bg-neutral-900/80 dark:bg-neutral-100/80" />
+              </div>
+            </div>
 
-          <div className="space-y-2.5 px-4 py-4">
-            <Skeleton className="h-2.5 w-[88%]" />
-            <Skeleton className="h-2.5 w-[64%]" />
-            <Skeleton className="h-2.5 w-[72%]" />
-            <Progress value={progress} className="mt-3 h-1 bg-pine/15 [&>div]:bg-pine" />
-            <p className="text-center text-[11px] text-neutral-400">{t("manualGeneratingFooter")}</p>
+            <div className="flex items-center gap-2.5 px-4 py-2.5">
+              <Skeleton className="size-8 shrink-0 rounded-full" />
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <Skeleton className="h-2.5 w-28" />
+                <Skeleton className="h-2 w-16" />
+              </div>
+            </div>
+
+            <div
+              className={cn(
+                "relative bg-neutral-100 dark:bg-neutral-900",
+                aspect === "portrait" ? "aspect-[4/5]" : "aspect-square",
+              )}
+            >
+              <Skeleton className="absolute inset-0 rounded-none" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-white/55 px-6 text-center backdrop-blur-sm dark:bg-neutral-950/55">
+                <span className="relative grid size-12 place-items-center" aria-hidden>
+                  <span className="absolute inset-0 rounded-full border-2 border-pine/15" />
+                  <span className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-pine motion-reduce:animate-none" />
+                </span>
+                <div className="space-y-1.5">
+                  <p className="text-sm font-semibold">{t("creatingNoticeTitle")}</p>
+                  <p className="text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
+                    {t(`manualGeneratingBeats.${BEAT_KEYS[beatIndex]}`, { brand })}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2.5 px-4 py-4">
+              <Skeleton className="h-2.5 w-[88%]" />
+              <Skeleton className="h-2.5 w-[64%]" />
+              <Skeleton className="h-2.5 w-[72%]" />
+              <Progress value={progress} className="mt-3 h-1 bg-pine/15 [&>div]:bg-pine" />
+              <p className="text-center text-[11px] text-neutral-400">{t("manualGeneratingFooter")}</p>
+            </div>
           </div>
-        </div>
+        )}
       </Iphone>
     </section>
   );

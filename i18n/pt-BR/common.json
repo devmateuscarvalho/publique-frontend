@@ -114,6 +114,8 @@
     "phoneLikes": "{count} curtidas",
     "phoneLike": "Curtir",
     "phoneUnlike": "Descurtir",
+    "phoneStoryNow": "agora",
+    "phoneStoryReply": "Enviar mensagem",
     "previewBrandFallback": "marca",
     "includeLogo": "Incluir logo da marca",
     "includeLogoHint": "Orienta a IA a deixar espaço limpo no canto escolhido; o logo real entra depois na composição.",

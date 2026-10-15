@@ -354,7 +354,12 @@ function DraftFeedCard({
           </span>
         </div>
 
-        <div className="relative aspect-square bg-muted/40">
+        <div
+          className={cn(
+            "relative bg-muted/40",
+            isStoryPost(post) ? "mx-auto aspect-[9/16] max-h-72 w-full max-w-[11rem]" : "aspect-square",
+          )}
+        >
           {image?.url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -928,7 +933,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
         )}
       >
         {pending ? (
-          <PostCreatingWait brandName={brandName} />
+          <PostCreatingWait brandName={brandName} aspect={phoneAspect} />
         ) : (
           <div className={cn(fromCreating && revealPanel && "animate-[panel-fade_480ms_ease-out]")}>
             <InstagramPhonePreview
@@ -958,9 +963,9 @@ function isStoryPost(post?: Post): boolean {
   return Boolean(post && (post.format === "story" || post.aspect === "9:16"));
 }
 
-function previewPhoneAspect(post?: Post): "square" | "portrait" {
+function previewPhoneAspect(post?: Post): "square" | "portrait" | "story" {
   if (isStoryPost(post)) {
-    return "portrait";
+    return "story";
   }
   const first = (post?.assets ?? []).find((item) => item.width > 0 && item.height > 0);
   if (first) {

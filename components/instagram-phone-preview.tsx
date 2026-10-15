@@ -43,8 +43,8 @@ type InstagramPhonePreviewProps = {
   generatingCaptionLabel: string;
   /** ICU template with `{count}`, e.g. "{count} likes". */
   likesLabel: string;
-  /** Media aspect: Instagram square (default) or portrait 4:5 (carousels). */
-  aspect?: "square" | "portrait";
+  /** Media aspect: feed square, feed portrait 4:5, or full-bleed Stories 9:16. */
+  aspect?: "square" | "portrait" | "story";
   className?: string;
 };
 
@@ -324,6 +324,105 @@ export function InstagramPhonePreview({
     }
     goTo(next);
   };
+
+  const storySrc = imageUrl || slides[0] || "";
+  const isStory = aspect === "story";
+
+  if (isStory) {
+    return (
+      <div className={cn("mx-auto w-full max-w-[380px] lg:max-w-[300px] xl:max-w-[320px]", className)}>
+        <Iphone>
+          <div className="relative flex size-full flex-col overflow-hidden bg-black text-white">
+            <div
+              ref={mediaRef}
+              onPointerDown={onMediaPointerDown}
+              onPointerUp={onMediaPointerUp}
+              className="absolute inset-0"
+            >
+              {storySrc ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={storySrc}
+                  alt=""
+                  className="absolute inset-0 size-full object-cover"
+                />
+              ) : (
+                <div className="flex size-full items-center justify-center bg-neutral-900 px-6 text-center text-[12px] leading-snug text-neutral-400">
+                  {emptyImageLabel}
+                </div>
+              )}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/55 to-transparent"
+              />
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/65 to-transparent"
+              />
+              {bursts.map((burst) => (
+                <Heart
+                  key={burst.id}
+                  aria-hidden
+                  className="pointer-events-none absolute z-20 fill-rose-500 text-rose-500 drop-shadow-md"
+                  style={{
+                    left: burst.x,
+                    top: burst.y,
+                    width: burst.size,
+                    height: burst.size,
+                    ["--heart-dx" as string]: `${burst.dx}px`,
+                    animation: `heart-rise 900ms ease-out ${burst.delay}ms both`,
+                  }}
+                />
+              ))}
+            </div>
+
+            <div className="relative z-10 flex shrink-0 flex-col px-3 pb-2 pt-3">
+              <div className="mb-2 h-0.5 overflow-hidden rounded-full bg-white/35">
+                <div className="h-full w-[38%] rounded-full bg-white" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-amber-400 via-rose-500 to-violet-600 p-[1.5px]">
+                  <span className="flex size-full items-center justify-center overflow-hidden rounded-full bg-black">
+                    {lightLogo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={darkLogo || lightLogo} alt="" className="size-full object-contain p-0.5" />
+                    ) : (
+                      <span className="text-[11px] font-semibold">{initial}</span>
+                    )}
+                  </span>
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[12px] font-semibold leading-tight drop-shadow">{displayName}</p>
+                  <p className="text-[10px] text-white/80 drop-shadow">{t("phoneStoryNow")}</p>
+                </div>
+                <MoreHorizontal className="size-4 shrink-0 text-white drop-shadow" aria-hidden />
+              </div>
+            </div>
+
+            <div className="relative z-10 mt-auto px-3 pb-4 pt-2">
+              {caption.trim() || captionPending ? (
+                <p
+                  className={cn(
+                    "mb-3 line-clamp-3 whitespace-pre-wrap text-[12px] leading-snug drop-shadow",
+                    captionPending && "animate-pulse text-white/70",
+                  )}
+                >
+                  {captionText}
+                </p>
+              ) : null}
+              <div className="flex items-center gap-2">
+                <div className="min-h-10 flex-1 rounded-full border border-white/55 bg-black/25 px-3 py-2 text-[12px] text-white/70 backdrop-blur-sm">
+                  {t("phoneStoryReply")}
+                </div>
+                <Heart className="size-6 shrink-0 text-white drop-shadow" aria-hidden />
+                <Send className="size-6 shrink-0 text-white drop-shadow" aria-hidden />
+              </div>
+            </div>
+          </div>
+        </Iphone>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("mx-auto w-full max-w-[380px] lg:max-w-[300px] xl:max-w-[320px]", className)}>

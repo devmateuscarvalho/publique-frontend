@@ -114,6 +114,8 @@
     "phoneLikes": "{count} likes",
     "phoneLike": "Like",
     "phoneUnlike": "Unlike",
+    "phoneStoryNow": "now",
+    "phoneStoryReply": "Send message",
     "previewBrandFallback": "brand",
     "includeLogo": "Include brand logo",
     "includeLogoHint": "Tells the AI to leave a clear corner for the real logo, which is composited later.",
