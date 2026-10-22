@@ -309,25 +309,29 @@ function ShellFrame({
               : "mx-auto flex min-h-svh w-full max-w-6xl flex-col px-4 py-4 md:px-8 md:py-6"
           }
         >
-          <header className="mb-6 flex items-center gap-3 pb-1">
-            <SidebarTrigger className="md:hidden" aria-label={t("menu")} />
-            <h1 className="font-display min-w-0 flex-1 truncate border-l-2 border-ruby pl-3 text-xl font-bold tracking-tight uppercase">
-              {title}
-            </h1>
-            {action}
+          <header className="mb-6 flex min-h-14 items-center gap-3 pb-1">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <SidebarTrigger className="md:hidden" aria-label={t("menu")} />
+              <h1 className="font-display min-w-0 flex-1 truncate border-l-2 border-ruby pl-3 text-xl font-bold tracking-tight uppercase">
+                {title}
+              </h1>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {action}
+              {showCreateFab ? (
+                <Link
+                  href="/create"
+                  className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-none border-2 border-blush bg-blush px-4 py-2.5 text-xs font-bold tracking-widest text-[#1f1f1f] uppercase shadow-md transition hover:border-ruby hover:bg-ruby hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ruby focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-ruby dark:bg-ruby dark:text-white dark:hover:border-blush dark:hover:bg-blush dark:hover:text-[#1f1f1f]"
+                  aria-label={t("startCreating")}
+                >
+                  <WandSparkles className="size-4 shrink-0" aria-hidden />
+                  <span className="max-w-[10rem] truncate sm:max-w-none">{t("startCreating")}</span>
+                </Link>
+              ) : null}
+            </div>
           </header>
           {children}
         </div>
-        {showCreateFab ? (
-          <Link
-            href="/create"
-            className="fixed top-4 right-4 z-40 inline-flex min-h-11 items-center gap-2 rounded-none border-2 border-blush bg-blush px-4 py-2.5 text-xs font-bold tracking-widest text-[#1f1f1f] uppercase shadow-md transition hover:border-ruby hover:bg-ruby hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ruby focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-ruby dark:bg-ruby dark:text-white dark:hover:border-blush dark:hover:bg-blush dark:hover:text-[#1f1f1f] md:top-6 md:right-6"
-            aria-label={t("startCreating")}
-          >
-            <WandSparkles className="size-4 shrink-0" aria-hidden />
-            <span className="max-w-[10rem] truncate sm:max-w-none">{t("startCreating")}</span>
-          </Link>
-        ) : null}
       </SidebarInset>
     </>
   );

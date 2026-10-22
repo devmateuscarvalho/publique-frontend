@@ -79,6 +79,27 @@ function useOriginQuery() {
   return { origin, setOrigin };
 }
 
+function useApprovalQuery() {
+  const params = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const approval = params.get("approval") ?? "";
+  const setApproval = useCallback(
+    (value: string) => {
+      const search = new URLSearchParams(params.toString());
+      if (value === "pending" || value === "approved" || value === "rejected") {
+        search.set("approval", value);
+      } else {
+        search.delete("approval");
+      }
+      const query = search.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [params, pathname, router],
+  );
+  return { approval, setApproval };
+}
+
 function usePresetQuery() {
   const params = useSearchParams();
   const pathname = usePathname();
@@ -109,8 +130,11 @@ function ManualPostWorkspace() {
   const { brandId } = useBrandQuery();
   const { origin, setOrigin } = useOriginQuery();
   const { preset, setPreset } = usePresetQuery();
+  const { approval, setApproval } = useApprovalQuery();
   const originFilter = origin === "manual" || origin === "automation" ? origin : "";
   const presetFilter = preset.trim();
+  const approvalFilter =
+    approval === "pending" || approval === "approved" || approval === "rejected" ? approval : "";
   const brandNameOf = (id?: string) => brands.find((brand) => brand.id === id)?.name ?? "";
   const visualQueries = useQueries({
     queries: brands.map((brand) => ({
@@ -139,7 +163,7 @@ function ManualPostWorkspace() {
   const recipes = recipesQuery.data?.creative_recipes ?? [];
 
   const listQuery = useQuery({
-    queryKey: ["posts", organization?.id, brandId || "all", originFilter || "all", presetFilter || "all"],
+    queryKey: ["posts", organization?.id, brandId || "all", originFilter || "all", presetFilter || "all", approvalFilter || "all"],
     queryFn: () => {
       const params = new URLSearchParams();
       if (brandId) {
@@ -150,6 +174,9 @@ function ManualPostWorkspace() {
       }
       if (presetFilter) {
         params.set("preset", presetFilter);
+      }
+      if (approvalFilter) {
+        params.set("approval", approvalFilter);
       }
       const query = params.toString();
       return api<{ posts: Post[] }>(`/v1/organizations/${organization?.id}/posts${query ? `?${query}` : ""}`);
@@ -222,11 +249,25 @@ function ManualPostWorkspace() {
                     label: presetCopy.name(recipe),
                   })),
                 } satisfies ListFilter,
+                {
+                  key: "approval",
+                  label: t("approvalFilter"),
+                  allLabel: lists("all"),
+                  options: [
+                    { value: "pending", label: t("approvalPending") },
+                    { value: "approved", label: t("approvalApproved") },
+                    { value: "rejected", label: t("approvalRejected") },
+                  ],
+                } satisfies ListFilter,
               ]}
-              values={{ origin: originFilter, preset: presetFilter }}
+              values={{ origin: originFilter, preset: presetFilter, approval: approvalFilter }}
               onChange={(key, value) => {
                 if (key === "origin") {
                   setOrigin(value);
+                  return;
+                }
+                if (key === "approval") {
+                  setApproval(value);
                   return;
                 }
                 setPreset(value);
@@ -241,7 +282,7 @@ function ManualPostWorkspace() {
         </div>
         {posts.length === 0 && !listQuery.isLoading ? (
           <p className="text-sm text-ink/70">
-            {brandId || originFilter || presetFilter ? t("manualNoResults") : t("manualEmpty")}
+            {brandId || originFilter || presetFilter || approvalFilter ? t("manualNoResults") : t("manualEmpty")}
           </p>
         ) : null}
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -344,20 +385,40 @@ function DraftFeedCard({
                 .join(" · ")}
             </p>
           </div>
-          <span
-            className={cn(
-              "rounded-md border px-2 py-0.5 text-[10px] font-medium",
-              failed
-                ? "border-destructive/40 text-destructive"
-                : pending
-                  ? "border-input text-ink/60"
-                  : post.status === "published"
-                    ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
-                    : "border-input text-ink/70",
-            )}
-          >
-            {t(`postStatuses.${post.status}`)}
-          </span>
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            {post.approval_status === "pending" || post.approval_status === "approved" || post.approval_status === "rejected" ? (
+              <span
+                className={cn(
+                  "rounded-md border px-2 py-0.5 text-[10px] font-medium",
+                  post.approval_status === "pending"
+                    ? post.overdue
+                      ? "border-amber-500/50 text-amber-800 dark:text-amber-300"
+                      : "border-sky-500/40 text-sky-800 dark:text-sky-300"
+                    : post.approval_status === "approved"
+                      ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
+                      : "border-destructive/40 text-destructive",
+                )}
+              >
+                {post.approval_status === "pending" && post.overdue
+                  ? t("approvalOverdue")
+                  : t(`approval${post.approval_status === "pending" ? "Pending" : post.approval_status === "approved" ? "Approved" : "Rejected"}`)}
+              </span>
+            ) : null}
+            <span
+              className={cn(
+                "rounded-md border px-2 py-0.5 text-[10px] font-medium",
+                failed
+                  ? "border-destructive/40 text-destructive"
+                  : pending
+                    ? "border-input text-ink/60"
+                    : post.status === "published"
+                      ? "border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
+                      : "border-input text-ink/70",
+              )}
+            >
+              {t(`postStatuses.${post.status}`)}
+            </span>
+          </div>
         </div>
 
         <div
@@ -645,6 +706,32 @@ function ManualDraftPage({ postId }: { postId: string }) {
     onSuccess: () => postQuery.refetch(),
     onError: (error) => appToast.error(errors(mapDraftError(error))),
   });
+  const approvalStatus = post?.approval_status ?? "not_required";
+  const approvalUnlocked = approvalStatus === "not_required" || approvalStatus === "approved";
+  const approvePost = useMutation({
+    mutationFn: () =>
+      api<{ post: Post }>(`/v1/brands/${brandId}/posts/${postId}/approve`, {
+        method: "POST",
+        body: "{}",
+      }),
+    onSuccess: async () => {
+      appToast.success(t("approvalApprovedToast"));
+      await postQuery.refetch();
+    },
+    onError: (error) => appToast.error(errors(mapDraftError(error))),
+  });
+  const rejectPost = useMutation({
+    mutationFn: () =>
+      api<{ post: Post }>(`/v1/brands/${brandId}/posts/${postId}/reject`, {
+        method: "POST",
+        body: "{}",
+      }),
+    onSuccess: async () => {
+      appToast.success(t("approvalRejectedToast"));
+      await postQuery.refetch();
+    },
+    onError: (error) => appToast.error(errors(mapDraftError(error))),
+  });
   const publish = useMutation({
     mutationFn: () => {
       const networks = [
@@ -665,9 +752,12 @@ function ManualDraftPage({ postId }: { postId: string }) {
     onError: (error) => appToast.error(errors(mapDraftError(error))),
   });
   const canPublish =
+    approvalUnlocked &&
     (status === "draft" || status === "published") &&
     !publish.isPending &&
     (linkedinCanSend || instagramCanSend || facebookCanSend || tiktokCanSend);
+  const showApprovalActions = status === "draft" && approvalStatus === "pending";
+  const showRejectedHint = status === "draft" && approvalStatus === "rejected";
   const alreadyPosted =
     status === "published" ||
     status === "publishing" ||
@@ -988,6 +1078,31 @@ function ManualDraftPage({ postId }: { postId: string }) {
               />
             ) : null
           ) : null}
+          {post?.overdue && approvalStatus === "pending" ? (
+            <p className="text-sm text-amber-800 dark:text-amber-300">{t("approvalOverdueHint")}</p>
+          ) : null}
+          {showApprovalActions ? (
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button
+                type="button"
+                className="min-h-11 w-full"
+                onClick={() => approvePost.mutate()}
+                disabled={approvePost.isPending || rejectPost.isPending}
+              >
+                {t("approvalApproveAction")}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-11 w-full"
+                onClick={() => rejectPost.mutate()}
+                disabled={approvePost.isPending || rejectPost.isPending}
+              >
+                {t("approvalRejectAction")}
+              </Button>
+            </div>
+          ) : null}
+          {showRejectedHint ? <p className="text-sm text-ink/70">{t("approvalRejectedHint")}</p> : null}
           {canPublish ? (
             <Button type="button" className="min-h-11 w-full" onClick={() => publish.mutate()} disabled={publish.isPending}>
               {t("manualPublish")}
@@ -1094,6 +1209,9 @@ function mapDraftError(error: unknown) {
     "tiktok_denied",
     "invalid_state",
     "network_unavailable",
+    "approval_required",
+    "approval_rejected",
+    "approval_stale",
   ] as const;
   if (known.includes(code as (typeof known)[number])) {
     return code;

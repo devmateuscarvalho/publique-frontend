@@ -17,13 +17,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ApiError, api, type CreativeRecipe } from "@/lib/api";
+import { ApiError, api, type CreativeRecipe, type OutputKind } from "@/lib/api";
+import { startSocialOAuth } from "@/lib/social-connect";
 import { appToast } from "@/lib/app-toast";
 import { usePresetCopy } from "@/lib/preset-i18n";
 import { cn } from "@/lib/utils";
 
 const weekdays = [1, 2, 3, 4, 5, 6, 7] as const;
 const networkChoices = ["linkedin", "instagram", "facebook", "tiktok"] as const;
+type NetworkChoice = (typeof networkChoices)[number];
 const calendarDays = [7, 1, 2, 3, 4, 5, 6] as const;
 const calendarHours = Array.from({ length: 24 }, (_, hour) => hour);
 
@@ -35,6 +37,7 @@ type AutomationSlot = {
   hour: number;
   minute: number;
   networks?: string[];
+  require_approval?: boolean;
 };
 
 type AutomationRun = {
@@ -88,21 +91,59 @@ function WeekPlanner() {
   const { brands } = useCreationBrand();
   const { brandId, setBrandId } = useBrandQuery();
   const brand = brands.find((item) => item.id === brandId);
+  const [kindCode, setKindCode] = useState("");
   const [presetId, setPresetId] = useState("");
   const [weekday, setWeekday] = useState("1");
   const [time, setTime] = useState("09:00");
-  const [networks, setNetworks] = useState<string[]>(["linkedin"]);
+  const [networks, setNetworks] = useState<NetworkChoice[]>([]);
+  const [requireApproval, setRequireApproval] = useState(false);
   const [openCell, setOpenCell] = useState<{ weekday: number; hour: number } | null>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
 
   const presetCopy = usePresetCopy();
-  const recipesQuery = useQuery({
-    queryKey: ["creative-recipes", organization?.id, brandId, "automation"],
-    queryFn: () =>
-      api<{ creative_recipes: CreativeRecipe[] }>(`/v1/organizations/${organization?.id}/creative-recipes`),
+  const kindsQuery = useQuery({
+    queryKey: ["output-kinds", "published"],
+    queryFn: () => api<{ output_kinds: OutputKind[] }>("/v1/output-kinds"),
     enabled: Boolean(organization?.id && brandId),
   });
+  const outputKinds = kindsQuery.data?.output_kinds ?? [];
+  const recipesQuery = useQuery({
+    queryKey: ["creative-recipes", organization?.id, brandId, kindCode, "automation"],
+    queryFn: () => {
+      const query = new URLSearchParams();
+      if (brand?.segment_id) {
+        query.set("segment_id", brand.segment_id);
+      }
+      query.set("output_kind", kindCode);
+      return api<{ creative_recipes: CreativeRecipe[] }>(
+        `/v1/organizations/${organization?.id}/creative-recipes?${query.toString()}`,
+      );
+    },
+    enabled: Boolean(organization?.id && brandId && kindCode),
+  });
   const recipes = recipesQuery.data?.creative_recipes ?? [];
+  const integrationsQuery = useQuery({
+    queryKey: ["integrations", brandId],
+    queryFn: () =>
+      api<{ integrations: { network: string; configured: boolean; page_urn?: string }[] }>(
+        `/v1/brands/${brandId}/integrations`,
+      ),
+    enabled: Boolean(brandId),
+  });
+  const connectedNetworks: NetworkChoice[] = networkChoices.filter((id) => {
+    const row = (integrationsQuery.data?.integrations ?? []).find((item) => item.network === id);
+    if (!row?.configured) {
+      return false;
+    }
+    if (id === "linkedin" || id === "facebook") {
+      return Boolean(row.page_urn?.trim());
+    }
+    if (id === "instagram" || id === "tiktok") {
+      return Boolean(row.page_urn?.trim() || row.configured);
+    }
+    return true;
+  });
+  const returnTo = brandId ? `/posts/automate?brand=${brandId}` : "/posts/automate";
 
   const countsQuery = useQuery({
     queryKey: ["automation-counts", organization?.id],
@@ -138,6 +179,7 @@ function WeekPlanner() {
           hour,
           minute,
           networks,
+          require_approval: requireApproval,
         }),
       });
     },
@@ -159,6 +201,20 @@ function WeekPlanner() {
   });
 
   const clockOk = /^\d{2}:\d{2}/.test(time);
+
+  useEffect(() => {
+    setPresetId("");
+  }, [kindCode]);
+
+  useEffect(() => {
+    if (!kindCode && outputKinds.length > 0) {
+      setKindCode(outputKinds[0].code);
+    }
+  }, [kindCode, outputKinds]);
+
+  useEffect(() => {
+    setNetworks((current) => current.filter((id) => connectedNetworks.includes(id)));
+  }, [connectedNetworks.join(",")]);
 
   useEffect(() => {
     if (openSlots.length > 0) {
@@ -202,13 +258,28 @@ function WeekPlanner() {
             <CardTitle>{t("automationAdd")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {recipes.length === 0 && !recipesQuery.isLoading ? (
+            {outputKinds.length === 0 && !kindsQuery.isLoading ? (
               <p className="text-sm text-ink/70">{t("automationNeedPreset")}</p>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-2 sm:col-span-2">
+                <div className="space-y-2">
+                  <Label htmlFor="automation-kind">{t("automationKind")}</Label>
+                  <Select value={kindCode} onValueChange={setKindCode}>
+                    <SelectTrigger id="automation-kind">
+                      <SelectValue placeholder={t("automationKindPlaceholder")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {outputKinds.map((kind) => (
+                        <SelectItem key={kind.code} value={kind.code}>
+                          {messages.has(`wizard.kinds.${kind.code}`) ? messages(`wizard.kinds.${kind.code}`) : kind.code}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="automation-preset">{t("automationPreset")}</Label>
-                  <Select value={presetId} onValueChange={setPresetId}>
+                  <Select value={presetId} onValueChange={setPresetId} disabled={!kindCode || recipesQuery.isLoading}>
                     <SelectTrigger id="automation-preset">
                       <SelectValue placeholder={t("automationPresetPlaceholder")} />
                     </SelectTrigger>
@@ -221,6 +292,9 @@ function WeekPlanner() {
                     </SelectContent>
                   </Select>
                 </div>
+                {kindCode && recipes.length === 0 && !recipesQuery.isLoading ? (
+                  <p className="text-sm text-ink/70 sm:col-span-2">{t("automationNoLooksForKind")}</p>
+                ) : null}
                 <div className="space-y-2">
                   <Label htmlFor="automation-day">{t("automationDay")}</Label>
                   <Select value={weekday} onValueChange={setWeekday}>
@@ -238,9 +312,33 @@ function WeekPlanner() {
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                   <Label>{t("automationNetworks")}</Label>
+                  {connectedNetworks.length === 0 && !integrationsQuery.isLoading ? (
+                    <p className="text-sm text-ink/70">{t("automationNoNetworks")}</p>
+                  ) : null}
                   <div className="flex flex-wrap gap-2">
                     {networkChoices.map((id) => {
+                      const connected = connectedNetworks.includes(id);
                       const selected = networks.includes(id);
+                      if (!connected) {
+                        return (
+                          <Button
+                            key={id}
+                            type="button"
+                            variant="outline"
+                            className="min-h-11 gap-2"
+                            onClick={() => {
+                              if (brandId) {
+                                void startSocialOAuth(brandId, id, returnTo).then(() =>
+                                  integrationsQuery.refetch(),
+                                );
+                              }
+                            }}
+                          >
+                            <SocialNetworkIcon id={id as SocialNetworkID} className="size-4" />
+                            {t("automationConnectNetwork", { network: t(`manualPublishNetworks.${id}`) })}
+                          </Button>
+                        );
+                      }
                       return (
                         <button
                           key={id}
@@ -263,6 +361,15 @@ function WeekPlanner() {
                     })}
                   </div>
                 </div>
+                <label className="flex min-h-11 cursor-pointer items-center gap-3 sm:col-span-2">
+                  <input
+                    type="checkbox"
+                    className="size-4 rounded border-input"
+                    checked={requireApproval}
+                    onChange={(event) => setRequireApproval(event.target.checked)}
+                  />
+                  <span className="text-sm">{t("automationRequireApproval")}</span>
+                </label>
                 <div className="space-y-2">
                   <Label htmlFor="automation-time">{t("automationTime")}</Label>
                   <Input

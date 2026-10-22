@@ -441,6 +441,10 @@ export type Post = {
   model: string;
   is_ai_generated: boolean;
   origin?: "manual" | "automation" | string;
+  approval_status?: "not_required" | "pending" | "approved" | "rejected" | string;
+  approval_required?: boolean;
+  automation_networks?: string[];
+  overdue?: boolean;
   prompt_preset_id?: string;
   preset?: {
     id: string;
