@@ -12,6 +12,8 @@ import { WizardPresetCarousel } from "@/components/wizard-preset-carousel";
 import {
   WizardPrepare,
   aspectToAPI,
+  defaultCarouselLayout,
+  normalizeLogoPlacement,
   wizardScreenKind,
   type WizardAspect,
   type WizardCarouselLayout,
@@ -36,15 +38,7 @@ import {
 } from "@/lib/api";
 import { appToast } from "@/lib/app-toast";
 import { type LogoPlacement } from "@/lib/backoffice-preset-shared";
-import { logoPlacements } from "@/lib/post-template";
 import { usePresetCopy } from "@/lib/preset-i18n";
-
-function normalizeLogoPlacement(value?: string): LogoPlacement {
-  if (value && (logoPlacements as readonly string[]).includes(value)) {
-    return value as LogoPlacement;
-  }
-  return "bottom_right";
-}
 
 function WizardActions({ children }: { children: ReactNode }) {
   return (
@@ -132,14 +126,7 @@ export function CreationKindPage() {
     setProduct({ name: "", price: "", description: "" });
     setMood("");
     setAspect("square");
-    const key = (recipe.style_key || "").toLowerCase();
-    if (key.includes("myth")) {
-      setCarouselLayout("statement");
-    } else if (key.includes("checklist") || key.includes("steps")) {
-      setCarouselLayout("steps");
-    } else {
-      setCarouselLayout("editorial");
-    }
+    setCarouselLayout(defaultCarouselLayout(recipe));
     setLocalRefs((current) => {
       current.forEach((item) => URL.revokeObjectURL(item.url));
       return [];

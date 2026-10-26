@@ -34,6 +34,24 @@ export function aspectToAPI(aspect: WizardAspect): "1:1" | "4:5" | "9:16" {
   return "1:1";
 }
 
+export function normalizeLogoPlacement(value?: string): LogoPlacement {
+  if (value && (logoPlacements as readonly string[]).includes(value)) {
+    return value as LogoPlacement;
+  }
+  return "bottom_right";
+}
+
+export function defaultCarouselLayout(recipe?: CreativeRecipe | null): WizardCarouselLayout {
+  const key = (recipe?.style_key || "").toLowerCase();
+  if (key.includes("myth")) {
+    return "statement";
+  }
+  if (key.includes("checklist") || key.includes("steps")) {
+    return "steps";
+  }
+  return "editorial";
+}
+
 export function wizardScreenKind(recipe?: CreativeRecipe | null) {
   if (!recipe) {
     return "avatar";

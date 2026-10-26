@@ -17,7 +17,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ApiError, api, type CreativeRecipe, type OutputKind } from "@/lib/api";
+import {
+  WizardPrepare,
+  aspectToAPI,
+  defaultCarouselLayout,
+  normalizeLogoPlacement,
+  wizardScreenKind,
+  type WizardAspect,
+  type WizardCarouselLayout,
+  type WizardCarouselTheme,
+  type WizardMood,
+  type WizardProduct,
+} from "@/components/wizard-prepare";
+import { type WizardLocalRef } from "@/components/wizard-refs";
+import { ApiError, api, apiUpload, type CreativeRecipe, type OutputKind } from "@/lib/api";
+import { type LogoPlacement } from "@/lib/backoffice-preset-shared";
 import { startSocialOAuth } from "@/lib/social-connect";
 import { appToast } from "@/lib/app-toast";
 import { usePresetCopy } from "@/lib/preset-i18n";
@@ -38,6 +52,15 @@ type AutomationSlot = {
   minute: number;
   networks?: string[];
   require_approval?: boolean;
+  brief?: SlotBrief;
+};
+
+type SlotBrief = {
+  theme?: string;
+  layout?: string;
+  mood?: string;
+  aspect?: string;
+  product?: { name: string; price?: string; description?: string };
 };
 
 type AutomationRun = {
@@ -97,6 +120,14 @@ function WeekPlanner() {
   const [time, setTime] = useState("09:00");
   const [networks, setNetworks] = useState<NetworkChoice[]>([]);
   const [requireApproval, setRequireApproval] = useState(false);
+  const [includeLogo, setIncludeLogo] = useState(true);
+  const [logoPlacement, setLogoPlacement] = useState<LogoPlacement>("bottom_right");
+  const [localRefs, setLocalRefs] = useState<WizardLocalRef[]>([]);
+  const [product, setProduct] = useState<WizardProduct>({ name: "", price: "", description: "" });
+  const [carouselTheme, setCarouselTheme] = useState<WizardCarouselTheme>("dark");
+  const [carouselLayout, setCarouselLayout] = useState<WizardCarouselLayout>("editorial");
+  const [mood, setMood] = useState<WizardMood>("");
+  const [aspect, setAspect] = useState<WizardAspect>("square");
   const [openCell, setOpenCell] = useState<{ weekday: number; hour: number } | null>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
 
@@ -122,6 +153,56 @@ function WeekPlanner() {
     enabled: Boolean(organization?.id && brandId && kindCode),
   });
   const recipes = recipesQuery.data?.creative_recipes ?? [];
+  const selectedRecipe = recipes.find((recipe) => recipe.id === presetId) ?? null;
+  const screen = selectedRecipe ? wizardScreenKind(selectedRecipe) : null;
+  const needsProduct = screen === "product" && !product.name.trim();
+
+  const clearRefs = () => {
+    setLocalRefs((current) => {
+      current.forEach((item) => URL.revokeObjectURL(item.url));
+      return [];
+    });
+  };
+
+  const selectPreset = (id: string) => {
+    setPresetId(id);
+    const recipe = recipes.find((item) => item.id === id);
+    setIncludeLogo(recipe?.include_logo ?? true);
+    setLogoPlacement(normalizeLogoPlacement(recipe?.logo_placement));
+    setProduct({ name: "", price: "", description: "" });
+    setCarouselTheme("dark");
+    setCarouselLayout(defaultCarouselLayout(recipe));
+    setMood("");
+    setAspect("square");
+    clearRefs();
+  };
+
+  const addLocalRef = (role: "person" | "location", file: File) => {
+    setLocalRefs((current) => {
+      if (role === "location") {
+        current.filter((item) => item.role === "location").forEach((item) => URL.revokeObjectURL(item.url));
+        return [
+          ...current.filter((item) => item.role !== "location"),
+          { key: crypto.randomUUID(), role, file, url: URL.createObjectURL(file) },
+        ];
+      }
+      if (current.filter((item) => item.role === "person").length >= 3) {
+        return current;
+      }
+      return [...current, { key: crypto.randomUUID(), role, file, url: URL.createObjectURL(file) }];
+    });
+  };
+
+  const removeLocalRef = (key: string) => {
+    setLocalRefs((current) => {
+      const found = current.find((item) => item.key === key);
+      if (found) {
+        URL.revokeObjectURL(found.url);
+      }
+      return current.filter((item) => item.key !== key);
+    });
+  };
+
   const integrationsQuery = useQuery({
     queryKey: ["integrations", brandId],
     queryFn: () =>
@@ -167,11 +248,11 @@ function WeekPlanner() {
     : [];
 
   const add = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const [hourText, minuteText] = time.split(":");
       const hour = Number(hourText);
       const minute = Number(minuteText);
-      return api<{ slot: AutomationSlot }>(`/v1/brands/${brandId}/automation/slots`, {
+      const result = await api<{ slot: AutomationSlot }>(`/v1/brands/${brandId}/automation/slots`, {
         method: "POST",
         body: JSON.stringify({
           prompt_preset_id: presetId,
@@ -180,10 +261,36 @@ function WeekPlanner() {
           minute,
           networks,
           require_approval: requireApproval,
+          ...(screen === "carousel" ? {} : { include_logo: includeLogo, logo_placement: logoPlacement }),
+          ...(screen === "carousel"
+            ? { theme: carouselTheme, layout: carouselLayout }
+            : { mood: mood || undefined, aspect: aspectToAPI(aspect) }),
+          ...(screen === "product"
+            ? {
+                product: {
+                  name: product.name.trim(),
+                  price: product.price.trim(),
+                  description: product.description.trim(),
+                },
+              }
+            : {}),
         }),
       });
+      if (screen === "product" || screen === "avatar") {
+        for (const ref of localRefs) {
+          const form = new FormData();
+          form.append("file", ref.file);
+          form.append("role", ref.role);
+          await apiUpload(
+            `/v1/brands/${brandId}/models/${result.slot.post_model_id}/references?role=${ref.role}`,
+            form,
+          );
+        }
+      }
+      return result;
     },
     onSuccess: async () => {
+      clearRefs();
       await queryClient.invalidateQueries({ queryKey: ["automation", brandId] });
       await queryClient.invalidateQueries({ queryKey: ["automation-counts", organization?.id] });
     },
@@ -201,10 +308,6 @@ function WeekPlanner() {
   });
 
   const clockOk = /^\d{2}:\d{2}/.test(time);
-
-  useEffect(() => {
-    setPresetId("");
-  }, [kindCode]);
 
   useEffect(() => {
     if (!kindCode && outputKinds.length > 0) {
@@ -264,7 +367,13 @@ function WeekPlanner() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="automation-kind">{t("automationKind")}</Label>
-                  <Select value={kindCode} onValueChange={setKindCode}>
+                  <Select
+                    value={kindCode}
+                    onValueChange={(code) => {
+                      setKindCode(code);
+                      selectPreset("");
+                    }}
+                  >
                     <SelectTrigger id="automation-kind">
                       <SelectValue placeholder={t("automationKindPlaceholder")} />
                     </SelectTrigger>
@@ -283,7 +392,7 @@ function WeekPlanner() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="automation-preset">{t("automationPreset")}</Label>
-                  <Select value={presetId} onValueChange={setPresetId} disabled={!kindCode || recipesQuery.isLoading}>
+                  <Select value={presetId} onValueChange={selectPreset} disabled={!kindCode || recipesQuery.isLoading}>
                     <SelectTrigger id="automation-preset">
                       <SelectValue placeholder={t("automationPresetPlaceholder")} />
                     </SelectTrigger>
@@ -298,6 +407,31 @@ function WeekPlanner() {
                 </div>
                 {kindCode && recipes.length === 0 && !recipesQuery.isLoading ? (
                   <p className="text-sm text-ink/70 sm:col-span-2">{t("automationNoLooksForKind")}</p>
+                ) : null}
+                {selectedRecipe ? (
+                  <div className="space-y-2 sm:col-span-2">
+                    <p className="text-sm text-ink/70">{t("automationLookVariablesHint")}</p>
+                    <WizardPrepare
+                      recipe={selectedRecipe}
+                      includeLogo={includeLogo}
+                      onIncludeLogo={setIncludeLogo}
+                      logoPlacement={logoPlacement}
+                      onLogoPlacement={setLogoPlacement}
+                      refs={localRefs}
+                      onAdd={addLocalRef}
+                      onRemove={removeLocalRef}
+                      product={product}
+                      onProduct={setProduct}
+                      carouselTheme={carouselTheme}
+                      onCarouselTheme={setCarouselTheme}
+                      carouselLayout={carouselLayout}
+                      onCarouselLayout={setCarouselLayout}
+                      mood={mood}
+                      onMood={setMood}
+                      aspect={aspect}
+                      onAspect={setAspect}
+                    />
+                  </div>
                 ) : null}
                 <div className="space-y-2">
                   <Label htmlFor="automation-day">{t("automationDay")}</Label>
@@ -389,7 +523,7 @@ function WeekPlanner() {
             <Button
               type="button"
               className="w-full sm:w-auto"
-              disabled={!presetId || !clockOk || networks.length === 0 || add.isPending}
+              disabled={!presetId || !clockOk || networks.length === 0 || needsProduct || add.isPending}
               onClick={() => add.mutate()}
             >
               {t("automationAdd")}
@@ -472,6 +606,7 @@ function WeekPlanner() {
                     <p className="text-sm font-medium">{clock(slot.hour, slot.minute)}</p>
                     <p className="truncate text-xs text-ink/60">{recipeLabel(slot.model_name)}</p>
                     <NetworkMarks networks={slot.networks} />
+                    <BriefMarks brief={slot.brief} />
                   </div>
                   <ConfirmAlertDialog
                     title={t("automationRemove")}
@@ -517,6 +652,7 @@ function WeekPlanner() {
                           <p className="text-sm font-medium">{clock(slot.hour, slot.minute)}</p>
                           <p className="truncate text-xs text-ink/60">{recipeLabel(slot.model_name)}</p>
                           <NetworkMarks networks={slot.networks} />
+                    <BriefMarks brief={slot.brief} />
                         </div>
                         <ConfirmAlertDialog
                           title={t("automationRemove")}
@@ -596,6 +732,46 @@ function NetworkMarks({ networks }: { networks?: string[] }) {
       })}
     </span>
   );
+}
+
+const moodKeys: Record<string, string> = {
+  warm: "moodWarm",
+  bold: "moodBold",
+  calm: "moodCalm",
+  casual: "moodCasual",
+};
+const aspectKeys: Record<string, string> = {
+  "1:1": "aspectSquare",
+  "4:5": "aspectPortrait",
+  "9:16": "aspectStory",
+};
+const themeKeys: Record<string, string> = {
+  dark: "carouselThemeDark",
+  light: "carouselThemeLight",
+  random: "carouselThemeRandom",
+};
+const layoutKeys: Record<string, string> = {
+  editorial: "carouselLayoutEditorial",
+  statement: "carouselLayoutStatement",
+  steps: "carouselLayoutSteps",
+};
+
+function BriefMarks({ brief }: { brief?: SlotBrief }) {
+  const wizard = useTranslations("wizard");
+  if (!brief) {
+    return null;
+  }
+  const labels = [
+    brief.product?.name,
+    brief.mood && moodKeys[brief.mood] ? wizard(moodKeys[brief.mood]) : "",
+    brief.aspect && aspectKeys[brief.aspect] ? wizard(aspectKeys[brief.aspect]) : "",
+    brief.theme && themeKeys[brief.theme] ? wizard(themeKeys[brief.theme]) : "",
+    brief.layout && layoutKeys[brief.layout] ? wizard(layoutKeys[brief.layout]) : "",
+  ].filter((label): label is string => Boolean(label));
+  if (labels.length === 0) {
+    return null;
+  }
+  return <span className="mt-1 block truncate text-xs text-ink/60">{labels.join(" · ")}</span>;
 }
 
 function clock(hour: number, minute: number) {

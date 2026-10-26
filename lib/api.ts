@@ -193,6 +193,103 @@ export type BackofficeBrand = {
   timezone: string;
 };
 
+/** AI cost ledger (ADR-0043). Money is integer micro-units of `currency`. */
+export type AICostTotals = {
+  cost_micros: number;
+  currency: string;
+  calls: number;
+  failed_calls: number;
+  unpriced_calls: number;
+  posts: number;
+  published_posts: number;
+};
+
+export type AICostSplit = { key: string; label: string; cost_micros: number; calls: number };
+
+export type AICostGroup = AICostTotals & { key: string; label: string; splits?: AICostSplit[] };
+
+export type AICostReport = {
+  from: string;
+  to: string;
+  tz: string;
+  group_by: string;
+  totals: AICostTotals;
+  groups: AICostGroup[];
+  stages: string[];
+};
+
+export type AIUsageCall = {
+  id: string;
+  organization_id: string | null;
+  brand_id: string | null;
+  post_id: string | null;
+  preset_id: string | null;
+  stage: string;
+  origin: string;
+  provider: string;
+  model: string;
+  prompt_version: string;
+  status: "succeeded" | "failed";
+  error_code: string;
+  usage_missing: boolean;
+  provider_request_id: string;
+  duration_ms: number;
+  cost_micros: number | null;
+  currency: string;
+  created_at: string;
+  lines: { unit: string; quantity: number; cost_micros: number | null }[];
+};
+
+export type AIPostCost = {
+  post_id: string;
+  status: string;
+  title: string;
+  brand_name: string;
+  organization_name: string;
+  cost_micros: number;
+  currency: string;
+  calls: AIUsageCall[];
+};
+
+export type AIModelPrice = {
+  id: string;
+  provider: string;
+  model: string;
+  unit: string;
+  price_micros: number;
+  per_quantity: number;
+  currency: string;
+  effective_from: string;
+  effective_to: string | null;
+  source: string;
+};
+
+export type AIReconciliationRow = {
+  key: string;
+  estimated_micros: number;
+  billed_micros: number;
+  billed: boolean;
+  unpriced_calls: number;
+};
+
+export type AIReconciliation = {
+  from: string;
+  to: string;
+  currency: string;
+  sync_configured: boolean;
+  last_synced_at: string | null;
+  days: AIReconciliationRow[];
+  models: AIReconciliationRow[];
+};
+
+export type AIMissingPrice = {
+  provider: string;
+  model: string;
+  unit: string;
+  calls: number;
+  last_seen: string;
+};
+
 export type ListMeta = {
   page: number;
   page_size: number;

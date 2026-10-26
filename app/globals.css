@@ -43,6 +43,12 @@ html.light {
   --ruby: #d95c5c;
   --blush: #f8d7d7;
   --sage: #a7c7b8;
+  --chart-1: #d95c5c;
+  --chart-2: #4f9a7f;
+  --chart-3: #e0a03c;
+  --chart-4: #5b7fb0;
+  --chart-5: #9a6ab0;
+  --chart-6: #a39e99;
   --elevation: 0 1px 2px rgb(31 31 31 / 0.05), 0 12px 28px rgb(31 31 31 / 0.08);
   --elevation-hover: 0 4px 8px rgb(31 31 31 / 0.07), 0 18px 40px rgb(31 31 31 / 0.12);
   color-scheme: light;
@@ -85,6 +91,12 @@ html.dark {
   --ruby: #d95c5c;
   --blush: #f8d7d7;
   --sage: #a7c7b8;
+  --chart-1: #e06b6b;
+  --chart-2: #8cc4ad;
+  --chart-3: #f0b75a;
+  --chart-4: #7fa3d6;
+  --chart-5: #b88fd0;
+  --chart-6: #6f6a66;
   --elevation: 0 0 0 1px rgb(250 248 245 / 0.04), 0 10px 28px rgb(0 0 0 / 0.55);
   --elevation-hover: 0 0 0 1px rgb(250 248 245 / 0.06), 0 16px 40px rgb(0 0 0 / 0.62);
   color-scheme: dark;

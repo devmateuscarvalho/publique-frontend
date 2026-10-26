@@ -5,6 +5,7 @@ import {
   Briefcase,
   CalendarDays,
   ChevronRight,
+  CircleDollarSign,
   LayoutTemplate,
   LogOut,
   PenLine,
@@ -141,6 +142,7 @@ function ShellFrame({
   ];
   const backofficeItems: { href: string; label: string; icon: LucideIcon }[] = [
     { href: "/backoffice/presets", label: t("promptPresets"), icon: Cake },
+    { href: "/backoffice/costs", label: t("aiCosts"), icon: CircleDollarSign },
   ];
 
   return (
