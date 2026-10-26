@@ -199,6 +199,16 @@ export type ListMeta = {
   total: number;
 };
 
+export type BrandInterview = {
+  brand_id: string;
+  differentiators: string[];
+  proofs: string[];
+  faqs: string[];
+  opinions: string[];
+  forbidden: string[];
+  updated_at: string;
+};
+
 export type BrandProfile = {
   id: string;
   brand_id: string;
@@ -444,6 +454,21 @@ export type Post = {
   approval_status?: "not_required" | "pending" | "approved" | "rejected" | string;
   approval_required?: boolean;
   automation_networks?: string[];
+  /** Deterministic copy checks, e.g. unsupported_figure. Automation holds flagged drafts for approval. */
+  quality_flags?: string[];
+  quality_score?: number;
+  content_pillar?: string;
+  quality_review?: {
+    score: number;
+    hook: number;
+    specificity: number;
+    brand_fit: number;
+    truthfulness: number;
+    originality: number;
+    issues: string[];
+    model: string;
+    prompt_version: string;
+  };
   overdue?: boolean;
   prompt_preset_id?: string;
   preset?: {
@@ -451,6 +476,7 @@ export type Post = {
     name: string;
     style_key: string;
     output_kind: string;
+    version?: number;
   };
   caption_prompt?: string;
   image_prompt?: string;

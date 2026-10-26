@@ -447,7 +447,18 @@
       "polish": "Polir o detalhe"
     },
     "manualFailed": "A geração falhou. Tente de novo.",
+    "qualityFlagsTitle": "Revise antes de publicar",
+    "qualityFlags": {
+      "unsupported_figure": "O texto cita um número (porcentagem, multiplicador ou valor) que não está nas informações da marca. Confirme ou remova antes de publicar.",
+      "low_quality_score": "A revisão automática deu nota abaixo do mínimo (texto genérico, fora da marca ou com afirmação duvidosa)."
+    },
+    "qualityFlagsHeld": "Por isso a automação não publicou sozinha e o anúncio aguarda aprovação.",
+    "qualityReviewTitle": "Revisão automática: {score}/100",
     "manualRegenerate": "Gerar de novo",
+    "feedbackRejectTitle": "Por que reprovar este anúncio?",
+    "feedbackRegenerateAction": "Gerar outra versão",
+    "feedbackRegenerateTitle": "O que não ficou bom?",
+    "feedbackRegenerateConfirm": "Gerar outra versão",
     "manualBack": "Voltar",
     "manualDelete": "Excluir post",
     "manualDeleteConfirm": "Excluir este post? Ele some da lista. posts já publicados não podem ser excluídos.",
@@ -1052,6 +1063,46 @@
     "approval_required": "Aprove este anúncio antes de publicar.",
     "approval_rejected": "Este anúncio foi reprovado. Edite ou aprove de novo após revisar.",
     "approval_stale": "O conteúdo mudou depois da aprovação. Aprove de novo antes de publicar."
+  },
+  "postFeedback": {
+    "lead": "Opcional. O motivo ensina a IA a acertar nos próximos anúncios desta marca.",
+    "reasonLabel": "Motivo",
+    "reasons": {
+      "generic": "Genérico",
+      "off_brand": "Não parece a marca",
+      "wrong_facts": "Informação errada",
+      "wrong_tone": "Tom errado",
+      "repetitive": "Repetido",
+      "bad_image": "Imagem ruim",
+      "other": "Outro"
+    },
+    "noteLabel": "Comentário (opcional)",
+    "notePlaceholder": "Ex.: nunca prometemos entrega no mesmo dia",
+    "cancel": "Cancelar"
+  },
+  "brandInterview": {
+    "title": "O que só você sabe",
+    "intro": "O site não conta tudo. Responda em poucas linhas (uma por linha): os posts usam isso para soar como a sua marca e nunca inventar números.",
+    "differentiators": {
+      "label": "O que vocês fazem que a concorrência não faz?",
+      "hint": "Ex.: entregamos em 2 horas no centro"
+    },
+    "proofs": {
+      "label": "Provas reais (números, clientes, prêmios)",
+      "hint": "Só o que é verdade e pode ser publicado. Ex.: 1.200 clientes atendidos em 2025"
+    },
+    "faqs": {
+      "label": "Perguntas que os clientes sempre fazem",
+      "hint": "Ex.: vocês atendem aos sábados?"
+    },
+    "opinions": {
+      "label": "O que vocês defendem (ou discordam) no seu mercado",
+      "hint": "Ex.: desconto agressivo destrói o pequeno negócio"
+    },
+    "forbidden": {
+      "label": "O que nunca dizer ou prometer",
+      "hint": "Ex.: entrega grátis, garantia de resultado"
+    }
   },
   "brandBrain": {
     "title": "Perfil da marca",

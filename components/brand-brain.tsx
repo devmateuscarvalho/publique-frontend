@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
+import { BrandInterviewForm } from "@/components/brand-interview";
 import { DataTable, formatListDate, useListQuery, type ListColumn } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -278,6 +279,7 @@ export function BrandBrain({ brand }: { brand: Brand }) {
           />
         </div>
       ) : null}
+      <BrandInterviewForm brandId={brand.id} />
       <PagesTable brandId={brand.id} />
     </div>
   );

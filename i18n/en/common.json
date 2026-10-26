@@ -447,7 +447,18 @@
       "polish": "Polish the detail"
     },
     "manualFailed": "Generation failed. Try again.",
+    "qualityFlagsTitle": "Review before publishing",
+    "qualityFlags": {
+      "unsupported_figure": "The copy cites a figure (percentage, multiplier, or amount) that is not in the brand information. Confirm or remove it before publishing.",
+      "low_quality_score": "The automatic review scored it below the minimum (generic, off-brand, or with a doubtful claim)."
+    },
+    "qualityFlagsHeld": "That is why automation did not publish it on its own and the ad is waiting for approval.",
+    "qualityReviewTitle": "Automatic review: {score}/100",
     "manualRegenerate": "Generate again",
+    "feedbackRejectTitle": "Why are you rejecting this ad?",
+    "feedbackRegenerateAction": "Generate another version",
+    "feedbackRegenerateTitle": "What didn't work?",
+    "feedbackRegenerateConfirm": "Generate another version",
     "manualBack": "Back",
     "manualDelete": "Delete ad",
     "manualDeleteConfirm": "Delete this ad? It leaves the list. Published ads cannot be deleted.",
@@ -1052,6 +1063,46 @@
     "approval_required": "Approve this ad before publishing.",
     "approval_rejected": "This ad was rejected. Edit it or approve again after review.",
     "approval_stale": "Content changed after approval. Approve again before publishing."
+  },
+  "postFeedback": {
+    "lead": "Optional. The reason teaches the AI to get this brand's next ads right.",
+    "reasonLabel": "Reason",
+    "reasons": {
+      "generic": "Generic",
+      "off_brand": "Doesn't sound like us",
+      "wrong_facts": "Wrong information",
+      "wrong_tone": "Wrong tone",
+      "repetitive": "Repetitive",
+      "bad_image": "Bad image",
+      "other": "Other"
+    },
+    "noteLabel": "Comment (optional)",
+    "notePlaceholder": "E.g. we never promise same-day delivery",
+    "cancel": "Cancel"
+  },
+  "brandInterview": {
+    "title": "What only you know",
+    "intro": "Your website does not tell everything. Answer in a few lines (one per line): posts use this to sound like your brand and never invent figures.",
+    "differentiators": {
+      "label": "What do you do that competitors don't?",
+      "hint": "E.g. we deliver downtown within 2 hours"
+    },
+    "proofs": {
+      "label": "Real proof (figures, clients, awards)",
+      "hint": "Only what is true and can be published. E.g. 1,200 customers served in 2025"
+    },
+    "faqs": {
+      "label": "Questions customers always ask",
+      "hint": "E.g. are you open on Saturdays?"
+    },
+    "opinions": {
+      "label": "What you stand for (or disagree with) in your market",
+      "hint": "E.g. aggressive discounts hurt small businesses"
+    },
+    "forbidden": {
+      "label": "What to never say or promise",
+      "hint": "E.g. free shipping, guaranteed results"
+    }
   },
   "brandBrain": {
     "title": "Brand profile",

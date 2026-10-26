@@ -271,7 +271,11 @@ function WeekPlanner() {
                     <SelectContent>
                       {outputKinds.map((kind) => (
                         <SelectItem key={kind.code} value={kind.code}>
-                          {messages.has(`wizard.kinds.${kind.code}`) ? messages(`wizard.kinds.${kind.code}`) : kind.code}
+                          {messages.has(kind.name_key)
+                            ? messages(kind.name_key)
+                            : t.has(`outputKinds.${kind.code}`)
+                              ? t(`outputKinds.${kind.code}`)
+                              : kind.code}
                         </SelectItem>
                       ))}
                     </SelectContent>

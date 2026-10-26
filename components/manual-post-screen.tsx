@@ -23,6 +23,7 @@ import {
 import { useAccount } from "@/components/use-account";
 import { PostCreatingWait } from "@/components/post-creating-wait";
 import { PostGeneratingCaptionLine, PostGeneratingStudio } from "@/components/post-generating-studio";
+import { PostFeedbackPicker, type PostFeedback } from "@/components/post-feedback-picker";
 import { Button } from "@/components/ui/button";
 import { ApiError, api, type CreativeRecipe, type Post, type VisualResponse } from "@/lib/api";
 import { appToast } from "@/lib/app-toast";
@@ -377,8 +378,9 @@ function DraftFeedCard({
                   ? presetCopy.name({
                       name: post.preset.name,
                       style_key: post.preset.style_key,
-                    })
+                    }) + (post.preset.version ? ` v${post.preset.version}` : "")
                   : "",
+                post.content_pillar ?? "",
                 t(post.origin === "automation" ? "originAutomation" : "originManual"),
               ]
                 .filter(Boolean)
@@ -697,16 +699,22 @@ function ManualDraftPage({ postId }: { postId: string }) {
     onError: (error) => appToast.error(errors(mapDraftError(error))),
   });
 
+  const [feedbackMode, setFeedbackMode] = useState<"" | "reject" | "regenerate">("");
   const regenerate = useMutation({
-    mutationFn: () =>
+    mutationFn: (feedback?: PostFeedback) =>
       api<{ post: Post }>(`/v1/brands/${brandId}/posts/${postId}/regenerate`, {
         method: "POST",
-        body: "{}",
+        body: JSON.stringify(feedback ?? {}),
       }),
-    onSuccess: () => postQuery.refetch(),
+    onSuccess: () => {
+      setFeedbackMode("");
+      return postQuery.refetch();
+    },
     onError: (error) => appToast.error(errors(mapDraftError(error))),
   });
   const approvalStatus = post?.approval_status ?? "not_required";
+  const qualityFlags = post?.quality_flags ?? [];
+  const qualityReview = post?.quality_review;
   const approvalUnlocked = approvalStatus === "not_required" || approvalStatus === "approved";
   const approvePost = useMutation({
     mutationFn: () =>
@@ -721,12 +729,13 @@ function ManualDraftPage({ postId }: { postId: string }) {
     onError: (error) => appToast.error(errors(mapDraftError(error))),
   });
   const rejectPost = useMutation({
-    mutationFn: () =>
+    mutationFn: (feedback: PostFeedback) =>
       api<{ post: Post }>(`/v1/brands/${brandId}/posts/${postId}/reject`, {
         method: "POST",
-        body: "{}",
+        body: JSON.stringify(feedback),
       }),
     onSuccess: async () => {
+      setFeedbackMode("");
       appToast.success(t("approvalRejectedToast"));
       await postQuery.refetch();
     },
@@ -763,6 +772,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
     status === "publishing" ||
     (post?.publications ?? []).some((item) => item.status === "published" || item.status === "publishing");
   const canDelete = Boolean(post) && !alreadyPosted && !publish.isPending;
+  const canRegenerateDraft = status === "draft" && Boolean(post?.is_ai_generated) && !alreadyPosted && !publish.isPending;
   const creatingPostId = useRef<string | null>(null);
   const [revealPanel, setRevealPanel] = useState(true);
   const fromCreating = creatingPostId.current === postId;
@@ -843,6 +853,33 @@ function ManualDraftPage({ postId }: { postId: string }) {
             <Button type="button" className="min-h-11 w-full" onClick={() => regenerate.mutate()} disabled={regenerate.isPending}>
               {t("manualRegenerate")}
             </Button>
+          </div>
+        ) : null}
+
+        {qualityFlags.length > 0 && !alreadyPosted ? (
+          <div role="status" className="space-y-2 rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
+            <p className="text-sm font-medium">{t("qualityFlagsTitle")}</p>
+            <ul className="space-y-1 text-sm text-ink/70">
+              {qualityFlags.map((flag) => (
+                <li key={flag}>{t.has(`qualityFlags.${flag}`) ? t(`qualityFlags.${flag}`) : flag}</li>
+              ))}
+            </ul>
+            {post.origin === "automation" && approvalStatus === "pending" ? (
+              <p className="text-xs text-ink/60">{t("qualityFlagsHeld")}</p>
+            ) : null}
+          </div>
+        ) : null}
+
+        {qualityReview && !alreadyPosted ? (
+          <div className="space-y-2 rounded-xl border border-ink/10 p-4">
+            <p className="text-sm font-medium">{t("qualityReviewTitle", { score: qualityReview.score })}</p>
+            {qualityReview.issues.length > 0 ? (
+              <ul className="list-disc space-y-1 pl-5 text-sm text-ink/70">
+                {qualityReview.issues.map((issue) => (
+                  <li key={issue}>{issue}</li>
+                ))}
+              </ul>
+            ) : null}
           </div>
         ) : null}
 
@@ -1081,7 +1118,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
           {post?.overdue && approvalStatus === "pending" ? (
             <p className="text-sm text-amber-800 dark:text-amber-300">{t("approvalOverdueHint")}</p>
           ) : null}
-          {showApprovalActions ? (
+          {showApprovalActions && feedbackMode !== "reject" ? (
             <div className="grid gap-2 sm:grid-cols-2">
               <Button
                 type="button"
@@ -1095,12 +1132,21 @@ function ManualDraftPage({ postId }: { postId: string }) {
                 type="button"
                 variant="outline"
                 className="min-h-11 w-full"
-                onClick={() => rejectPost.mutate()}
+                onClick={() => setFeedbackMode("reject")}
                 disabled={approvePost.isPending || rejectPost.isPending}
               >
                 {t("approvalRejectAction")}
               </Button>
             </div>
+          ) : null}
+          {showApprovalActions && feedbackMode === "reject" ? (
+            <PostFeedbackPicker
+              title={t("feedbackRejectTitle")}
+              confirmLabel={t("approvalRejectAction")}
+              pending={rejectPost.isPending}
+              onConfirm={(feedback) => rejectPost.mutate(feedback)}
+              onCancel={() => setFeedbackMode("")}
+            />
           ) : null}
           {showRejectedHint ? <p className="text-sm text-ink/70">{t("approvalRejectedHint")}</p> : null}
           {canPublish ? (
@@ -1109,6 +1155,27 @@ function ManualDraftPage({ postId }: { postId: string }) {
             </Button>
           ) : null}
         </section>
+
+        {canRegenerateDraft && feedbackMode !== "regenerate" ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-11 w-full"
+            onClick={() => setFeedbackMode("regenerate")}
+            disabled={regenerate.isPending}
+          >
+            {t("feedbackRegenerateAction")}
+          </Button>
+        ) : null}
+        {canRegenerateDraft && feedbackMode === "regenerate" ? (
+          <PostFeedbackPicker
+            title={t("feedbackRegenerateTitle")}
+            confirmLabel={t("feedbackRegenerateConfirm")}
+            pending={regenerate.isPending}
+            onConfirm={(feedback) => regenerate.mutate(feedback)}
+            onCancel={() => setFeedbackMode("")}
+          />
+        ) : null}
 
         {canDelete ? (
           <ConfirmAlertDialog
