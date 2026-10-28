@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { wizardSurfaceState } from "@/components/wizard-ui";
 import type { CreativeRecipe } from "@/lib/api";
+import { soleFitBadge } from "@/lib/look-fits";
 import { usePresetCopy } from "@/lib/preset-i18n";
 import { cn } from "@/lib/utils";
 
@@ -86,6 +87,7 @@ export function WizardPresetCarousel({
         const active = recipe.id === selectedId;
         const aspect = lookAspect(recipe.output_kind);
         const name = copy.name(recipe);
+        const badge = soleFitBadge(recipe.fits);
         return (
           <li key={recipe.id} className="flex min-w-0">
             <div className={cn("flex w-full flex-col overflow-hidden rounded-lg border", wizardSurfaceState(active))}>
@@ -116,6 +118,11 @@ export function WizardPresetCarousel({
                   {kindLabel(recipe.output_kind)}
                 </span>
                 <span className="line-clamp-2 font-display text-sm leading-tight font-semibold">{name}</span>
+                {badge ? (
+                  <span className="w-fit rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                    {t(`fitBadge.${badge}`)}
+                  </span>
+                ) : null}
                 <span className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">{copy.blurb(recipe)}</span>
                 <span
                   className={cn(

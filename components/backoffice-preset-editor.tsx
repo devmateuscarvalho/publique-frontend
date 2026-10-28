@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, ImagePlus, Loader2, X } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import JSZip from "jszip";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,6 +12,7 @@ import { AppShell } from "@/components/app-shell";
 import { BackofficePresetProductFields } from "@/components/backoffice-preset-product-fields";
 import { BackofficePresetTopicStudio } from "@/components/backoffice-preset-topic-studio";
 import { ConfirmAlertDialog } from "@/components/confirm-alert-dialog";
+import { LibraryPhoto } from "@/components/library-photo";
 import {
   BrandTokenButtons,
   EffectivePromptPanel,
@@ -20,17 +21,6 @@ import {
 } from "@/components/backoffice-preset-widgets";
 import { InstagramPhonePreview } from "@/components/instagram-phone-preview";
 import { useAccount } from "@/components/use-account";
-import {
-  Attachment,
-  AttachmentAction,
-  AttachmentActions,
-  AttachmentContent,
-  AttachmentDescription,
-  AttachmentGroup,
-  AttachmentMedia,
-  AttachmentTitle,
-  AttachmentTrigger,
-} from "@/components/ui/attachment";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,22 +28,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ApiError, api, apiUpload, type BackofficeBrand, type OutputKind, type PromptPreset } from "@/lib/api";
+import { ApiError, api, type BackofficeBrand, type BrandItem, type OutputKind, type PromptPreset } from "@/lib/api";
 import { appToast } from "@/lib/app-toast";
 import {
   LAB_BRAND_KEY,
   type BrandToken,
   type LogoPlacement,
-  type RefRole,
   IMAGE_TOKENS,
   TEXT_TOKENS,
   appendLogoClearZone,
   appendReferenceSceneGuidance,
   filterKindTokens,
   findUnknownTokens,
-  formatFileMeta,
-  isLocationRole,
-  isPersonRole,
   readStoredBrandId,
   resolveTemplate,
   scriptKey,
@@ -65,6 +51,8 @@ import {
   presetLabEditPath,
   presetLabPathFromPreset,
 } from "@/lib/content-format";
+import { orderedItemImages } from "@/lib/generation-assets";
+import { itemMatchesLook } from "@/lib/look-fits";
 import { logoPlacements } from "@/lib/post-template";
 
 function imageExtension(url: string, contentType: string): string {
@@ -110,6 +98,7 @@ export function BackofficePresetEditor({
   format?: ContentFormat;
 }) {
   const t = useTranslations("backoffice");
+  const wizardCopy = useTranslations("wizard");
   const creation = useTranslations("creation");
   const messages = useTranslations();
   const errors = useTranslations("errors");
@@ -155,6 +144,8 @@ export function BackofficePresetEditor({
   const [previewPath, setPreviewPath] = useState("");
   const [assets, setAssets] = useState<PromptPreset["assets"]>([]);
   const [labBrandId, setLabBrandId] = useState("");
+  const [labItemId, setLabItemId] = useState("");
+  const [labPlaceId, setLabPlaceId] = useState("");
   const [labProductName, setLabProductName] = useState("");
   const [labProductPrice, setLabProductPrice] = useState("");
   const [labProductDescription, setLabProductDescription] = useState("");
@@ -170,17 +161,10 @@ export function BackofficePresetEditor({
   const [effectiveCaption, setEffectiveCaption] = useState<EffectivePrompt | null>(null);
   const [effectivePrompts, setEffectivePrompts] = useState<EffectivePrompt[]>([]);
   const [includeLogo, setIncludeLogo] = useState(true);
+  const [fitKeys, setFitKeys] = useState<string[]>([]);
   const [logoPlacement, setLogoPlacement] = useState<LogoPlacement>("bottom_right");
   const [resultText, setResultText] = useState("");
-  const [pendingLocationFile, setPendingLocationFile] = useState<File | null>(null);
-  const [pendingLocationPreview, setPendingLocationPreview] = useState("");
-  const [pendingPeopleFiles, setPendingPeopleFiles] = useState<File[]>([]);
-  const [pendingPeoplePreviews, setPendingPeoplePreviews] = useState<string[]>([]);
-  const [uploadingFileName, setUploadingFileName] = useState("");
-  const [uploadingRole, setUploadingRole] = useState<RefRole | "">("");
   const [downloadingImages, setDownloadingImages] = useState(false);
-  const locationFileRef = useRef<HTMLInputElement>(null);
-  const peopleFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setLabBrandId(readStoredBrandId());
@@ -237,17 +221,6 @@ export function BackofficePresetEditor({
   }, [isNew, contentFormat, kindsQuery.data?.output_kinds, kindsQuery.isSuccess, outputKind]);
 
   useEffect(() => {
-    return () => {
-      if (pendingLocationPreview) {
-        URL.revokeObjectURL(pendingLocationPreview);
-      }
-      for (const url of pendingPeoplePreviews) {
-        URL.revokeObjectURL(url);
-      }
-    };
-  }, [pendingLocationPreview, pendingPeoplePreviews]);
-
-  useEffect(() => {
     const preset = presetQuery.data?.prompt_preset;
     if (!preset) {
       return;
@@ -270,6 +243,7 @@ export function BackofficePresetEditor({
     setPreviewPath(preset.preview_path);
     setAssets(preset.assets ?? []);
     setIncludeLogo(preset.include_logo ?? true);
+    setFitKeys((preset.fits ?? []).map((fit) => (fit.subtype ? `${fit.category}:${fit.subtype}` : fit.category)));
     setResultText(preset.result_text || preset.preview_caption || "");
     if (preset.lab_brand_id) {
       setLabBrandId(preset.lab_brand_id);
@@ -315,6 +289,8 @@ export function BackofficePresetEditor({
     }
     const next = brands[0].id;
     setLabBrandId(next);
+    setLabItemId("");
+    setLabPlaceId("");
     window.localStorage.setItem(LAB_BRAND_KEY, next);
   }, [brands, brandsQuery.isLoading, labBrandId]);
 
@@ -329,6 +305,44 @@ export function BackofficePresetEditor({
       }>(`/v1/backoffice/brands/${labBrandId}/prompt-context`),
     enabled: isSuperAdmin && Boolean(labBrandId),
   });
+
+  const labItemsQuery = useQuery({
+    queryKey: ["backoffice-brand-items", labBrandId],
+    queryFn: () => api<{ items: BrandItem[] }>(`/v1/backoffice/brands/${labBrandId}/items`),
+    enabled: isSuperAdmin && Boolean(labBrandId) && contentFormat === "image",
+  });
+  const labFits = useMemo(
+    () =>
+      fitKeys.map((key) => {
+        const [category, subtype = ""] = key.split(":");
+        return { category, subtype };
+      }),
+    [fitKeys],
+  );
+  const labSubjectItems = useMemo(
+    () =>
+      (labItemsQuery.data?.items ?? []).filter(
+        (item) => item.category !== "location" && itemMatchesLook(labFits, outputKind, item),
+      ),
+    [labItemsQuery.data?.items, labFits, outputKind],
+  );
+  const labPlaces = useMemo(
+    () => (labItemsQuery.data?.items ?? []).filter((item) => item.category === "location"),
+    [labItemsQuery.data?.items],
+  );
+  const labSubject = labSubjectItems.find((item) => item.id === labItemId) ?? null;
+  const labPlace = labPlaces.find((item) => item.id === labPlaceId) ?? null;
+  useEffect(() => {
+    if (!labItemsQuery.isSuccess) {
+      return;
+    }
+    if (labItemId && !labSubjectItems.some((item) => item.id === labItemId)) {
+      setLabItemId("");
+    }
+    if (labPlaceId && !labPlaces.some((item) => item.id === labPlaceId)) {
+      setLabPlaceId("");
+    }
+  }, [labItemsQuery.isSuccess, labItemId, labPlaceId, labSubjectItems, labPlaces]);
 
   const [previewDebounced, setPreviewDebounced] = useState({
     promptImage: "",
@@ -371,16 +385,9 @@ export function BackofficePresetEditor({
     labTopicMood,
   ]);
 
-  const locationAssets = useMemo(
-    () => (assets ?? []).filter((item) => isLocationRole(item.role)),
-    [assets],
-  );
-  const peopleAssets = useMemo(
-    () => (assets ?? []).filter((item) => isPersonRole(item.role)),
-    [assets],
-  );
-  const personCount = peopleAssets.length + pendingPeopleFiles.length;
-  const hasLocationRef = locationAssets.length > 0 || Boolean(pendingLocationFile);
+  const subjectPhotoCount = orderedItemImages(labSubject).length;
+  const personCount = outputKind === "avatar" ? (subjectPhotoCount > 0 ? 1 : 0) : Math.min(3, subjectPhotoCount);
+  const hasLocationRef = orderedItemImages(labPlace).length > 0;
 
   const previewPromptsQuery = useQuery({
     queryKey: [
@@ -389,8 +396,8 @@ export function BackofficePresetEditor({
       labBrandId,
       previewDebounced,
       contentFormat,
-      peopleAssets.length,
-      locationAssets.length,
+      labItemId,
+      labPlaceId,
       resultText,
     ],
     queryFn: () =>
@@ -413,13 +420,13 @@ export function BackofficePresetEditor({
           lab_topic_angle: previewDebounced.labTopicAngle,
           lab_topic_mood: previewDebounced.labTopicMood,
           previous_caption: resultText,
+          item_id: labItemId,
+          place_id: labPlaceId,
         }),
       }),
     enabled: isSuperAdmin && !isNew && Boolean(labBrandId) && Boolean(presetId),
     retry: 1,
   });
-  const canAddPerson = personCount < 3;
-  const canAddLocation = !hasLocationRef;
   const imageTokens = useMemo(() => filterKindTokens(IMAGE_TOKENS, outputKind), [outputKind]);
   const textTokens = useMemo(() => filterKindTokens(TEXT_TOKENS, outputKind), [outputKind]);
   const carouselSlides = useMemo(
@@ -563,73 +570,6 @@ export function BackofficePresetEditor({
     promptTokens,
   ]);
 
-  const clearPendingLocation = () => {
-    if (pendingLocationPreview) {
-      URL.revokeObjectURL(pendingLocationPreview);
-    }
-    setPendingLocationFile(null);
-    setPendingLocationPreview("");
-  };
-
-  const clearPendingPeople = () => {
-    for (const url of pendingPeoplePreviews) {
-      URL.revokeObjectURL(url);
-    }
-    setPendingPeopleFiles([]);
-    setPendingPeoplePreviews([]);
-  };
-
-  const stageLocationFile = (file: File | null) => {
-    if (pendingLocationPreview) {
-      URL.revokeObjectURL(pendingLocationPreview);
-    }
-    if (!file) {
-      setPendingLocationFile(null);
-      setPendingLocationPreview("");
-      return;
-    }
-    setPendingLocationFile(file);
-    setPendingLocationPreview(URL.createObjectURL(file));
-  };
-
-  const stagePersonFile = (file: File) => {
-    if (pendingPeopleFiles.length >= 3) {
-      return;
-    }
-    setPendingPeopleFiles((current) => [...current, file]);
-    setPendingPeoplePreviews((current) => [...current, URL.createObjectURL(file)]);
-  };
-
-  const removePendingPerson = (index: number) => {
-    setPendingPeoplePreviews((current) => {
-      const url = current[index];
-      if (url) {
-        URL.revokeObjectURL(url);
-      }
-      return current.filter((_, i) => i !== index);
-    });
-    setPendingPeopleFiles((current) => current.filter((_, i) => i !== index));
-  };
-
-  const uploadRefToPreset = async (targetPresetId: string, file: File, role: RefRole) => {
-    const form = new FormData();
-    // role before file; also in query so multipart parsers cannot drop it
-    form.append("role", role);
-    form.append("file", file);
-    const data = await apiUpload<{ asset: { id: string; media_id: string; role: string; url: string } }>(
-      `/v1/backoffice/prompt-presets/${targetPresetId}/references?role=${encodeURIComponent(role)}`,
-      form,
-    );
-    const saved = data.asset?.role;
-    const ok =
-      (role === "location" && isLocationRole(saved)) ||
-      (role === "person" && isPersonRole(saved));
-    if (!ok) {
-      throw new ApiError("invalid_input");
-    }
-    return data;
-  };
-
   useEffect(() => {
     // Brand change invalidates last-generate payloads; live preview covers edits.
     setEffectiveImage(null);
@@ -646,7 +586,24 @@ export function BackofficePresetEditor({
 
   const selectLabBrand = (id: string) => {
     setLabBrandId(id);
+    setLabItemId("");
+    setLabPlaceId("");
     window.localStorage.setItem(LAB_BRAND_KEY, id);
+  };
+
+  const selectLabItem = (id: string) => {
+    if (!id || id === "none") {
+      setLabItemId("");
+      return;
+    }
+    setLabItemId(id);
+    const item = labSubjectItems.find((row) => row.id === id);
+    if (!item || (item.category !== "product" && item.category !== "service")) {
+      return;
+    }
+    setLabProductName(item.name);
+    setLabProductPrice(item.category === "service" ? "" : item.price_label);
+    setLabProductDescription(item.description);
   };
 
   const insertToken = (
@@ -704,27 +661,20 @@ export function BackofficePresetEditor({
         include_logo: includeLogo,
         logo_placement: logoPlacement,
         enabled,
+        ...(contentFormat === "image"
+          ? {
+              fits: fitKeys.map((key) => {
+                const [category, subtype = ""] = key.split(":");
+                return { category, subtype };
+              }),
+            }
+          : {}),
       };
       if (isNew) {
         const created = await api<{ prompt_preset: PromptPreset }>("/v1/backoffice/prompt-presets", {
           method: "POST",
           body: JSON.stringify(body),
         });
-        const id = created.prompt_preset.id;
-        for (const file of pendingPeopleFiles) {
-          try {
-            await uploadRefToPreset(id, file, "person");
-          } catch {
-            // Preset exists; user can retry upload on the edit screen.
-          }
-        }
-        if (pendingLocationFile) {
-          try {
-            await uploadRefToPreset(id, pendingLocationFile, "location");
-          } catch {
-            // Preset exists; user can retry upload on the edit screen.
-          }
-        }
         return created;
       }
       return api<{ prompt_preset: PromptPreset }>(`/v1/backoffice/prompt-presets/${presetId}`, {
@@ -735,8 +685,6 @@ export function BackofficePresetEditor({
     onSuccess: async (data) => {
       await queryClient.invalidateQueries({ queryKey: ["backoffice-prompt-presets"] });
       if (isNew) {
-        clearPendingLocation();
-        clearPendingPeople();
         router.replace(presetLabPathFromPreset(data.prompt_preset));
         return;
       }
@@ -790,6 +738,8 @@ export function BackofficePresetEditor({
             lab_product_name: labProductName,
             lab_product_price: labProductPrice,
             lab_product_description: labProductDescription,
+            item_id: labItemId,
+            place_id: labPlaceId,
           }),
         },
       );
@@ -856,59 +806,6 @@ export function BackofficePresetEditor({
     onError: (err) => {
       const code = err instanceof ApiError ? err.code : "error";
       appToast.error(errors.has(code) ? errors(code) : code);
-    },
-  });
-
-  const upload = useMutation({
-    mutationFn: async ({ file, role }: { file: File; role: RefRole }) => {
-      if (!presetId) {
-        throw new ApiError("invalid_input");
-      }
-      setUploadingFileName(file.name);
-      setUploadingRole(role);
-      return uploadRefToPreset(presetId, file, role);
-    },
-    onSuccess: async (data) => {
-      setAssets((current) => [...(current ?? []), data.asset]);
-      await queryClient.invalidateQueries({ queryKey: ["backoffice-prompt-preset", presetId] });
-    },
-    onError: (err) => {
-      appToast.error(err instanceof ApiError ? err.code : "error");
-    },
-    onSettled: () => {
-      setUploadingFileName("");
-      setUploadingRole("");
-    },
-  });
-
-  const onLocationFileChange = (file: File | undefined) => {
-    if (!file || !canAddLocation) {
-      return;
-    }
-    if (isNew) {
-      stageLocationFile(file);
-      return;
-    }
-    upload.mutate({ file, role: "location" });
-  };
-
-  const onPersonFileChange = (file: File | undefined) => {
-    if (!file || !canAddPerson) {
-      return;
-    }
-    if (isNew) {
-      stagePersonFile(file);
-      return;
-    }
-    upload.mutate({ file, role: "person" });
-  };
-
-  const removeAsset = useMutation({
-    mutationFn: (assetId: string) =>
-      api(`/v1/backoffice/prompt-presets/${presetId}/references/${assetId}`, { method: "DELETE" }),
-    onSuccess: async (_data, assetId) => {
-      setAssets((current) => (current ?? []).filter((item) => item.id !== assetId));
-      await queryClient.invalidateQueries({ queryKey: ["backoffice-prompt-preset", presetId] });
     },
   });
 
@@ -1055,6 +952,38 @@ export function BackofficePresetEditor({
 
             {contentFormat === "image" ? (
               <div className="space-y-2">
+                <Label>{t("fitLabel")}</Label>
+                <p className="text-sm text-ink/70">{t("fitHint")}</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {(
+                    [
+                      ["product:physical", "fitPhysical"],
+                      ["product:digital", "fitDigital"],
+                      ["service", "fitService"],
+                      ["character:person", "fitCharacter"],
+                      ["location", "fitLocation"],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <label key={key} className="flex min-h-11 items-center gap-3 text-sm">
+                      <input
+                        type="checkbox"
+                        className="size-4 accent-pine"
+                        checked={fitKeys.includes(key)}
+                        onChange={(event) => {
+                          setFitKeys((current) =>
+                            event.target.checked ? [...current, key] : current.filter((item) => item !== key),
+                          );
+                        }}
+                      />
+                      {t(label)}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {contentFormat === "image" ? (
+              <div className="space-y-2">
                 <Label>{t("subjectTag")}</Label>
                 <p className="text-sm text-ink/70">{t("subjectTagHint")}</p>
                 <Select value={outputKind} onValueChange={setOutputKind}>
@@ -1171,195 +1100,73 @@ export function BackofficePresetEditor({
                   <EffectivePromptPanel prompts={imagePanelPrompts} />
                 </div>
 
-                <div className="space-y-5">
-                  <input
-                    ref={locationFileRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    className="hidden"
-                    disabled={upload.isPending || save.isPending || !canAddLocation}
-                    onChange={(e) => {
-                      onLocationFileChange(e.target.files?.[0]);
-                      e.target.value = "";
-                    }}
-                  />
-                  <input
-                    ref={peopleFileRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    className="hidden"
-                    disabled={upload.isPending || save.isPending || !canAddPerson}
-                    onChange={(e) => {
-                      onPersonFileChange(e.target.files?.[0]);
-                      e.target.value = "";
-                    }}
-                  />
-
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm font-medium">{t("refLocation")}</p>
-                      <p className="text-sm text-ink/70">{t("refLocationHint")}</p>
+                {contentFormat === "image" && labBrandId ? (
+                  <div className="space-y-4 rounded-xl border border-border p-3">
+                    <div className="space-y-2">
+                      <Label>{t("labItem")}</Label>
+                      <p className="text-sm text-ink/70">{t("labItemHint")}</p>
+                      <Select value={labItemId || "none"} onValueChange={selectLabItem} disabled={labItemsQuery.isLoading}>
+                        <SelectTrigger className="min-h-11">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">{t("labItemNone")}</SelectItem>
+                          {labSubjectItems.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {item.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {!labItemsQuery.isLoading && labSubjectItems.length === 0 ? (
+                        <p className="text-sm text-ink/70">{t("labItemEmpty")}</p>
+                      ) : null}
+                      {labSubject ? (
+                        <div className="flex flex-wrap gap-2">
+                          {orderedItemImages(labSubject).slice(0, 3).length > 0 ? (
+                            orderedItemImages(labSubject)
+                              .slice(0, 3)
+                              .map((image) => (
+                                <LibraryPhoto
+                                  key={image.id}
+                                  src={image.url}
+                                  emptyLabel={wizardCopy("libraryNoPhoto")}
+                                  className="size-16 rounded-md"
+                                />
+                              ))
+                          ) : (
+                            <LibraryPhoto emptyLabel={wizardCopy("libraryNoPhoto")} className="size-16 rounded-md" />
+                          )}
+                        </div>
+                      ) : null}
                     </div>
-                    <AttachmentGroup className="gap-3">
-                      {canAddLocation && !(upload.isPending && uploadingRole === "location") ? (
-                        <Attachment state="idle" orientation="vertical" className="w-28">
-                          <AttachmentMedia>
-                            <ImagePlus aria-hidden />
-                          </AttachmentMedia>
-                          <AttachmentContent>
-                            <AttachmentTitle>{t("upload")}</AttachmentTitle>
-                            <AttachmentDescription>{t("refLocationOptional")}</AttachmentDescription>
-                          </AttachmentContent>
-                          <AttachmentTrigger
-                            aria-label={t("refLocation")}
-                            className="min-h-11"
-                            disabled={upload.isPending || save.isPending}
-                            onClick={() => locationFileRef.current?.click()}
-                          />
-                        </Attachment>
+                    <div className="space-y-2">
+                      <Label>{t("labPlace")}</Label>
+                      <p className="text-sm text-ink/70">{t("labPlaceHint")}</p>
+                      <Select value={labPlaceId || "none"} onValueChange={(value) => setLabPlaceId(value === "none" ? "" : value)} disabled={labItemsQuery.isLoading}>
+                        <SelectTrigger className="min-h-11">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">{t("labItemNone")}</SelectItem>
+                          {labPlaces.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {item.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {labPlace ? (
+                        <LibraryPhoto
+                          src={orderedItemImages(labPlace)[0]?.url}
+                          emptyLabel={wizardCopy("libraryNoPhoto")}
+                          className="size-16 rounded-md"
+                        />
                       ) : null}
-                      {pendingLocationPreview && pendingLocationFile ? (
-                        <Attachment state="idle" orientation="vertical">
-                          <AttachmentMedia variant="image">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={pendingLocationPreview} alt="" />
-                          </AttachmentMedia>
-                          <AttachmentContent>
-                            <AttachmentTitle>{t("refLocation")}</AttachmentTitle>
-                            <AttachmentDescription>{formatFileMeta(pendingLocationFile)}</AttachmentDescription>
-                          </AttachmentContent>
-                          <AttachmentActions>
-                            <AttachmentAction
-                              aria-label={t("refRemoveLocation")}
-                              onClick={() => stageLocationFile(null)}
-                            >
-                              <X />
-                            </AttachmentAction>
-                          </AttachmentActions>
-                        </Attachment>
-                      ) : null}
-                      {upload.isPending && uploadingRole === "location" ? (
-                        <Attachment state="uploading" orientation="vertical">
-                          <AttachmentMedia>
-                            <Loader2 data-slot="spinner" className="animate-spin" aria-hidden />
-                          </AttachmentMedia>
-                          <AttachmentContent>
-                            <AttachmentTitle>{uploadingFileName || t("upload")}</AttachmentTitle>
-                            <AttachmentDescription>{t("uploading")}</AttachmentDescription>
-                          </AttachmentContent>
-                        </Attachment>
-                      ) : null}
-                      {locationAssets.map((asset) => (
-                        <Attachment key={asset.id} state="done" orientation="vertical">
-                          <AttachmentMedia variant="image">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={asset.url} alt="" />
-                          </AttachmentMedia>
-                          <AttachmentContent>
-                            <AttachmentTitle>{t("refLocation")}</AttachmentTitle>
-                            <AttachmentDescription>{t("references")}</AttachmentDescription>
-                          </AttachmentContent>
-                          {!isNew ? (
-                            <AttachmentActions>
-                              <AttachmentAction
-                                aria-label={t("refRemoveLocation")}
-                                disabled={removeAsset.isPending}
-                                onClick={() => removeAsset.mutate(asset.id)}
-                              >
-                                <X />
-                              </AttachmentAction>
-                            </AttachmentActions>
-                          ) : null}
-                        </Attachment>
-                      ))}
-                    </AttachmentGroup>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm font-medium">{t("refSubjects")}</p>
-                      <p className="text-sm text-ink/70">{t("refSubjectsHint")}</p>
                     </div>
-                    <AttachmentGroup className="gap-3">
-                      {canAddPerson && !(upload.isPending && uploadingRole === "person") ? (
-                        <Attachment state="idle" orientation="vertical" className="w-28">
-                          <AttachmentMedia>
-                            <ImagePlus aria-hidden />
-                          </AttachmentMedia>
-                          <AttachmentContent>
-                            <AttachmentTitle>{t("upload")}</AttachmentTitle>
-                            <AttachmentDescription>
-                              {t("refPeopleCount", { count: personCount, max: 3 })}
-                            </AttachmentDescription>
-                          </AttachmentContent>
-                          <AttachmentTrigger
-                            aria-label={t("refSubjects")}
-                            className="min-h-11"
-                            disabled={upload.isPending || save.isPending}
-                            onClick={() => peopleFileRef.current?.click()}
-                          />
-                        </Attachment>
-                      ) : null}
-                      {pendingPeopleFiles.map((file, index) => (
-                        <Attachment key={`pending-person-${index}`} state="idle" orientation="vertical">
-                          <AttachmentMedia variant="image">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={pendingPeoplePreviews[index]} alt="" />
-                          </AttachmentMedia>
-                          <AttachmentContent>
-                            <AttachmentTitle>{t("refSubjectN", { n: index + 1 })}</AttachmentTitle>
-                            <AttachmentDescription>{formatFileMeta(file)}</AttachmentDescription>
-                          </AttachmentContent>
-                          <AttachmentActions>
-                            <AttachmentAction
-                              aria-label={t("refRemoveSubject")}
-                              onClick={() => removePendingPerson(index)}
-                            >
-                              <X />
-                            </AttachmentAction>
-                          </AttachmentActions>
-                        </Attachment>
-                      ))}
-                      {upload.isPending && uploadingRole === "person" ? (
-                        <Attachment state="uploading" orientation="vertical">
-                          <AttachmentMedia>
-                            <Loader2 data-slot="spinner" className="animate-spin" aria-hidden />
-                          </AttachmentMedia>
-                          <AttachmentContent>
-                            <AttachmentTitle>{uploadingFileName || t("upload")}</AttachmentTitle>
-                            <AttachmentDescription>{t("uploading")}</AttachmentDescription>
-                          </AttachmentContent>
-                        </Attachment>
-                      ) : null}
-                      {peopleAssets.map((asset, index) => (
-                        <Attachment key={asset.id} state="done" orientation="vertical">
-                          <AttachmentMedia variant="image">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={asset.url} alt="" />
-                          </AttachmentMedia>
-                          <AttachmentContent>
-                            <AttachmentTitle>{t("refSubjectN", { n: index + 1 })}</AttachmentTitle>
-                            <AttachmentDescription>{t("refSubjectHint")}</AttachmentDescription>
-                          </AttachmentContent>
-                          {!isNew ? (
-                            <AttachmentActions>
-                              <AttachmentAction
-                                aria-label={t("refRemoveSubject")}
-                                disabled={removeAsset.isPending}
-                                onClick={() => removeAsset.mutate(asset.id)}
-                              >
-                                <X />
-                              </AttachmentAction>
-                            </AttachmentActions>
-                          ) : null}
-                        </Attachment>
-                      ))}
-                    </AttachmentGroup>
                   </div>
-
-                  {isNew ? <p className="text-sm text-ink/55">{t("refUploadNewHint")}</p> : null}
-                  {isNew ? <p className="text-sm text-ink/70">{t("saveBeforeGenerate")}</p> : null}
-                </div>
+                ) : null}
+                {isNew ? <p className="text-sm text-ink/70">{t("saveBeforeGenerate")}</p> : null}
               </TabsContent>
 
               <TabsContent value="text" className="space-y-5">

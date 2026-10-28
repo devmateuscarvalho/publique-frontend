@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 
+import { BrandLibrary } from "@/components/brand-library";
 import { BrandBrain } from "@/components/brand-brain";
 import { BrandIntegrations } from "@/components/integrations-screen";
 import { BrandVisualCard } from "@/components/brand-visual";
@@ -109,10 +110,12 @@ export function BrandWorkspace({
   return (
     <section className="w-full space-y-4">
       <Tabs defaultValue={defaultTab} className="w-full">
-        <TabsList aria-label={t("section")}>
-          <TabsTrigger value="profile">{t("sections.profile")}</TabsTrigger>
-          <TabsTrigger value="visual">{t("sections.visual")}</TabsTrigger>
-          <TabsTrigger value="networks">{t("sections.networks")}</TabsTrigger>
+        <TabsList aria-label={t("section")} className="h-auto w-full flex-wrap">
+          <TabsTrigger className="min-h-11 flex-none sm:flex-1" value="profile">{t("sections.profile")}</TabsTrigger>
+          <TabsTrigger className="min-h-11 flex-none sm:flex-1" value="visual">{t("sections.visual")}</TabsTrigger>
+          <TabsTrigger className="min-h-11 flex-none sm:flex-1" value="library">{t("sections.library")}</TabsTrigger>
+          <TabsTrigger className="min-h-11 flex-none sm:flex-1" value="networks">{t("sections.networks")}</TabsTrigger>
+         
         </TabsList>
 
         <TabsContent value="profile" className="space-y-4">
@@ -165,6 +168,10 @@ export function BrandWorkspace({
 
         <TabsContent value="networks">
           <BrandIntegrations brandId={brand.id} />
+        </TabsContent>
+
+        <TabsContent value="library">
+          <BrandLibrary brandId={brand.id} />
         </TabsContent>
       </Tabs>
 

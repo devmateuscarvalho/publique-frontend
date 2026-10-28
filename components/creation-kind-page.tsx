@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { WizardFitChips } from "@/components/wizard-fit-chips";
 import { WizardLookPreview } from "@/components/wizard-look-preview";
 import { WizardPresetCarousel } from "@/components/wizard-preset-carousel";
 import {
@@ -19,7 +20,6 @@ import {
   type WizardMood,
   type WizardProduct,
 } from "@/components/wizard-prepare";
-import { type WizardLocalRef } from "@/components/wizard-refs";
 import { WIZARD_STEPS, WizardStepper } from "@/components/wizard-stepper";
 import { WizardWhen, type WhenMode } from "@/components/wizard-when";
 import { WizardActions, WizardFrame, WizardStepHeader, wizardEmptyClass, wizardPrimaryClass, wizardSecondaryClass } from "@/components/wizard-ui";
@@ -28,14 +28,16 @@ import { useAccount } from "@/components/use-account";
 import {
   ApiError,
   api,
-  apiUpload,
   type Brand,
+  type BrandItem,
   type CreativeRecipe,
   type OutputKind,
   type Post,
   type PostModel,
   type VisualResponse,
 } from "@/lib/api";
+import { attachModelReferences, generationBrief, needsBrandSubject } from "@/lib/generation-assets";
+import { lookMatchesFit, lookMatchesKind, type OfferingChip } from "@/lib/look-fits";
 import { appToast } from "@/lib/app-toast";
 import { type LogoPlacement } from "@/lib/backoffice-preset-shared";
 import { usePresetCopy } from "@/lib/preset-i18n";
@@ -103,11 +105,13 @@ export function CreationKindPage() {
   const [modelName, setModelName] = useState("");
   const [includeLogo, setIncludeLogo] = useState(true);
   const [logoPlacement, setLogoPlacement] = useState<LogoPlacement>("bottom_right");
-  const [localRefs, setLocalRefs] = useState<WizardLocalRef[]>([]);
   const [product, setProduct] = useState<WizardProduct>({ name: "", price: "", description: "" });
   const [carouselTheme, setCarouselTheme] = useState<WizardCarouselTheme>("dark");
   const [mood, setMood] = useState<WizardMood>("");
   const [aspect, setAspect] = useState<WizardAspect>("square");
+  const [offering, setOffering] = useState<OfferingChip>("");
+  const [libraryItem, setLibraryItem] = useState<BrandItem | null>(null);
+  const [placeItem, setPlaceItem] = useState<BrandItem | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewRecipeId, setPreviewRecipeId] = useState("");
   const [whenMode, setWhenMode] = useState<WhenMode>(presetOn ? "once" : "now");
@@ -169,7 +173,14 @@ export function CreationKindPage() {
   });
 
   const recipes = useMemo(() => recipesQuery.data?.creative_recipes ?? [], [recipesQuery.data?.creative_recipes]);
-  const selectedRecipe = recipes.find((item) => item.id === selectedRecipeId) ?? recipes[0];
+  const visibleRecipes = useMemo(
+    () =>
+      recipes.filter(
+        (item) => lookMatchesKind(item.fits, kindCode) && (kindCode !== "product" || lookMatchesFit(item.fits, offering)),
+      ),
+    [recipes, kindCode, offering],
+  );
+  const selectedRecipe = visibleRecipes.find((item) => item.id === selectedRecipeId) ?? visibleRecipes[0];
   const previewRecipe = recipes.find((item) => item.id === previewRecipeId) ?? null;
 
   const selectRecipe = (recipe: CreativeRecipe) => {
@@ -180,10 +191,8 @@ export function CreationKindPage() {
     setProduct({ name: "", price: "", description: "" });
     setMood("");
     setAspect("square");
-    setLocalRefs((current) => {
-      current.forEach((item) => URL.revokeObjectURL(item.url));
-      return [];
-    });
+    setLibraryItem(null);
+    setPlaceItem(null);
   };
 
   useEffect(() => {
@@ -201,33 +210,21 @@ export function CreationKindPage() {
     }
   }, [publishedQuery.isLoading, publishedQuery.data, publishedKind, brandId, router, searchParams]);
 
-  const addLocalRef = (role: "person" | "location", file: File) => {
-    setLocalRefs((current) => {
-      if (role === "location") {
-        const previous = current.find((item) => item.role === "location");
-        if (previous) {
-          URL.revokeObjectURL(previous.url);
-        }
-        return [
-          ...current.filter((item) => item.role !== "location"),
-          { key: crypto.randomUUID(), role, file, url: URL.createObjectURL(file) },
-        ];
-      }
-      if (current.filter((item) => item.role === "person").length >= 3) {
-        return current;
-      }
-      return [...current, { key: crypto.randomUUID(), role, file, url: URL.createObjectURL(file) }];
-    });
+  const chooseLibraryItem = (next: BrandItem | null) => {
+    setLibraryItem(next);
+    if (next?.category === "product" || next?.category === "service") {
+      setProduct({
+        name: next.name,
+        price: next.category === "service" ? "" : next.price_label,
+        description: next.description,
+      });
+    } else if (!next) {
+      setProduct({ name: "", price: "", description: "" });
+    }
   };
 
-  const removeLocalRef = (key: string) => {
-    setLocalRefs((current) => {
-      const found = current.find((item) => item.key === key);
-      if (found) {
-        URL.revokeObjectURL(found.url);
-      }
-      return current.filter((item) => item.key !== key);
-    });
+  const choosePlace = (next: BrandItem | null) => {
+    setPlaceItem(next);
   };
 
   const generate = useMutation({
@@ -245,26 +242,27 @@ export function CreationKindPage() {
           logo_placement: logoPlacement,
         }),
       });
-      for (const ref of localRefs) {
-        const form = new FormData();
-        form.append("file", ref.file);
-        form.append("role", ref.role);
-        await apiUpload(`/v1/brands/${brandId}/models/${modelResult.model.id}/references?role=${ref.role}`, form);
-      }
       const screen = wizardScreenKind(selectedRecipe);
-      const brief = {
-        ...(screen === "carousel" ? { theme: carouselTheme } : {}),
-        ...(screen === "single" ? { mood: mood || undefined, aspect: aspectToAPI(aspect) } : {}),
-        ...(screen === "product"
-          ? {
-              product: {
-                name: product.name.trim(),
-                price: product.price.trim(),
-                description: product.description.trim(),
-              },
-            }
-          : {}),
-      };
+      if (screen === "product" || screen === "avatar") {
+        await attachModelReferences({
+          brandId,
+          modelId: modelResult.model.id,
+          item: libraryItem,
+          place: placeItem,
+        });
+      }
+      const brief = generationBrief({
+        screen,
+        product,
+        carouselTheme,
+        mood,
+        aspect: aspectToAPI(aspect),
+        fits: selectedRecipe.fits,
+        chip: offering,
+        item: libraryItem,
+        place: placeItem,
+        characterName: libraryItem?.name ?? "",
+      });
       if (whenMode === "weekly") {
         const [hour, minute] = publishTime.split(":");
         await api(`/v1/brands/${brandId}/automation/slots`, {
@@ -303,6 +301,7 @@ export function CreationKindPage() {
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ["models"] });
       void queryClient.invalidateQueries({ queryKey: ["posts"] });
+      void queryClient.invalidateQueries({ queryKey: ["brand-items", brandId] });
       if (result.kind === "slot") {
         router.push(`/calendar?brand=${brandId}`);
         return;
@@ -376,12 +375,26 @@ export function CreationKindPage() {
           <WizardFrame>
             <WizardStepper steps={WIZARD_STEPS} step={2} onGoTo={goToWizardStep} />
             <WizardStepHeader title={t("galleryTitle")} lead={t("galleryLeadKind", { kind: kindTitle })} />
+            {kindCode === "product" ? (
+              <WizardFitChips
+                value={offering}
+                onChange={(next) => {
+                  setOffering(next);
+                  if (next === "service") {
+                    setProduct((current) => ({ ...current, price: "" }));
+                  }
+                }}
+              />
+            ) : null}
             {recipesQuery.isLoading ? <p className="text-sm text-ink/65">{t("loading")}</p> : null}
             {!recipesQuery.isLoading && recipes.length === 0 ? (
               <p className={wizardEmptyClass}>{t("galleryEmpty")}</p>
             ) : null}
+            {!recipesQuery.isLoading && recipes.length > 0 && visibleRecipes.length === 0 ? (
+              <p className={wizardEmptyClass}>{t("galleryFilteredEmpty")}</p>
+            ) : null}
             <WizardPresetCarousel
-              recipes={recipes}
+              recipes={visibleRecipes}
               selectedId={selectedRecipe?.id ?? ""}
               onSelect={selectRecipe}
               onPreview={(recipe) => {
@@ -432,9 +445,6 @@ export function CreationKindPage() {
                 onIncludeLogo={setIncludeLogo}
                 logoPlacement={logoPlacement}
                 onLogoPlacement={setLogoPlacement}
-                refs={localRefs}
-                onAdd={addLocalRef}
-                onRemove={removeLocalRef}
                 product={product}
                 onProduct={setProduct}
                 carouselTheme={carouselTheme}
@@ -443,6 +453,12 @@ export function CreationKindPage() {
                 onMood={setMood}
                 aspect={aspect}
                 onAspect={setAspect}
+                brandId={brandId}
+                offering={offering}
+                libraryItem={libraryItem}
+                onLibraryItem={chooseLibraryItem}
+                placeItem={placeItem}
+                onPlaceItem={choosePlace}
               />
             ) : (
               <div className="space-y-1.5 rounded-lg border border-dashed border-border bg-card p-5">
@@ -460,7 +476,7 @@ export function CreationKindPage() {
                   className={wizardPrimaryClass}
                   disabled={
                     !selectedRecipe ||
-                    (wizardScreenKind(selectedRecipe) === "product" && !product.name.trim())
+                    needsBrandSubject(wizardScreenKind(selectedRecipe), libraryItem, product.name)
                   }
                   onClick={() => setStep("when")}
                 >
@@ -503,7 +519,7 @@ export function CreationKindPage() {
                 className={wizardPrimaryClass}
                 disabled={
                   generate.isPending ||
-                  (wizardScreenKind(selectedRecipe) === "product" && !product.name.trim()) ||
+                  needsBrandSubject(wizardScreenKind(selectedRecipe), libraryItem, product.name) ||
                   (whenMode !== "now" && networks.length === 0) ||
                   (whenMode === "once" && (!publishOn || !publishTime)) ||
                   (whenMode === "weekly" && (!startsOn || !publishTime))

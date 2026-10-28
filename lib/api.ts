@@ -145,6 +145,7 @@ export type CreativeRecipe = {
   guidance_do?: string;
   guidance_dont?: string;
   image_notes?: string;
+  fits?: { category: string; subtype: string }[];
 };
 
 export type PromptPreset = {
@@ -180,6 +181,25 @@ export type PromptPreset = {
   preview_caption?: string;
   image_notes?: string;
   assets?: { id: string; media_id: string; role: string; sort_order?: number; url: string }[];
+  fits?: { category: string; subtype: string }[];
+};
+
+export type BrandItemImage = {
+  id: string;
+  media_id: string;
+  url: string;
+  sort_order: number;
+  is_primary: boolean;
+};
+
+export type BrandItem = {
+  id: string;
+  category: string;
+  subtype: string;
+  name: string;
+  description: string;
+  price_label: string;
+  images: BrandItemImage[];
 };
 
 export type BackofficeBrand = {
@@ -313,8 +333,6 @@ export type BrandProfile = {
   company_name: string;
   description: string;
   audience: string[];
-  services: string[];
-  products: string[];
   tone: string[];
   topics: string[];
   terminology: string[];

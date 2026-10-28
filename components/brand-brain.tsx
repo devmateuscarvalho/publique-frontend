@@ -51,8 +51,6 @@ function emptyProfile(brand: Brand): BrandProfile {
     company_name: brand.name || "",
     description: "",
     audience: [],
-    services: [],
-    products: [],
     tone: [],
     topics: [],
     terminology: [],
@@ -122,6 +120,7 @@ export function BrandBrain({ brand }: { brand: Brand }) {
       if (status === "completed") {
         setDirty(false);
         void queryClient.invalidateQueries({ queryKey: ["profile", brand.id] });
+        void queryClient.invalidateQueries({ queryKey: ["brand-items", brand.id] });
       }
     }
   }, [analysis?.status, brand.id, queryClient]);
@@ -136,6 +135,7 @@ export function BrandBrain({ brand }: { brand: Brand }) {
       await queryClient.invalidateQueries({ queryKey: ["profile", brand.id] });
       await queryClient.invalidateQueries({ queryKey: ["brands"] });
       await queryClient.invalidateQueries({ queryKey: ["brand", brand.id] });
+      await queryClient.invalidateQueries({ queryKey: ["brand-items", brand.id] });
     },
     onError: (error) => appToast.error(errorText(errors, error), toastId),
   });
@@ -154,8 +154,6 @@ export function BrandBrain({ brand }: { brand: Brand }) {
           company_name: profile.company_name,
           description: profile.description,
           audience: cleanList(profile.audience),
-          services: cleanList(profile.services),
-          products: cleanList(profile.products),
           tone: cleanList(profile.tone),
           topics: cleanList(profile.topics),
           terminology: cleanList(profile.terminology),
@@ -250,8 +248,7 @@ export function BrandBrain({ brand }: { brand: Brand }) {
             value={form.description}
             onChange={(value) => updateForm({ ...form, description: value })}
           />
-          <ListField id={`services-${brand.id}`} label={t("services")} hint={t("listHint")} values={form.services} onChange={(values) => updateForm({ ...form, services: values })} />
-          <ListField id={`products-${brand.id}`} label={t("products")} hint={t("listHint")} values={form.products} onChange={(values) => updateForm({ ...form, products: values })} />
+          <p className="text-sm text-ink/70">{t("catalogHint")}</p>
           <ListField id={`audience-${brand.id}`} label={t("audience")} hint={t("listHint")} values={form.audience} onChange={(values) => updateForm({ ...form, audience: values })} />
           <ListField id={`tone-${brand.id}`} label={t("tone")} hint={t("listHint")} values={form.tone} onChange={(values) => updateForm({ ...form, tone: values })} />
           <ListField id={`topics-${brand.id}`} label={t("topics")} hint={t("listHint")} values={form.topics} onChange={(values) => updateForm({ ...form, topics: values })} />

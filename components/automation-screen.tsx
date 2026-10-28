@@ -27,8 +27,10 @@ import {
   type WizardMood,
   type WizardProduct,
 } from "@/components/wizard-prepare";
-import { type WizardLocalRef } from "@/components/wizard-refs";
-import { ApiError, api, apiUpload, type CreativeRecipe, type OutputKind } from "@/lib/api";
+import { WizardFitChips } from "@/components/wizard-fit-chips";
+import { ApiError, api, type BrandItem, type CreativeRecipe, type OutputKind } from "@/lib/api";
+import { attachModelReferences, generationBrief, needsBrandSubject } from "@/lib/generation-assets";
+import { lookMatchesFit, lookMatchesKind, type OfferingChip } from "@/lib/look-fits";
 import { type LogoPlacement } from "@/lib/backoffice-preset-shared";
 import { startSocialOAuth } from "@/lib/social-connect";
 import { appToast } from "@/lib/app-toast";
@@ -119,11 +121,13 @@ function WeekPlanner() {
   const [requireApproval, setRequireApproval] = useState(false);
   const [includeLogo, setIncludeLogo] = useState(true);
   const [logoPlacement, setLogoPlacement] = useState<LogoPlacement>("bottom_right");
-  const [localRefs, setLocalRefs] = useState<WizardLocalRef[]>([]);
   const [product, setProduct] = useState<WizardProduct>({ name: "", price: "", description: "" });
   const [carouselTheme, setCarouselTheme] = useState<WizardCarouselTheme>("dark");
   const [mood, setMood] = useState<WizardMood>("");
   const [aspect, setAspect] = useState<WizardAspect>("square");
+  const [offering, setOffering] = useState<OfferingChip>("");
+  const [libraryItem, setLibraryItem] = useState<BrandItem | null>(null);
+  const [placeItem, setPlaceItem] = useState<BrandItem | null>(null);
   const [openCell, setOpenCell] = useState<{ weekday: number; hour: number } | null>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
 
@@ -148,17 +152,12 @@ function WeekPlanner() {
     },
     enabled: Boolean(organization?.id && brandId && kindCode),
   });
-  const recipes = recipesQuery.data?.creative_recipes ?? [];
+  const recipes = (recipesQuery.data?.creative_recipes ?? []).filter(
+    (recipe) => lookMatchesKind(recipe.fits, kindCode) && (kindCode !== "product" || lookMatchesFit(recipe.fits, offering)),
+  );
   const selectedRecipe = recipes.find((recipe) => recipe.id === presetId) ?? null;
   const screen = selectedRecipe ? wizardScreenKind(selectedRecipe) : null;
-  const needsProduct = screen === "product" && !product.name.trim();
-
-  const clearRefs = () => {
-    setLocalRefs((current) => {
-      current.forEach((item) => URL.revokeObjectURL(item.url));
-      return [];
-    });
-  };
+  const subjectBlocked = needsBrandSubject(screen, libraryItem, product.name);
 
   const selectPreset = (id: string) => {
     setPresetId(id);
@@ -169,33 +168,25 @@ function WeekPlanner() {
     setCarouselTheme("dark");
     setMood("");
     setAspect("square");
-    clearRefs();
+    setLibraryItem(null);
+    setPlaceItem(null);
   };
 
-  const addLocalRef = (role: "person" | "location", file: File) => {
-    setLocalRefs((current) => {
-      if (role === "location") {
-        current.filter((item) => item.role === "location").forEach((item) => URL.revokeObjectURL(item.url));
-        return [
-          ...current.filter((item) => item.role !== "location"),
-          { key: crypto.randomUUID(), role, file, url: URL.createObjectURL(file) },
-        ];
-      }
-      if (current.filter((item) => item.role === "person").length >= 3) {
-        return current;
-      }
-      return [...current, { key: crypto.randomUUID(), role, file, url: URL.createObjectURL(file) }];
-    });
+  const chooseLibraryItem = (next: BrandItem | null) => {
+    setLibraryItem(next);
+    if (next?.category === "product" || next?.category === "service") {
+      setProduct({
+        name: next.name,
+        price: next.category === "service" ? "" : next.price_label,
+        description: next.description,
+      });
+    } else if (!next) {
+      setProduct({ name: "", price: "", description: "" });
+    }
   };
 
-  const removeLocalRef = (key: string) => {
-    setLocalRefs((current) => {
-      const found = current.find((item) => item.key === key);
-      if (found) {
-        URL.revokeObjectURL(found.url);
-      }
-      return current.filter((item) => item.key !== key);
-    });
+  const choosePlace = (next: BrandItem | null) => {
+    setPlaceItem(next);
   };
 
   const integrationsQuery = useQuery({
@@ -247,6 +238,20 @@ function WeekPlanner() {
       const [hourText, minuteText] = time.split(":");
       const hour = Number(hourText);
       const minute = Number(minuteText);
+      const brief = screen
+        ? generationBrief({
+            screen,
+            product,
+            carouselTheme,
+            mood,
+            aspect: aspectToAPI(aspect),
+            fits: selectedRecipe?.fits,
+            chip: offering,
+            item: libraryItem,
+            place: placeItem,
+            characterName: libraryItem?.name ?? "",
+          })
+        : {};
       const result = await api<{ slot: AutomationSlot }>(`/v1/brands/${brandId}/automation/slots`, {
         method: "POST",
         body: JSON.stringify({
@@ -257,36 +262,23 @@ function WeekPlanner() {
           networks,
           require_approval: requireApproval,
           ...(screen === "carousel" ? {} : { include_logo: includeLogo, logo_placement: logoPlacement }),
-          ...(screen === "carousel" ? { theme: carouselTheme } : {}),
-          ...(screen === "single" ? { mood: mood || undefined, aspect: aspectToAPI(aspect) } : {}),
-          ...(screen === "product"
-            ? {
-                product: {
-                  name: product.name.trim(),
-                  price: product.price.trim(),
-                  description: product.description.trim(),
-                },
-              }
-            : {}),
+          ...brief,
         }),
       });
-      if (screen === "product" || screen === "avatar") {
-        for (const ref of localRefs) {
-          const form = new FormData();
-          form.append("file", ref.file);
-          form.append("role", ref.role);
-          await apiUpload(
-            `/v1/brands/${brandId}/models/${result.slot.post_model_id}/references?role=${ref.role}`,
-            form,
-          );
-        }
+      if ((screen === "product" || screen === "avatar") && selectedRecipe) {
+        await attachModelReferences({
+          brandId,
+          modelId: result.slot.post_model_id,
+          item: libraryItem,
+          place: placeItem,
+        });
       }
       return result;
     },
     onSuccess: async () => {
-      clearRefs();
       await queryClient.invalidateQueries({ queryKey: ["automation", brandId] });
       await queryClient.invalidateQueries({ queryKey: ["automation-counts", organization?.id] });
+      await queryClient.invalidateQueries({ queryKey: ["brand-items", brandId] });
     },
     onError: (error) => appToast.error(errors(runError(error))),
   });
@@ -365,6 +357,7 @@ function WeekPlanner() {
                     value={kindCode}
                     onValueChange={(code) => {
                       setKindCode(code);
+                      setOffering("");
                       selectPreset("");
                     }}
                   >
@@ -384,9 +377,26 @@ function WeekPlanner() {
                     </SelectContent>
                   </Select>
                 </div>
+                {kindCode === "product" ? (
+                  <div className="sm:col-span-2">
+                    <WizardFitChips
+                      value={offering}
+                      onChange={(next) => {
+                        if (next === offering) {
+                          return;
+                        }
+                        setOffering(next);
+                        if (next === "service") {
+                          setProduct((current) => ({ ...current, price: "" }));
+                        }
+                        selectPreset("");
+                      }}
+                    />
+                  </div>
+                ) : null}
                 <div className="space-y-2">
                   <Label htmlFor="automation-preset">{t("automationPreset")}</Label>
-                  <Select value={presetId} onValueChange={selectPreset} disabled={!kindCode || recipesQuery.isLoading}>
+                  <Select value={selectedRecipe?.id ?? ""} onValueChange={selectPreset} disabled={!kindCode || recipesQuery.isLoading}>
                     <SelectTrigger id="automation-preset">
                       <SelectValue placeholder={t("automationPresetPlaceholder")} />
                     </SelectTrigger>
@@ -411,9 +421,6 @@ function WeekPlanner() {
                       onIncludeLogo={setIncludeLogo}
                       logoPlacement={logoPlacement}
                       onLogoPlacement={setLogoPlacement}
-                      refs={localRefs}
-                      onAdd={addLocalRef}
-                      onRemove={removeLocalRef}
                       product={product}
                       onProduct={setProduct}
                       carouselTheme={carouselTheme}
@@ -422,6 +429,12 @@ function WeekPlanner() {
                       onMood={setMood}
                       aspect={aspect}
                       onAspect={setAspect}
+                      brandId={brandId}
+                      offering={offering}
+                      libraryItem={libraryItem}
+                      onLibraryItem={chooseLibraryItem}
+                      placeItem={placeItem}
+                      onPlaceItem={choosePlace}
                     />
                   </div>
                 ) : null}
@@ -515,7 +528,7 @@ function WeekPlanner() {
             <Button
               type="button"
               className="w-full sm:w-auto"
-              disabled={!presetId || !clockOk || networks.length === 0 || needsProduct || add.isPending}
+              disabled={!selectedRecipe || !clockOk || networks.length === 0 || subjectBlocked || add.isPending}
               onClick={() => add.mutate()}
             >
               {t("automationAdd")}

@@ -140,7 +140,7 @@ function ShellFrame({
     { href: "/posts", label: t("manualPost"), icon: PenLine },
     { href: "/calendar", label: t("calendar"), icon: CalendarDays },
   ];
-  const showCreateFab = !pathname.startsWith("/create");
+  const showCreateFab = !pathname.startsWith("/create") && !pathname.startsWith("/backoffice");
   const settingsItems: { href: string; label: string; icon: LucideIcon }[] = [
     { href: "/settings/users", label: t("users"), icon: Users },
     { href: "/settings/organization", label: t("organization"), icon: Briefcase },

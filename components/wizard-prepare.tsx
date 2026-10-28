@@ -3,14 +3,13 @@
 import { useTranslations } from "next-intl";
 
 import { LogoPlacementGrid } from "@/components/backoffice-preset-widgets";
-import { WizardRefs, type WizardLocalRef } from "@/components/wizard-refs";
-import { Input } from "@/components/ui/input";
+import { WizardLibrary } from "@/components/wizard-library";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { wizardControlClass, wizardHintClass, wizardPanelClass, WizardStepHeader } from "@/components/wizard-ui";
-import type { CreativeRecipe } from "@/lib/api";
+import type { BrandItem, CreativeRecipe } from "@/lib/api";
 import type { LogoPlacement } from "@/lib/backoffice-preset-shared";
+import { type OfferingChip } from "@/lib/look-fits";
 import { logoPlacements } from "@/lib/post-template";
 
 export type WizardProduct = {
@@ -123,9 +122,6 @@ export function WizardPrepare({
   onIncludeLogo,
   logoPlacement,
   onLogoPlacement,
-  refs,
-  onAdd,
-  onRemove,
   product,
   onProduct,
   carouselTheme,
@@ -134,15 +130,18 @@ export function WizardPrepare({
   onMood,
   aspect,
   onAspect,
+  brandId,
+  offering,
+  libraryItem,
+  onLibraryItem,
+  placeItem,
+  onPlaceItem,
 }: {
   recipe?: CreativeRecipe | null;
   includeLogo: boolean;
   onIncludeLogo: (value: boolean) => void;
   logoPlacement: LogoPlacement;
   onLogoPlacement: (value: LogoPlacement) => void;
-  refs: WizardLocalRef[];
-  onAdd: (role: "person" | "location", file: File) => void;
-  onRemove: (key: string) => void;
   product: WizardProduct;
   onProduct: (next: WizardProduct) => void;
   carouselTheme: WizardCarouselTheme;
@@ -151,6 +150,12 @@ export function WizardPrepare({
   onMood: (next: WizardMood) => void;
   aspect: WizardAspect;
   onAspect: (next: WizardAspect) => void;
+  brandId: string;
+  offering: OfferingChip;
+  libraryItem: BrandItem | null;
+  onLibraryItem: (item: BrandItem | null) => void;
+  placeItem: BrandItem | null;
+  onPlaceItem: (item: BrandItem | null) => void;
 }) {
   const t = useTranslations("wizard");
   const kind = wizardScreenKind(recipe);
@@ -158,7 +163,6 @@ export function WizardPrepare({
   const showRefs = kind === "product" || kind === "avatar";
   const showCarousel = kind === "carousel";
   const showImageDirection = kind === "single";
-
   return (
     <div className="space-y-5">
       <WizardStepHeader title={t(`prepareTitle.${kind}`)} lead={t(`prepareLead.${kind}`)} />
@@ -237,39 +241,18 @@ export function WizardPrepare({
         </div>
       ) : null}
 
-      {kind === "product" ? (
-        <div className={`${wizardPanelClass} grid gap-4 p-4 sm:grid-cols-2 sm:p-5`}>
-          <div className="space-y-1.5">
-            <Label htmlFor="wizard-product-name">{t("productName")}</Label>
-            <Input
-              id="wizard-product-name"
-              className={wizardControlClass}
-              value={product.name}
-              onChange={(event) => onProduct({ ...product, name: event.target.value })}
-              autoComplete="off"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="wizard-product-price">{t("productPrice")}</Label>
-            <Input
-              id="wizard-product-price"
-              className={wizardControlClass}
-              value={product.price}
-              onChange={(event) => onProduct({ ...product, price: event.target.value })}
-              placeholder={t("productPricePlaceholder")}
-              autoComplete="off"
-            />
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="wizard-product-description">{t("productDescription")}</Label>
-            <Textarea
-              id="wizard-product-description"
-              className="min-h-28 resize-y border-border bg-background text-base shadow-none focus-visible:ring-2 focus-visible:ring-pine/25"
-              value={product.description}
-              onChange={(event) => onProduct({ ...product, description: event.target.value })}
-            />
-          </div>
-        </div>
+      {showRefs ? (
+        <WizardLibrary
+          brandId={brandId}
+          recipe={recipe}
+          offering={offering}
+          item={libraryItem}
+          onItem={onLibraryItem}
+          product={product}
+          onProduct={onProduct}
+          place={placeItem}
+          onPlace={onPlaceItem}
+        />
       ) : null}
 
       {showLogo ? (
@@ -282,14 +265,6 @@ export function WizardPrepare({
         />
       ) : null}
 
-      {showRefs ? (
-        <WizardRefs
-          outputKind={kind === "product" ? "product" : "avatar"}
-          refs={refs}
-          onAdd={onAdd}
-          onRemove={onRemove}
-        />
-      ) : null}
     </div>
   );
 }
