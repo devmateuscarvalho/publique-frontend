@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { WizardLookPreview } from "@/components/wizard-look-preview";
@@ -66,6 +66,23 @@ function isoWeekday(iso: string) {
   return String(weekday === 0 ? 7 : weekday);
 }
 
+function createHubHref(brandId: string, params: { get: (key: string) => string | null }) {
+  const search = new URLSearchParams();
+  if (brandId) {
+    search.set("brand", brandId);
+  }
+  const on = params.get("on") ?? "";
+  const at = params.get("at") ?? "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(on)) {
+    search.set("on", on);
+  }
+  if (/^\d{2}:\d{2}$/.test(at)) {
+    search.set("at", at);
+  }
+  const query = search.toString();
+  return query ? `/create?${query}` : "/create";
+}
+
 export function CreationKindPage() {
   const t = useTranslations("wizard");
   const phone = useTranslations("backoffice");
@@ -104,6 +121,19 @@ export function CreationKindPage() {
   const [endsOn, setEndsOn] = useState("");
   const [networks, setNetworks] = useState<string[]>([]);
   const [requireApproval, setRequireApproval] = useState(false);
+  const scheduleKey = presetOn ? `${presetOn}|${presetAt}` : "";
+  const appliedSchedule = useRef("");
+  useEffect(() => {
+    if (!scheduleKey || appliedSchedule.current === scheduleKey) {
+      return;
+    }
+    appliedSchedule.current = scheduleKey;
+    setWhenMode("once");
+    setPublishOn(presetOn);
+    setPublishTime(presetAt || "09:00");
+    setWeekday(isoWeekday(presetOn));
+    setStartsOn(presetOn);
+  }, [scheduleKey, presetOn, presetAt]);
 
   const publishedQuery = useQuery({
     queryKey: ["output-kinds", "published"],
@@ -161,18 +191,18 @@ export function CreationKindPage() {
 
   useEffect(() => {
     if (!brandId && !loading) {
-      router.replace("/create");
+      router.replace(createHubHref("", searchParams));
     }
-  }, [brandId, loading, router]);
+  }, [brandId, loading, router, searchParams]);
 
   useEffect(() => {
     if (publishedQuery.isLoading || !publishedQuery.data) {
       return;
     }
     if (!publishedKind) {
-      router.replace(brandId ? `/create?brand=${brandId}` : "/create");
+      router.replace(createHubHref(brandId, searchParams));
     }
-  }, [publishedQuery.isLoading, publishedQuery.data, publishedKind, brandId, router]);
+  }, [publishedQuery.isLoading, publishedQuery.data, publishedKind, brandId, router, searchParams]);
 
   const addLocalRef = (role: "person" | "location", file: File) => {
     setLocalRefs((current) => {
@@ -303,7 +333,7 @@ export function CreationKindPage() {
   };
 
   const backToHub = () => {
-    router.push(brandId ? `/create?brand=${brandId}` : "/create");
+    router.push(createHubHref(brandId, searchParams));
   };
 
   if (loading || publishedQuery.isLoading || !publishedKind) {
