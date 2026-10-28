@@ -41,7 +41,7 @@ export function WizardLookPreview({
       <SheetContent
         side="bottom"
         className={cn(
-          "inset-auto bottom-auto left-1/2 right-auto top-1/2 h-auto w-auto max-w-[min(22rem,calc(100vw-1.5rem))] -translate-x-1/2 -translate-y-1/2",
+          "inset-auto top-1/2 right-auto bottom-auto left-1/2 h-auto max-h-[calc(100svh-1.5rem)] w-auto max-w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto",
           "border-0 bg-transparent p-0 shadow-none",
           "data-[state=closed]:slide-out-to-bottom-0 data-[state=open]:slide-in-from-bottom-0",
           "[&>button]:hidden",
@@ -49,7 +49,7 @@ export function WizardLookPreview({
       >
         <SheetTitle className="sr-only">{lookName}</SheetTitle>
         <SheetDescription className="sr-only">{t("previewTitle")}</SheetDescription>
-        <div className="w-[min(22rem,calc(100vw-1.5rem),calc((100svh-2rem)*433/882))]">
+        <div className="w-[min(22rem,calc(100vw-2rem),calc((100svh-2rem)*433/882))]">
           <InstagramPhonePreview
             brandName={brandName}
             logoUrl={visualLogoUrl(visual)}

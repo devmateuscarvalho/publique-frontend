@@ -7,6 +7,8 @@ import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { wizardPanelClass } from "@/components/wizard-ui";
+import { cn } from "@/lib/utils";
 
 function displayWebsite(raw: string): string {
   return raw.trim().replace(/^https?:\/\//i, "");
@@ -52,28 +54,28 @@ export function WizardScanStatus({
   const value = state === "ready" ? 100 : busyValue;
 
   return (
-    <div className="space-y-4 rounded-2xl border border-input bg-card p-4 shadow-sm md:p-5">
-      <div className="flex items-start gap-3">
+    <div className={cn(wizardPanelClass, "space-y-4 p-4 md:p-6")}>
+      <div className="flex items-start gap-3.5">
         <div
           className={
             state === "ready"
-              ? "grid size-11 shrink-0 place-items-center rounded-2xl bg-pine/10 text-pine"
+              ? "grid size-11 shrink-0 place-items-center rounded-md bg-pine/10 text-pine"
               : state === "failed"
-                ? "grid size-11 shrink-0 place-items-center rounded-2xl bg-destructive/10 text-destructive"
-                : "grid size-11 shrink-0 place-items-center rounded-2xl bg-muted text-ink/70"
+                ? "grid size-11 shrink-0 place-items-center rounded-md bg-destructive/10 text-destructive"
+                : "grid size-11 shrink-0 place-items-center rounded-md bg-muted text-ink/70"
           }
         >
-          {state === "busy" ? <Loader2 className="size-5 animate-spin" aria-hidden /> : null}
+          {state === "busy" ? <Loader2 className="size-5 animate-spin motion-reduce:animate-none" aria-hidden /> : null}
           {state === "ready" ? <Check className="size-5" aria-hidden /> : null}
           {state === "failed" ? <span className="text-lg font-semibold">!</span> : null}
         </div>
         <div className="min-w-0 space-y-1">
-          <h3 className="text-base font-semibold">
+          <h3 className="font-display text-lg leading-tight font-semibold tracking-tight">
             {state === "busy" ? t("scanProgressTitle", { host }) : null}
             {state === "ready" ? t("scanReadyTitle") : null}
             {state === "failed" ? t("scanFailed") : null}
           </h3>
-          <p className="text-sm text-ink/70">
+          <p className="max-w-2xl text-sm leading-relaxed text-ink/65">
             {state === "busy" ? t("scanProgressLead") : null}
             {state === "ready" ? t("scanReadyLead") : null}
             {state === "failed" ? t("scanRetryLead") : null}
@@ -81,24 +83,22 @@ export function WizardScanStatus({
           {brandName ? (
             <p className="pt-1 text-sm">
               <span className="font-medium">{brandName}</span>
-              {segment ? <span className="text-ink/55"> · {segment}</span> : null}
+              {segment ? <span className="text-ink/50"> · {segment}</span> : null}
             </p>
           ) : null}
         </div>
       </div>
 
-      {state === "busy" ? (
-        <Progress value={value} className="h-2 bg-pine/15 [&>div]:bg-pine" />
-      ) : null}
+      {state === "busy" ? <Progress value={value} className="h-1.5 bg-pine/15 [&>div]:bg-pine" /> : null}
 
       {state === "failed" && onWebsiteChange ? (
         <label className="block" htmlFor="wizard-scan-retry-url">
           <span className="sr-only">{t("newBrandWebsiteHint")}</span>
-          <div className="flex min-h-12 items-center rounded-xl border border-input bg-muted px-3 focus-within:ring-1 focus-within:ring-ring">
-            <span className="shrink-0 pr-1 text-sm text-ink/40">https://</span>
+          <div className="flex h-11 items-center rounded-md border border-border bg-background px-3 transition-colors duration-200 focus-within:border-pine/70 focus-within:ring-2 focus-within:ring-pine/25 motion-reduce:transition-none">
+            <span className="shrink-0 pr-1 text-base text-ink/40">https://</span>
             <input
               id="wizard-scan-retry-url"
-              className="min-h-12 w-full bg-transparent text-base outline-none placeholder:text-muted-foreground"
+              className="h-11 w-full min-w-0 bg-transparent text-base outline-none placeholder:text-muted-foreground"
               value={displayWebsite(website ?? "")}
               onChange={(event) => onWebsiteChange(event.target.value)}
               inputMode="url"
@@ -111,21 +111,16 @@ export function WizardScanStatus({
         </label>
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <Button asChild variant="ghost" className="min-h-11 px-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
+        <Button asChild variant="ghost" className="min-h-11 px-3 text-ink/70">
           <Link href={brandHref}>{t("editBrand")}</Link>
         </Button>
         {state === "failed" ? (
-          <Button
-            type="button"
-            className="min-h-11 min-w-28"
-            disabled={!displayWebsite(website ?? "")}
-            onClick={onRetry}
-          >
+          <Button type="button" className="min-h-11 w-full sm:w-auto sm:min-w-36" disabled={!displayWebsite(website ?? "")} onClick={onRetry}>
             {t("scanRetry")}
           </Button>
         ) : (
-          <Button type="button" className="min-h-11 min-w-28" disabled={!canContinue || state === "busy"} onClick={onContinue}>
+          <Button type="button" className="min-h-11 w-full sm:w-auto sm:min-w-36" disabled={!canContinue || state === "busy"} onClick={onContinue}>
             {t("next")}
           </Button>
         )}

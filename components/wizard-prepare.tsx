@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { wizardControlClass, wizardHintClass, wizardPanelClass, WizardStepHeader } from "@/components/wizard-ui";
 import type { CreativeRecipe } from "@/lib/api";
 import type { LogoPlacement } from "@/lib/backoffice-preset-shared";
 import { logoPlacements } from "@/lib/post-template";
@@ -19,7 +20,6 @@ export type WizardProduct = {
 };
 
 export type WizardCarouselTheme = "light" | "dark" | "random";
-export type WizardCarouselLayout = "editorial" | "statement" | "steps";
 export type WizardMood = "" | "warm" | "bold" | "calm" | "casual";
 /** Prepare UI keys — mapped to API `1:1` | `4:5` | `9:16` on generate. */
 export type WizardAspect = "square" | "portrait" | "story";
@@ -39,17 +39,6 @@ export function normalizeLogoPlacement(value?: string): LogoPlacement {
     return value as LogoPlacement;
   }
   return "bottom_right";
-}
-
-export function defaultCarouselLayout(recipe?: CreativeRecipe | null): WizardCarouselLayout {
-  const key = (recipe?.style_key || "").toLowerCase();
-  if (key.includes("myth")) {
-    return "statement";
-  }
-  if (key.includes("checklist") || key.includes("steps")) {
-    return "steps";
-  }
-  return "editorial";
 }
 
 export function wizardScreenKind(recipe?: CreativeRecipe | null) {
@@ -85,23 +74,23 @@ function WizardLogoControls({
   const creation = useTranslations("creation");
 
   return (
-    <div className="space-y-3 rounded-2xl border border-input bg-card p-4 shadow-sm">
+    <div className={`${wizardPanelClass} space-y-3 p-4 md:p-5`}>
       <label className="flex min-h-11 items-start gap-3 text-sm">
         <input
           type="checkbox"
-          className="mt-1 size-4 rounded border-input"
+          className="mt-0.5 size-4 shrink-0 accent-pine"
           checked={includeLogo}
           onChange={(event) => onIncludeLogo(event.target.checked)}
         />
         <span>
           <span className="block font-medium">{t("includeLogo")}</span>
-          <span className="mt-0.5 block text-ink/70">{hint}</span>
+          <span className={`mt-0.5 block ${wizardHintClass}`}>{hint}</span>
         </span>
       </label>
       {includeLogo ? (
-        <div className="space-y-2 border-t border-input pt-3">
+        <div className="space-y-2 border-t border-border pt-4">
           <Label>{t("logoAdvanced")}</Label>
-          <p className="text-sm text-ink/70">{t("logoPlacementHint")}</p>
+          <p className={wizardHintClass}>{t("logoPlacementHint")}</p>
           <Select
             value={logoPlacement}
             onValueChange={(value) => {
@@ -110,7 +99,7 @@ function WizardLogoControls({
               }
             }}
           >
-            <SelectTrigger className="min-h-11">
+            <SelectTrigger className={wizardControlClass}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -141,8 +130,6 @@ export function WizardPrepare({
   onProduct,
   carouselTheme,
   onCarouselTheme,
-  carouselLayout,
-  onCarouselLayout,
   mood,
   onMood,
   aspect,
@@ -160,8 +147,6 @@ export function WizardPrepare({
   onProduct: (next: WizardProduct) => void;
   carouselTheme: WizardCarouselTheme;
   onCarouselTheme: (next: WizardCarouselTheme) => void;
-  carouselLayout: WizardCarouselLayout;
-  onCarouselLayout: (next: WizardCarouselLayout) => void;
   mood: WizardMood;
   onMood: (next: WizardMood) => void;
   aspect: WizardAspect;
@@ -172,67 +157,40 @@ export function WizardPrepare({
   const showLogo = kind !== "carousel";
   const showRefs = kind === "product" || kind === "avatar";
   const showCarousel = kind === "carousel";
-  const showImageDirection = kind === "product" || kind === "avatar" || kind === "single";
+  const showImageDirection = kind === "single";
 
   return (
     <div className="space-y-5">
-      <div className="space-y-1.5">
-        <h2 className="text-lg font-semibold md:text-xl">{t(`prepareTitle.${kind}`)}</h2>
-        <p className="text-sm text-ink/70">{t(`prepareLead.${kind}`)}</p>
-      </div>
+      <WizardStepHeader title={t(`prepareTitle.${kind}`)} lead={t(`prepareLead.${kind}`)} />
 
       {showCarousel ? (
-        <div className="space-y-4 rounded-2xl border border-input bg-card p-4 shadow-sm">
-          <div className="space-y-2">
-            <Label htmlFor="wizard-carousel-theme">{t("carouselTheme")}</Label>
-            <p className="text-sm text-ink/70">{t("carouselThemeHint")}</p>
-            <Select
-              value={carouselTheme}
-              onValueChange={(value) => {
-                const next: WizardCarouselTheme =
-                  value === "light" || value === "random" ? value : "dark";
-                onCarouselTheme(next);
-              }}
-            >
-              <SelectTrigger id="wizard-carousel-theme" className="min-h-11">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="dark">{t("carouselThemeDark")}</SelectItem>
-                <SelectItem value="light">{t("carouselThemeLight")}</SelectItem>
-                <SelectItem value="random">{t("carouselThemeRandom")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2 border-t border-input pt-3">
-            <Label htmlFor="wizard-carousel-layout">{t("carouselLayout")}</Label>
-            <p className="text-sm text-ink/70">{t("carouselLayoutHint")}</p>
-            <Select
-              value={carouselLayout}
-              onValueChange={(value) => {
-                const next: WizardCarouselLayout =
-                  value === "statement" || value === "steps" ? value : "editorial";
-                onCarouselLayout(next);
-              }}
-            >
-              <SelectTrigger id="wizard-carousel-layout" className="min-h-11">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="editorial">{t("carouselLayoutEditorial")}</SelectItem>
-                <SelectItem value="statement">{t("carouselLayoutStatement")}</SelectItem>
-                <SelectItem value="steps">{t("carouselLayoutSteps")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className={`${wizardPanelClass} space-y-1.5 p-4 sm:max-w-md sm:p-5`}>
+          <Label htmlFor="wizard-carousel-theme">{t("carouselTheme")}</Label>
+          <p className={wizardHintClass}>{t("carouselThemeHint")}</p>
+          <Select
+            value={carouselTheme}
+            onValueChange={(value) => {
+              const next: WizardCarouselTheme = value === "light" || value === "random" ? value : "dark";
+              onCarouselTheme(next);
+            }}
+          >
+            <SelectTrigger id="wizard-carousel-theme" className={wizardControlClass}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="dark">{t("carouselThemeDark")}</SelectItem>
+              <SelectItem value="light">{t("carouselThemeLight")}</SelectItem>
+              <SelectItem value="random">{t("carouselThemeRandom")}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       ) : null}
 
       {showImageDirection ? (
-        <div className="space-y-4 rounded-2xl border border-input bg-card p-4 shadow-sm">
-          <div className="space-y-2">
+        <div className={`${wizardPanelClass} grid gap-5 p-4 sm:grid-cols-2 sm:p-5`}>
+          <div className="space-y-1.5">
             <Label htmlFor="wizard-mood">{t("mood")}</Label>
-            <p className="text-sm text-ink/70">{t("moodHint")}</p>
+            <p className={wizardHintClass}>{t("moodHint")}</p>
             <Select
               value={mood || "default"}
               onValueChange={(value) => {
@@ -243,7 +201,7 @@ export function WizardPrepare({
                 onMood(next);
               }}
             >
-              <SelectTrigger id="wizard-mood" className="min-h-11">
+              <SelectTrigger id="wizard-mood" className={wizardControlClass}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -255,9 +213,9 @@ export function WizardPrepare({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2 border-t border-input pt-3">
+          <div className="space-y-1.5 sm:border-l sm:border-border sm:pl-5">
             <Label htmlFor="wizard-aspect">{t("aspect")}</Label>
-            <p className="text-sm text-ink/70">{t("aspectHint")}</p>
+            <p className={wizardHintClass}>{t("aspectHint")}</p>
             <Select
               value={aspect}
               onValueChange={(value) => {
@@ -266,7 +224,7 @@ export function WizardPrepare({
                 onAspect(next);
               }}
             >
-              <SelectTrigger id="wizard-aspect" className="min-h-11">
+              <SelectTrigger id="wizard-aspect" className={wizardControlClass}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -280,33 +238,33 @@ export function WizardPrepare({
       ) : null}
 
       {kind === "product" ? (
-        <div className="space-y-3 rounded-2xl border border-input bg-card p-4 shadow-sm">
-          <div className="space-y-2">
+        <div className={`${wizardPanelClass} grid gap-4 p-4 sm:grid-cols-2 sm:p-5`}>
+          <div className="space-y-1.5">
             <Label htmlFor="wizard-product-name">{t("productName")}</Label>
             <Input
               id="wizard-product-name"
-              className="min-h-11"
+              className={wizardControlClass}
               value={product.name}
               onChange={(event) => onProduct({ ...product, name: event.target.value })}
               autoComplete="off"
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label htmlFor="wizard-product-price">{t("productPrice")}</Label>
             <Input
               id="wizard-product-price"
-              className="min-h-11"
+              className={wizardControlClass}
               value={product.price}
               onChange={(event) => onProduct({ ...product, price: event.target.value })}
               placeholder={t("productPricePlaceholder")}
               autoComplete="off"
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor="wizard-product-description">{t("productDescription")}</Label>
             <Textarea
               id="wizard-product-description"
-              className="min-h-24"
+              className="min-h-28 resize-y border-border bg-background text-base shadow-none focus-visible:ring-2 focus-visible:ring-pine/25"
               value={product.description}
               onChange={(event) => onProduct({ ...product, description: event.target.value })}
             />

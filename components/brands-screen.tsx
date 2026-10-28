@@ -104,6 +104,8 @@ function BrandsBody() {
     {
       key: "actions",
       header: t("columns.actions"),
+      align: "end",
+      className: "w-px whitespace-nowrap",
       cell: (brand) => (
         <div className="flex justify-end" onClick={(event) => event.stopPropagation()}>
           <ConfirmAlertDialog

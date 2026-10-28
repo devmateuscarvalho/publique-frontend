@@ -25,6 +25,8 @@ export type ListColumn<T> = {
   header: string;
   sortable?: boolean;
   className?: string;
+  /** `end` lines the header up with end-aligned cell content, such as a row action. */
+  align?: "start" | "end";
   cell: (row: T) => ReactNode;
 };
 
@@ -323,12 +325,20 @@ export function DataTable<T extends { id: string }>({
               {columns.map((column) => {
                 const active = list.sort === column.key;
                 const ariaSort = active ? (list.order === "asc" ? "ascending" : "descending") : "none";
+                const end = column.align === "end";
                 return (
-                  <TableHead key={column.key} aria-sort={column.sortable ? ariaSort : undefined} className={column.className}>
+                  <TableHead
+                    key={column.key}
+                    aria-sort={column.sortable ? ariaSort : undefined}
+                    className={cn(end && "text-right", column.className)}
+                  >
                     {column.sortable ? (
                       <button
                         type="button"
-                        className="inline-flex min-h-11 items-center gap-1 text-left font-medium"
+                        className={cn(
+                          "inline-flex min-h-11 items-center gap-1 font-medium",
+                          end ? "w-full justify-end text-right" : "text-left",
+                        )}
                         onClick={() => list.toggleSort(column.key)}
                       >
                         {column.header}
@@ -338,7 +348,9 @@ export function DataTable<T extends { id: string }>({
                         <span className="sr-only">{t("sortBy", { field: column.header })}</span>
                       </button>
                     ) : (
-                      <span className="inline-flex min-h-11 items-center">{column.header}</span>
+                      <span className={cn("inline-flex min-h-11 items-center", end && "w-full justify-end")}>
+                        {column.header}
+                      </span>
                     )}
                   </TableHead>
                 );
@@ -364,7 +376,7 @@ export function DataTable<T extends { id: string }>({
                 }
               >
                 {columns.map((column) => (
-                  <TableCell key={column.key} className={column.className}>
+                  <TableCell key={column.key} className={cn(column.align === "end" && "text-right", column.className)}>
                     {column.cell(row)}
                   </TableCell>
                 ))}

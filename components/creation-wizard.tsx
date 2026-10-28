@@ -10,7 +10,8 @@ import { WizardBrandPick } from "@/components/wizard-brand-pick";
 import { WizardKindPick } from "@/components/wizard-kind-pick";
 import { WizardNewBrand, WizardModeSwitch } from "@/components/wizard-new-brand";
 import { WizardScanStatus } from "@/components/wizard-scan-status";
-import { WizardStepper } from "@/components/wizard-stepper";
+import { WIZARD_STEPS, WizardStepper } from "@/components/wizard-stepper";
+import { WizardFrame, WizardStepHeader } from "@/components/wizard-ui";
 import { useAccount } from "@/components/use-account";
 import {
   ApiError,
@@ -23,8 +24,6 @@ import {
 import { appToast } from "@/lib/app-toast";
 
 const DEFAULT_SEGMENT_CODE = "professional_services";
-const HUB_STEPS = ["stepBrand", "stepKind"] as const;
-
 type Step = "site" | "kind";
 
 function scheduleSearch(params: { get: (key: string) => string | null }, brandId: string) {
@@ -77,7 +76,9 @@ export function CreationWizard() {
   const searchParams = useSearchParams();
   const { organization, brands, loading } = useAccount();
 
-  const [step, setStep] = useState<Step>(searchParams.get("brand") ? "kind" : "site");
+  const [step, setStep] = useState<Step>(
+    searchParams.get("brand") && searchParams.get("step") !== "brand" ? "kind" : "site",
+  );
   const [brandId, setBrandId] = useState(searchParams.get("brand") ?? "");
   const [brandName, setBrandName] = useState("");
   const [website, setWebsite] = useState("");
@@ -333,11 +334,11 @@ export function CreationWizard() {
 
   return (
     <AppShell title={t("title")} fluid>
-      <div className="flex w-full min-h-0 flex-1 flex-col gap-4 md:gap-6">
+      <div className="flex w-full min-h-0 flex-1 flex-col">
         {step === "site" ? (
-          <section className="mx-auto flex w-full max-w-xl flex-1 flex-col space-y-4 pb-8 md:space-y-5">
-            <WizardStepper step={0} steps={HUB_STEPS} />
-            {!isNewBrandFlow ? <p className="text-sm text-ink/70">{t("siteLead")}</p> : null}
+          <WizardFrame>
+            <WizardStepper step={0} steps={WIZARD_STEPS} />
+            {!isNewBrandFlow ? <WizardStepHeader title={t("siteTitle")} lead={t("siteLead")} /> : null}
 
             <WizardModeSwitch
               hasExisting={brandList.length > 0}
@@ -395,31 +396,28 @@ export function CreationWizard() {
                 onRetry={() => analyze.mutate()}
               />
             ) : null}
-          </section>
+          </WizardFrame>
         ) : null}
 
         {step === "kind" ? (
-          <section className="mx-auto flex w-full max-w-xl flex-1 flex-col space-y-4 pb-8 md:space-y-5">
+          <WizardFrame>
             <WizardStepper
               step={1}
-              steps={HUB_STEPS}
+              steps={WIZARD_STEPS}
               onGoTo={(next) => {
                 if (next === 0) {
                   setStep("site");
                 }
               }}
             />
-            <div className="space-y-1">
-              <h2 className="text-lg font-semibold md:text-xl">{t("kindTitle")}</h2>
-              <p className="text-sm text-ink/70">{t("kindLead")}</p>
-            </div>
+            <WizardStepHeader title={t("kindTitle")} lead={t("kindLead")} />
             <WizardKindPick
               kinds={kindsQuery.data?.output_kinds ?? []}
               loading={kindsQuery.isLoading}
               empty={t("kindEmpty")}
               onPick={openKind}
             />
-          </section>
+          </WizardFrame>
         ) : null}
       </div>
     </AppShell>

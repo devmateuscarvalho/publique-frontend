@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { WizardLookPreview } from "@/components/wizard-look-preview";
@@ -12,18 +12,17 @@ import { WizardPresetCarousel } from "@/components/wizard-preset-carousel";
 import {
   WizardPrepare,
   aspectToAPI,
-  defaultCarouselLayout,
   normalizeLogoPlacement,
   wizardScreenKind,
   type WizardAspect,
-  type WizardCarouselLayout,
   type WizardCarouselTheme,
   type WizardMood,
   type WizardProduct,
 } from "@/components/wizard-prepare";
 import { type WizardLocalRef } from "@/components/wizard-refs";
-import { WizardStepper } from "@/components/wizard-stepper";
+import { WIZARD_STEPS, WizardStepper } from "@/components/wizard-stepper";
 import { WizardWhen, type WhenMode } from "@/components/wizard-when";
+import { WizardActions, WizardFrame, WizardStepHeader, wizardEmptyClass, wizardPrimaryClass, wizardSecondaryClass } from "@/components/wizard-ui";
 import { Button } from "@/components/ui/button";
 import { useAccount } from "@/components/use-account";
 import {
@@ -41,17 +40,8 @@ import { appToast } from "@/lib/app-toast";
 import { type LogoPlacement } from "@/lib/backoffice-preset-shared";
 import { usePresetCopy } from "@/lib/preset-i18n";
 
-function WizardActions({ children }: { children: ReactNode }) {
-  return (
-    <div className="sticky bottom-0 z-20 -mx-4 mt-auto border-t border-input bg-background/95 px-4 py-3 backdrop-blur md:static md:mx-0 md:mt-2 md:border-0 md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-none">
-      <div className="flex gap-2">{children}</div>
-    </div>
-  );
-}
-
 type Step = "gallery" | "prepare" | "when";
 
-const KIND_STEPS = ["stepBrand", "stepPreset", "stepPrepare", "stepWhen"] as const;
 
 function localToday() {
   const now = new Date();
@@ -66,10 +56,17 @@ function isoWeekday(iso: string) {
   return String(weekday === 0 ? 7 : weekday);
 }
 
-function createHubHref(brandId: string, params: { get: (key: string) => string | null }) {
+function createHubHref(
+  brandId: string,
+  params: { get: (key: string) => string | null },
+  destination: "brand" | "kind" = "kind",
+) {
   const search = new URLSearchParams();
   if (brandId) {
     search.set("brand", brandId);
+  }
+  if (destination === "brand") {
+    search.set("step", "brand");
   }
   const on = params.get("on") ?? "";
   const at = params.get("at") ?? "";
@@ -109,10 +106,10 @@ export function CreationKindPage() {
   const [localRefs, setLocalRefs] = useState<WizardLocalRef[]>([]);
   const [product, setProduct] = useState<WizardProduct>({ name: "", price: "", description: "" });
   const [carouselTheme, setCarouselTheme] = useState<WizardCarouselTheme>("dark");
-  const [carouselLayout, setCarouselLayout] = useState<WizardCarouselLayout>("editorial");
   const [mood, setMood] = useState<WizardMood>("");
   const [aspect, setAspect] = useState<WizardAspect>("square");
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewRecipeId, setPreviewRecipeId] = useState("");
   const [whenMode, setWhenMode] = useState<WhenMode>(presetOn ? "once" : "now");
   const [publishOn, setPublishOn] = useState(presetOn);
   const [publishTime, setPublishTime] = useState(presetAt || "09:00");
@@ -173,6 +170,7 @@ export function CreationKindPage() {
 
   const recipes = useMemo(() => recipesQuery.data?.creative_recipes ?? [], [recipesQuery.data?.creative_recipes]);
   const selectedRecipe = recipes.find((item) => item.id === selectedRecipeId) ?? recipes[0];
+  const previewRecipe = recipes.find((item) => item.id === previewRecipeId) ?? null;
 
   const selectRecipe = (recipe: CreativeRecipe) => {
     setSelectedRecipeId(recipe.id);
@@ -182,7 +180,6 @@ export function CreationKindPage() {
     setProduct({ name: "", price: "", description: "" });
     setMood("");
     setAspect("square");
-    setCarouselLayout(defaultCarouselLayout(recipe));
     setLocalRefs((current) => {
       current.forEach((item) => URL.revokeObjectURL(item.url));
       return [];
@@ -256,9 +253,8 @@ export function CreationKindPage() {
       }
       const screen = wizardScreenKind(selectedRecipe);
       const brief = {
-        ...(screen === "carousel"
-          ? { theme: carouselTheme, layout: carouselLayout }
-          : { mood: mood || undefined, aspect: aspectToAPI(aspect) }),
+        ...(screen === "carousel" ? { theme: carouselTheme } : {}),
+        ...(screen === "single" ? { mood: mood || undefined, aspect: aspectToAPI(aspect) } : {}),
         ...(screen === "product"
           ? {
               product: {
@@ -336,6 +332,25 @@ export function CreationKindPage() {
     router.push(createHubHref(brandId, searchParams));
   };
 
+  const goToWizardStep = (index: number) => {
+    if (index <= 0) {
+      router.push(createHubHref(brandId, searchParams, "brand"));
+      return;
+    }
+    if (index === 1) {
+      backToHub();
+      return;
+    }
+    if (index === 2) {
+      setPreviewOpen(false);
+      setStep("gallery");
+      return;
+    }
+    if (index === 3) {
+      setStep("prepare");
+    }
+  };
+
   if (loading || publishedQuery.isLoading || !publishedKind) {
     return (
       <AppShell title={t("title")} fluid>
@@ -356,34 +371,21 @@ export function CreationKindPage() {
 
   return (
     <AppShell title={t("title")} fluid>
-      <div className="flex w-full min-h-0 flex-1 flex-col gap-4 md:gap-6">
+      <div className="flex w-full min-h-0 flex-1 flex-col">
         {step === "gallery" ? (
-          <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col space-y-3 md:space-y-4">
-            <WizardStepper
-              steps={KIND_STEPS}
-              step={1}
-              onGoTo={(next) => {
-                if (next === 0) {
-                  backToHub();
-                }
-              }}
-            />
-            <div className="space-y-1">
-              <h2 className="text-lg font-semibold md:text-xl">{t("galleryTitle")}</h2>
-              <p className="text-sm text-ink/70">{t("galleryLeadKind", { kind: kindTitle })}</p>
-            </div>
-            {recipesQuery.isLoading ? <p className="text-sm text-ink/70">{t("loading")}</p> : null}
+          <WizardFrame>
+            <WizardStepper steps={WIZARD_STEPS} step={2} onGoTo={goToWizardStep} />
+            <WizardStepHeader title={t("galleryTitle")} lead={t("galleryLeadKind", { kind: kindTitle })} />
+            {recipesQuery.isLoading ? <p className="text-sm text-ink/65">{t("loading")}</p> : null}
             {!recipesQuery.isLoading && recipes.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-input bg-card p-5 text-sm text-ink/70">
-                {t("galleryEmpty")}
-              </p>
+              <p className={wizardEmptyClass}>{t("galleryEmpty")}</p>
             ) : null}
             <WizardPresetCarousel
               recipes={recipes}
               selectedId={selectedRecipe?.id ?? ""}
               onSelect={selectRecipe}
               onPreview={(recipe) => {
-                selectRecipe(recipe);
+                setPreviewRecipeId(recipe.id);
                 setPreviewOpen(true);
               }}
               onConfirm={goPrepare}
@@ -394,12 +396,12 @@ export function CreationKindPage() {
             />
 
             <WizardActions>
-              <Button type="button" variant="outline" className="min-h-11 min-w-24" onClick={backToHub}>
+              <Button type="button" variant="outline" className={wizardSecondaryClass} onClick={backToHub}>
                 {t("back")}
               </Button>
               <Button
                 type="button"
-                className="min-h-11 flex-1"
+                className={wizardPrimaryClass}
                 disabled={!selectedRecipe}
                 onClick={() => goPrepare()}
               >
@@ -407,8 +409,8 @@ export function CreationKindPage() {
               </Button>
             </WizardActions>
             <WizardLookPreview
-              open={previewOpen && Boolean(selectedRecipe)}
-              recipe={selectedRecipe}
+              open={previewOpen && Boolean(previewRecipe)}
+              recipe={previewRecipe}
               brandName={selectedBrand?.name ?? ""}
               visual={visualQuery.data?.identity}
               emptyImageLabel={phone("phoneEmptyImage")}
@@ -417,23 +419,12 @@ export function CreationKindPage() {
               likesLabel={phone.raw("phoneLikes")}
               onOpenChange={setPreviewOpen}
             />
-          </section>
+          </WizardFrame>
         ) : null}
 
         {step === "prepare" ? (
-          <section className="mx-auto flex w-full max-w-xl flex-1 flex-col space-y-3 md:space-y-4">
-            <WizardStepper
-              steps={KIND_STEPS}
-              step={2}
-              onGoTo={(next) => {
-                if (next === 0) {
-                  backToHub();
-                }
-                if (next === 1) {
-                  setStep("gallery");
-                }
-              }}
-            />
+          <WizardFrame>
+            <WizardStepper steps={WIZARD_STEPS} step={3} onGoTo={goToWizardStep} />
             {canGenerate ? (
               <WizardPrepare
                 recipe={selectedRecipe}
@@ -448,27 +439,25 @@ export function CreationKindPage() {
                 onProduct={setProduct}
                 carouselTheme={carouselTheme}
                 onCarouselTheme={setCarouselTheme}
-                carouselLayout={carouselLayout}
-                onCarouselLayout={setCarouselLayout}
                 mood={mood}
                 onMood={setMood}
                 aspect={aspect}
                 onAspect={setAspect}
               />
             ) : (
-              <div className="space-y-1.5 rounded-2xl border border-dashed border-input bg-card p-5">
-                <h2 className="text-lg font-semibold md:text-xl">{kindTitle}</h2>
-                <p className="text-sm text-ink/70">{t("kindComingSoon")}</p>
+              <div className="space-y-1.5 rounded-lg border border-dashed border-border bg-card p-5">
+                <h2 className="font-display text-xl font-semibold tracking-tight">{kindTitle}</h2>
+                <p className="text-sm leading-relaxed text-ink/65">{t("kindComingSoon")}</p>
               </div>
             )}
             <WizardActions>
-              <Button type="button" variant="outline" className="min-h-11 min-w-24" onClick={() => setStep("gallery")}>
+              <Button type="button" variant="outline" className={wizardSecondaryClass} onClick={() => setStep("gallery")}>
                 {t("back")}
               </Button>
               {canGenerate ? (
                 <Button
                   type="button"
-                  className="min-h-11 flex-1"
+                  className={wizardPrimaryClass}
                   disabled={
                     !selectedRecipe ||
                     (wizardScreenKind(selectedRecipe) === "product" && !product.name.trim())
@@ -479,26 +468,12 @@ export function CreationKindPage() {
                 </Button>
               ) : null}
             </WizardActions>
-          </section>
+          </WizardFrame>
         ) : null}
 
         {step === "when" && selectedRecipe ? (
-          <section className="mx-auto flex w-full max-w-xl flex-1 flex-col space-y-3 md:space-y-4">
-            <WizardStepper
-              steps={KIND_STEPS}
-              step={3}
-              onGoTo={(next) => {
-                if (next === 0) {
-                  backToHub();
-                }
-                if (next === 1) {
-                  setStep("gallery");
-                }
-                if (next === 2) {
-                  setStep("prepare");
-                }
-              }}
-            />
+          <WizardFrame>
+            <WizardStepper steps={WIZARD_STEPS} step={4} onGoTo={goToWizardStep} />
             <WizardWhen
               brandId={brandId}
               timezone={selectedBrand?.timezone ?? ""}
@@ -520,12 +495,12 @@ export function CreationKindPage() {
               onRequireApproval={setRequireApproval}
             />
             <WizardActions>
-              <Button type="button" variant="outline" className="min-h-11 min-w-24" onClick={() => setStep("prepare")}>
+              <Button type="button" variant="outline" className={wizardSecondaryClass} onClick={() => setStep("prepare")}>
                 {t("back")}
               </Button>
               <Button
                 type="button"
-                className="min-h-11 flex-1"
+                className={wizardPrimaryClass}
                 disabled={
                   generate.isPending ||
                   (wizardScreenKind(selectedRecipe) === "product" && !product.name.trim()) ||
@@ -539,7 +514,7 @@ export function CreationKindPage() {
                 {whenMode === "weekly" ? t("whenConfirmWeekly") : t("generate")}
               </Button>
             </WizardActions>
-          </section>
+          </WizardFrame>
         ) : null}
       </div>
     </AppShell>

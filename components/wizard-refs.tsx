@@ -52,7 +52,7 @@ export function WizardRefs({ outputKind, refs, onAdd, onRemove }: WizardRefsProp
         : lab("refPeopleHint");
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <input
         ref={locationRef}
         type="file"
@@ -80,14 +80,14 @@ export function WizardRefs({ outputKind, refs, onAdd, onRemove }: WizardRefsProp
         }}
       />
 
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         <div>
           <p className="text-sm font-medium">{lab("refLocation")}</p>
-          <p className="text-sm text-ink/70">{lab("refLocationHint")}</p>
+          <p className="text-sm leading-relaxed text-ink/60">{lab("refLocationHint")}</p>
         </div>
         <AttachmentGroup className="gap-3">
           {canAddLocation ? (
-            <Attachment state="idle" orientation="vertical" className="w-28">
+            <Attachment state="idle" orientation="vertical" className="w-28 rounded-lg">
               <AttachmentMedia>
                 <ImagePlus aria-hidden />
               </AttachmentMedia>
@@ -103,7 +103,7 @@ export function WizardRefs({ outputKind, refs, onAdd, onRemove }: WizardRefsProp
             </Attachment>
           ) : null}
           {location ? (
-            <Attachment state="done" orientation="vertical">
+            <Attachment state="done" orientation="vertical" className="rounded-lg">
               <AttachmentMedia variant="image">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={location.url} alt="" />
@@ -121,14 +121,14 @@ export function WizardRefs({ outputKind, refs, onAdd, onRemove }: WizardRefsProp
         </AttachmentGroup>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         <div>
           <p className="text-sm font-medium">{subjectTitle}</p>
-          <p className="text-sm text-ink/70">{subjectHint}</p>
+          <p className="text-sm leading-relaxed text-ink/60">{subjectHint}</p>
         </div>
         <AttachmentGroup className="gap-3">
           {canAddPerson ? (
-            <Attachment state="idle" orientation="vertical" className="w-28">
+            <Attachment state="idle" orientation="vertical" className="w-28 rounded-lg">
               <AttachmentMedia>
                 <ImagePlus aria-hidden />
               </AttachmentMedia>
@@ -144,7 +144,7 @@ export function WizardRefs({ outputKind, refs, onAdd, onRemove }: WizardRefsProp
             </Attachment>
           ) : null}
           {people.map((item, index) => (
-            <Attachment key={item.key} state="done" orientation="vertical">
+            <Attachment key={item.key} state="done" orientation="vertical" className="rounded-lg">
               <AttachmentMedia variant="image">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={item.url} alt="" />

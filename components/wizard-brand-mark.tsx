@@ -14,11 +14,11 @@ export function WizardBrandMark({
 }) {
   const initial = name.trim().slice(0, 1).toUpperCase() || "?";
   return (
-    <Avatar className={cn("rounded-xl", size === "sm" ? "size-8" : "size-11")}>
+    <Avatar className={cn("rounded-md border border-border bg-card", size === "sm" ? "size-8" : "size-10")}>
       {logoUrl ? <AvatarImage src={logoUrl} alt="" className="object-contain p-1" /> : null}
       <AvatarFallback
         className={cn(
-          "rounded-xl bg-pine/10 font-semibold text-pine",
+          "rounded-md bg-wizard-icon font-semibold text-pine",
           size === "sm" ? "text-xs" : "text-sm",
         )}
       >

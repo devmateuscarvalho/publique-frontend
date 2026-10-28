@@ -20,11 +20,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   WizardPrepare,
   aspectToAPI,
-  defaultCarouselLayout,
   normalizeLogoPlacement,
   wizardScreenKind,
   type WizardAspect,
-  type WizardCarouselLayout,
   type WizardCarouselTheme,
   type WizardMood,
   type WizardProduct,
@@ -57,7 +55,6 @@ type AutomationSlot = {
 
 type SlotBrief = {
   theme?: string;
-  layout?: string;
   mood?: string;
   aspect?: string;
   product?: { name: string; price?: string; description?: string };
@@ -125,7 +122,6 @@ function WeekPlanner() {
   const [localRefs, setLocalRefs] = useState<WizardLocalRef[]>([]);
   const [product, setProduct] = useState<WizardProduct>({ name: "", price: "", description: "" });
   const [carouselTheme, setCarouselTheme] = useState<WizardCarouselTheme>("dark");
-  const [carouselLayout, setCarouselLayout] = useState<WizardCarouselLayout>("editorial");
   const [mood, setMood] = useState<WizardMood>("");
   const [aspect, setAspect] = useState<WizardAspect>("square");
   const [openCell, setOpenCell] = useState<{ weekday: number; hour: number } | null>(null);
@@ -171,7 +167,6 @@ function WeekPlanner() {
     setLogoPlacement(normalizeLogoPlacement(recipe?.logo_placement));
     setProduct({ name: "", price: "", description: "" });
     setCarouselTheme("dark");
-    setCarouselLayout(defaultCarouselLayout(recipe));
     setMood("");
     setAspect("square");
     clearRefs();
@@ -262,9 +257,8 @@ function WeekPlanner() {
           networks,
           require_approval: requireApproval,
           ...(screen === "carousel" ? {} : { include_logo: includeLogo, logo_placement: logoPlacement }),
-          ...(screen === "carousel"
-            ? { theme: carouselTheme, layout: carouselLayout }
-            : { mood: mood || undefined, aspect: aspectToAPI(aspect) }),
+          ...(screen === "carousel" ? { theme: carouselTheme } : {}),
+          ...(screen === "single" ? { mood: mood || undefined, aspect: aspectToAPI(aspect) } : {}),
           ...(screen === "product"
             ? {
                 product: {
@@ -424,8 +418,6 @@ function WeekPlanner() {
                       onProduct={setProduct}
                       carouselTheme={carouselTheme}
                       onCarouselTheme={setCarouselTheme}
-                      carouselLayout={carouselLayout}
-                      onCarouselLayout={setCarouselLayout}
                       mood={mood}
                       onMood={setMood}
                       aspect={aspect}
@@ -750,11 +742,6 @@ const themeKeys: Record<string, string> = {
   light: "carouselThemeLight",
   random: "carouselThemeRandom",
 };
-const layoutKeys: Record<string, string> = {
-  editorial: "carouselLayoutEditorial",
-  statement: "carouselLayoutStatement",
-  steps: "carouselLayoutSteps",
-};
 
 function BriefMarks({ brief }: { brief?: SlotBrief }) {
   const wizard = useTranslations("wizard");
@@ -766,7 +753,6 @@ function BriefMarks({ brief }: { brief?: SlotBrief }) {
     brief.mood && moodKeys[brief.mood] ? wizard(moodKeys[brief.mood]) : "",
     brief.aspect && aspectKeys[brief.aspect] ? wizard(aspectKeys[brief.aspect]) : "",
     brief.theme && themeKeys[brief.theme] ? wizard(themeKeys[brief.theme]) : "",
-    brief.layout && layoutKeys[brief.layout] ? wizard(layoutKeys[brief.layout]) : "",
   ].filter((label): label is string => Boolean(label));
   if (labels.length === 0) {
     return null;

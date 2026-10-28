@@ -1,13 +1,14 @@
 "use client";
 
 import { useQueries } from "@tanstack/react-query";
-import { Check, Pencil } from "lucide-react";
+import { Check, Pencil, Search } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { WizardBrandMark, visualLogoUrl } from "@/components/wizard-brand-mark";
 import { Button } from "@/components/ui/button";
+import { WizardBrandMark, visualLogoUrl } from "@/components/wizard-brand-mark";
+import { WizardActions, wizardFieldClass, wizardFocusClass, wizardPrimaryClass, wizardSurfaceState } from "@/components/wizard-ui";
 import { api, type Brand, type VisualResponse } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -68,13 +69,14 @@ export function WizardBrandPick({
   }, [brands, query]);
 
   return (
-    <div className="space-y-3 rounded-2xl border border-input bg-card p-3 shadow-sm md:p-4">
+    <div className="flex min-h-0 flex-col gap-3">
       {brands.length > 5 ? (
-        <label className="block" htmlFor="wizard-brand-search">
+        <label className="relative block" htmlFor="wizard-brand-search">
           <span className="sr-only">{t("brandSearch")}</span>
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <input
             id="wizard-brand-search"
-            className="flex min-h-11 w-full rounded-xl border border-input bg-muted px-3 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring"
+            className={cn(wizardFieldClass, "bg-card pl-9")}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("brandSearch")}
@@ -82,23 +84,34 @@ export function WizardBrandPick({
           />
         </label>
       ) : null}
-      <ul className="max-h-[min(22rem,50svh)] space-y-2 overflow-y-auto" role="listbox" aria-label={t("siteTitle")}>
+      <ul
+        className={cn(
+          "grid max-h-[max(11rem,min(34rem,calc(100svh-29rem)))] grid-cols-1 gap-2 overflow-y-auto overscroll-contain p-px",
+          filtered.length > 1 && "sm:grid-cols-2 sm:gap-3",
+        )}
+        role="listbox"
+        aria-label={t("siteTitle")}
+      >
         {filtered.map((brand) => {
           const selected = brand.id === selectedId;
           const host = hostOf(brand.website_url);
+          const segment = brand.segment_id ? segmentLabel(brand.segment_id) : "";
           return (
-            <li key={brand.id}>
+            <li key={brand.id} className="min-w-0">
               <div
                 className={cn(
-                  "flex items-center gap-1.5 rounded-2xl border px-1.5 py-1.5 transition",
-                  selected ? "border-pine/35 bg-pine/5 shadow-sm" : "border-transparent hover:bg-muted/60",
+                  "flex h-full min-h-[4.5rem] items-center gap-0.5 rounded-lg border py-1.5 pr-1.5 pl-2",
+                  wizardSurfaceState(selected),
                 )}
               >
                 <button
                   type="button"
                   role="option"
                   aria-selected={selected}
-                  className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-xl px-1.5 text-left"
+                  className={cn(
+                    "flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-md px-1 py-1 text-left",
+                    wizardFocusClass,
+                  )}
                   onClick={() => onSelect(brand)}
                   onDoubleClick={() => {
                     onSelect(brand);
@@ -109,23 +122,31 @@ export function WizardBrandPick({
                 >
                   <WizardBrandMark name={brand.name} logoUrl={logoOf(brand.id)} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">{brand.name}</span>
-                    <span className="block truncate text-xs text-ink/55">
-                      {[brand.segment_id ? segmentLabel(brand.segment_id) : null, host].filter(Boolean).join(" · ")}
-                    </span>
+                    <span className="block truncate text-sm leading-tight font-medium">{brand.name}</span>
+                    {segment ? <span className="mt-1 block truncate text-xs text-ink/70">{segment}</span> : null}
+                    {host ? (
+                      <span className="mt-0.5 block truncate text-xs text-muted-foreground" title={host}>
+                        {host}
+                      </span>
+                    ) : null}
                   </span>
                   <span
                     className={cn(
-                      "grid size-5 shrink-0 place-items-center rounded-full border",
-                      selected ? "border-pine bg-pine text-white" : "border-input text-transparent",
+                      "grid size-5 shrink-0 place-items-center rounded-full border transition-colors duration-200 motion-reduce:transition-none",
+                      selected ? "border-pine bg-pine text-white" : "border-border bg-card text-transparent",
                     )}
                     aria-hidden
                   >
-                    <Check className="size-3" />
+                    <Check className="size-3" strokeWidth={2.75} />
                   </span>
                 </button>
                 {selected ? (
-                  <Button asChild variant="outline" size="icon" className="min-h-11 min-w-11 shrink-0">
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="icon"
+                    className="size-11 shrink-0 text-muted-foreground hover:bg-background hover:text-ink"
+                  >
                     <Link href={`/brands/${brand.id}`} aria-label={editLabel}>
                       <Pencil />
                     </Link>
@@ -136,14 +157,19 @@ export function WizardBrandPick({
           );
         })}
         {filtered.length === 0 ? (
-          <li className="px-2 py-6 text-center text-sm text-ink/55">{t("brandSearchEmpty")}</li>
+          <li className="px-3 py-10 text-center text-sm text-ink/55 sm:col-span-2">{t("brandSearchEmpty")}</li>
         ) : null}
       </ul>
-      <div className="flex justify-end">
-        <Button type="button" className="min-h-11 min-w-28" disabled={!canContinue} onClick={onContinue}>
+      <WizardActions>
+        <Button
+          type="button"
+          className={wizardPrimaryClass}
+          disabled={!canContinue}
+          onClick={onContinue}
+        >
           {continueLabel}
         </Button>
-      </div>
+      </WizardActions>
     </div>
   );
 }
