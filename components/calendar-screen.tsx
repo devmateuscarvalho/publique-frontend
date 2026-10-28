@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { TZDate } from "react-day-picker";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -9,6 +9,7 @@ import { useFormatter, useTranslations } from "next-intl";
 
 import { AppShell } from "@/components/app-shell";
 import { CalendarInspector, type CalendarEvent } from "@/components/calendar-inspector";
+import { CalendarToolbar } from "@/components/calendar-toolbar";
 import { BrandFilter, CreationFrame, useBrandQuery } from "@/components/creation-screen";
 import { useCreationBrand } from "@/components/creation-brand";
 import { SocialNetworkIcon, type SocialNetworkID } from "@/components/social-network-icons";
@@ -41,6 +42,11 @@ function zonedISO(date: Date, timeZone: string) {
 function utcNoon(iso: string) {
   const [year, month, day] = iso.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, day, 12));
+}
+
+function zonedNoon(iso: string, timeZone: string) {
+  const [year, month, day] = iso.split("-").map(Number);
+  return new TZDate(year, month - 1, day, 12, timeZone);
 }
 
 function addDays(iso: string, days: number) {
@@ -247,7 +253,12 @@ export function CalendarScreen() {
   const periodLabel =
     view === "month"
       ? format.dateTime(utcNoon(cursor), { month: "long", year: "numeric", timeZone: "UTC" })
-      : `${format.dateTime(utcNoon(weekDays[0]), { day: "numeric", month: "short", timeZone: "UTC" })} – ${format.dateTime(utcNoon(weekDays[6]), { day: "numeric", month: "short", timeZone: "UTC" })}`;
+      : format.dateTimeRange(utcNoon(weekDays[0]), utcNoon(weekDays[6]), {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          timeZone: "UTC",
+        });
 
   const shift = (direction: -1 | 1) => {
     replaceQuery({ cursor: view === "month" ? shiftMonth(cursor, direction) : addDays(cursor, direction * 7) });
@@ -260,35 +271,18 @@ export function CalendarScreen() {
           <div className="flex flex-col gap-3 border-b border-line pb-3">
             <p className="max-w-2xl text-sm text-ink/65">{t("lead", { zone })}</p>
             <BrandFilter />
-            <div className="flex flex-wrap items-center gap-2">
-              <Button type="button" variant="outline" size="icon" aria-label={t("previous")} onClick={() => shift(-1)}>
-                <ChevronLeft />
-              </Button>
-              <Button type="button" variant="ghost" className="min-h-11" onClick={() => replaceQuery({ cursor: today })}>
-                {t("today")}
-              </Button>
-              <p className="min-w-40 flex-1 text-center text-sm font-medium">{periodLabel}</p>
-              <Button type="button" variant="outline" size="icon" aria-label={t("next")} onClick={() => shift(1)}>
-                <ChevronRight />
-              </Button>
-              <div className="flex border border-line" role="tablist" aria-label={t("views")}>
-                {(["week", "month", "agenda"] as const).map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    role="tab"
-                    aria-selected={view === item}
-                    className={cn(
-                      "min-h-11 px-3 text-sm",
-                      view === item ? "bg-foreground text-background" : "bg-background text-ink/70",
-                    )}
-                    onClick={() => replaceQuery({ view: item })}
-                  >
-                    {t(item)}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <CalendarToolbar
+              view={view}
+              label={periodLabel}
+              cursorDate={zonedNoon(cursor, zone)}
+              todayDate={zonedNoon(today, zone)}
+              timeZone={zone}
+              cursorIsToday={cursor === today}
+              onShift={shift}
+              onToday={() => replaceQuery({ cursor: today })}
+              onView={(next) => replaceQuery({ view: next })}
+              onPick={(date) => replaceQuery({ cursor: zonedISO(date, zone) })}
+            />
             <div className="flex flex-wrap gap-x-1">
               {(["published", "scheduled", "pending", "attention", "series"] as const).map((item) => (
                 <button
@@ -431,7 +425,7 @@ function WeekGrid({
             type="button"
             aria-pressed={day === selected}
             className={cn(
-              "min-h-14 border-l border-line text-sm first:border-l-0",
+              "min-h-14 cursor-pointer border-l border-line text-sm first:border-l-0",
               day === today && "text-pine",
               day === selected && "bg-sand",
             )}
@@ -450,12 +444,20 @@ function WeekGrid({
             <section
               key={day}
               className={cn(
-                "flex min-h-[26rem] flex-col border-l border-line first:border-l-0",
+                "flex min-h-[26rem] cursor-pointer flex-col border-l border-line first:border-l-0",
                 day === today && "border-t-2 border-t-pine",
                 day === selected && "bg-sand/60",
               )}
+              onClick={() => onSelect(day)}
             >
-              <button type="button" className="flex items-baseline justify-between px-2 py-2 text-left" onClick={() => onSelect(day)}>
+              <button
+                type="button"
+                className="flex cursor-pointer items-baseline justify-between px-2 py-2 text-left"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onSelect(day);
+                }}
+              >
                 <span className="text-[11px] uppercase tracking-wide text-ink/45">{creation(`weekdays.${isoWeekday(day)}`)}</span>
                 <span className={cn("text-sm tabular-nums", day === today && "font-semibold text-pine")}>{Number(day.slice(8))}</span>
               </button>
@@ -464,12 +466,23 @@ function WeekGrid({
                   <EventChip key={eventKey(event)} event={event} zone={zone} onOpen={onOpen} />
                 ))}
                 {items.length > shown.length ? (
-                  <button type="button" className="min-h-8 px-1 text-left text-xs text-ink/60" onClick={() => onSelect(day)}>
+                  <button
+                    type="button"
+                    className="min-h-8 cursor-pointer px-1 text-left text-xs text-ink/60"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onSelect(day);
+                    }}
+                  >
                     {t("more", { count: items.length - shown.length })}
                   </button>
                 ) : null}
                 {items.length === 0 && rawDay(day).length === 0 ? (
-                  <Link href={createHref(day)} className="mt-auto inline-flex min-h-11 items-center px-1 text-xs text-ink/45 hover:text-ink">
+                  <Link
+                    href={createHref(day)}
+                    className="mt-auto inline-flex min-h-11 cursor-pointer items-center px-1 text-xs text-ink/45 hover:text-ink"
+                    onClick={(event) => event.stopPropagation()}
+                  >
                     {t("planDay")}
                   </Link>
                 ) : null}
@@ -519,16 +532,23 @@ function MonthGrid({
           return (
             <div
               key={day}
-                className={cn(
-                "min-h-16 border-t border-line p-1 md:min-h-28 [&:nth-child(7n+1)]:border-l-0 border-l",
+              className={cn(
+                "min-h-16 cursor-pointer border-t border-line p-1 md:min-h-28 [&:nth-child(7n+1)]:border-l-0 border-l",
                 outside && "bg-sand/30 text-ink/35",
                 day === selected && "bg-sand/70",
               )}
+              onClick={() => onSelect(day)}
             >
               <button
                 type="button"
-                className={cn("flex size-8 items-center justify-center text-sm tabular-nums", day === today && "font-semibold text-pine")}
-                onClick={() => onSelect(day)}
+                className={cn(
+                  "flex size-8 cursor-pointer items-center justify-center text-sm tabular-nums",
+                  day === today && "font-semibold text-pine",
+                )}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onSelect(day);
+                }}
               >
                 {Number(day.slice(8))}
               </button>
@@ -537,7 +557,14 @@ function MonthGrid({
                   <EventChip key={eventKey(event)} event={event} compact onOpen={onOpen} />
                 ))}
                 {items.length > 3 ? (
-                  <button type="button" className="px-1 text-xs text-ink/55" onClick={() => onSelect(day)}>
+                  <button
+                    type="button"
+                    className="cursor-pointer px-1 text-xs text-ink/55"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onSelect(day);
+                    }}
+                  >
                     {t("more", { count: items.length - 3 })}
                   </button>
                 ) : null}
@@ -675,9 +702,12 @@ function EventChip({
   return (
     <button
       type="button"
-      className="flex min-h-8 w-full flex-col border-l-2 bg-background px-1.5 py-1 text-left hover:bg-sand/80"
+      className="flex min-h-8 w-full cursor-pointer flex-col border-l-2 bg-background px-1.5 py-1 text-left hover:bg-sand/80"
       style={{ borderLeftColor: toneColor(tone), borderLeftStyle: tone === "series" ? "dashed" : "solid" }}
-      onClick={() => onOpen(event)}
+      onClick={(click) => {
+        click.stopPropagation();
+        onOpen(event);
+      }}
     >
       <span className="flex items-center gap-1 text-[11px] tabular-nums text-ink/65">
         {time}
@@ -711,7 +741,7 @@ function EventRow({
         ? creation(`postStatuses.${event.status}`)
         : event.status;
   return (
-    <button type="button" className="flex w-full min-h-11 items-start gap-3 px-3 py-2 text-left hover:bg-sand/70" onClick={() => onOpen(event)}>
+    <button type="button" className="flex w-full min-h-11 cursor-pointer items-start gap-3 px-3 py-2 text-left hover:bg-sand/70" onClick={() => onOpen(event)}>
       <span className="mt-1 size-2 shrink-0" style={{ background: toneColor(tone) }} aria-hidden />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2 text-sm">

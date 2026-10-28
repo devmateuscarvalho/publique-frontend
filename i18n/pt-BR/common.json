@@ -991,6 +991,8 @@
     "previous": "Período anterior",
     "next": "Próximo período",
     "today": "Hoje",
+    "dateNav": "Navegação de datas",
+    "jumpToDate": "Escolher data. Período atual: {period}",
     "views": "Visualização",
     "week": "Semana",
     "month": "Mês",
