@@ -489,7 +489,8 @@ function ManualDraftPage({ postId }: { postId: string }) {
   const router = useRouter();
   const brandId = searchParams.get("brand") ?? "";
   const { brands } = useCreationBrand();
-  const brandName = brands.find((brand) => brand.id === brandId)?.name ?? "";
+  const brand = brands.find((item) => item.id === brandId);
+  const brandName = brand?.name ?? "";
   const oauthHandled = useRef(false);
   const instagramOAuthHandled = useRef(false);
   const facebookOAuthHandled = useRef(false);
@@ -758,6 +759,11 @@ function ManualDraftPage({ postId }: { postId: string }) {
       await queryClient.invalidateQueries({ queryKey: ["post", brandId, postId] });
       await queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
+    onError: (error) => appToast.error(errors(mapDraftError(error))),
+  });
+  const cancelSchedule = useMutation({
+    mutationFn: () => api<{ post: Post }>(`/v1/brands/${brandId}/posts/${postId}/cancel-schedule`, { method: "POST", body: "{}" }),
+    onSuccess: () => postQuery.refetch(),
     onError: (error) => appToast.error(errors(mapDraftError(error))),
   });
   const canPublish =
@@ -1149,6 +1155,31 @@ function ManualDraftPage({ postId }: { postId: string }) {
             />
           ) : null}
           {showRejectedHint ? <p className="text-sm text-ink/70">{t("approvalRejectedHint")}</p> : null}
+          {post?.publish_at && !alreadyPosted ? (
+            <p className="text-sm text-ink/70">
+              {t("scheduledFor", {
+                when: format.dateTime(new Date(post.publish_at), {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                  timeZone: brand?.timezone || "UTC",
+                }),
+              })}
+            </p>
+          ) : null}
+          {post?.publish_at && !alreadyPosted ? (
+            <ConfirmAlertDialog
+              title={t("cancelSchedule")}
+              description={t("cancelScheduleConfirm")}
+              cancelLabel={t("manualDeleteCancel")}
+              confirmLabel={t("cancelSchedule")}
+              onConfirm={() => cancelSchedule.mutate()}
+              trigger={
+                <Button type="button" variant="outline" className="min-h-11 w-full" disabled={cancelSchedule.isPending}>
+                  {t("cancelSchedule")}
+                </Button>
+              }
+            />
+          ) : null}
           {canPublish ? (
             <Button type="button" className="min-h-11 w-full" onClick={() => publish.mutate()} disabled={publish.isPending}>
               {t("manualPublish")}

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 const DEFAULT_STEPS = ["stepBrand", "stepPreset", "stepPrepare"] as const;
 
-type WizardStepKey = "stepBrand" | "stepKind" | "stepPreset" | "stepPrepare";
+type WizardStepKey = "stepBrand" | "stepKind" | "stepPreset" | "stepPrepare" | "stepWhen";
 
 export function WizardStepper({
   step,

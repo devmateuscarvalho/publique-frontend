@@ -567,6 +567,7 @@ export type Post = {
     prompt_version: string;
   };
   overdue?: boolean;
+  publish_at?: string | null;
   prompt_preset_id?: string;
   preset?: {
     id: string;

@@ -23,6 +23,7 @@ import {
 } from "@/components/wizard-prepare";
 import { type WizardLocalRef } from "@/components/wizard-refs";
 import { WizardStepper } from "@/components/wizard-stepper";
+import { WizardWhen, type WhenMode } from "@/components/wizard-when";
 import { Button } from "@/components/ui/button";
 import { useAccount } from "@/components/use-account";
 import {
@@ -48,7 +49,22 @@ function WizardActions({ children }: { children: ReactNode }) {
   );
 }
 
-type Step = "gallery" | "prepare";
+type Step = "gallery" | "prepare" | "when";
+
+const KIND_STEPS = ["stepBrand", "stepPreset", "stepPrepare", "stepWhen"] as const;
+
+function localToday() {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+function isoWeekday(iso: string) {
+  const [year, month, day] = iso.split("-").map(Number);
+  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  return String(weekday === 0 ? 7 : weekday);
+}
 
 export function CreationKindPage() {
   const t = useTranslations("wizard");
@@ -65,6 +81,8 @@ export function CreationKindPage() {
 
   const kindCode = typeof params.kind === "string" ? params.kind : "";
   const brandId = searchParams.get("brand") ?? "";
+  const presetOn = /^\d{4}-\d{2}-\d{2}$/.test(searchParams.get("on") ?? "") ? (searchParams.get("on") as string) : "";
+  const presetAt = /^\d{2}:\d{2}$/.test(searchParams.get("at") ?? "") ? (searchParams.get("at") as string) : "";
 
   const [step, setStep] = useState<Step>("gallery");
   const [selectedRecipeId, setSelectedRecipeId] = useState("");
@@ -78,6 +96,14 @@ export function CreationKindPage() {
   const [mood, setMood] = useState<WizardMood>("");
   const [aspect, setAspect] = useState<WizardAspect>("square");
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [whenMode, setWhenMode] = useState<WhenMode>(presetOn ? "once" : "now");
+  const [publishOn, setPublishOn] = useState(presetOn);
+  const [publishTime, setPublishTime] = useState(presetAt || "09:00");
+  const [weekday, setWeekday] = useState(presetOn ? isoWeekday(presetOn) : "1");
+  const [startsOn, setStartsOn] = useState(presetOn || localToday);
+  const [endsOn, setEndsOn] = useState("");
+  const [networks, setNetworks] = useState<string[]>([]);
+  const [requireApproval, setRequireApproval] = useState(false);
 
   const publishedQuery = useQuery({
     queryKey: ["output-kinds", "published"],
@@ -199,34 +225,70 @@ export function CreationKindPage() {
         await apiUpload(`/v1/brands/${brandId}/models/${modelResult.model.id}/references?role=${ref.role}`, form);
       }
       const screen = wizardScreenKind(selectedRecipe);
+      const brief = {
+        ...(screen === "carousel"
+          ? { theme: carouselTheme, layout: carouselLayout }
+          : { mood: mood || undefined, aspect: aspectToAPI(aspect) }),
+        ...(screen === "product"
+          ? {
+              product: {
+                name: product.name.trim(),
+                price: product.price.trim(),
+                description: product.description.trim(),
+              },
+            }
+          : {}),
+      };
+      if (whenMode === "weekly") {
+        const [hour, minute] = publishTime.split(":");
+        await api(`/v1/brands/${brandId}/automation/slots`, {
+          method: "POST",
+          body: JSON.stringify({
+            post_model_id: modelResult.model.id,
+            weekday: Number(weekday),
+            hour: Number(hour),
+            minute: Number(minute || 0),
+            networks,
+            require_approval: requireApproval,
+            starts_on: startsOn,
+            ends_on: endsOn,
+            ...brief,
+          }),
+        });
+        return { kind: "slot" as const, post: null };
+      }
       const postResult = await api<{ post: Post }>(`/v1/brands/${brandId}/posts`, {
         method: "POST",
         body: JSON.stringify({
           post_model_id: modelResult.model.id,
-          ...(screen === "carousel"
-            ? { theme: carouselTheme, layout: carouselLayout }
-            : { mood: mood || undefined, aspect: aspectToAPI(aspect) }),
-          ...(screen === "product"
+          ...brief,
+          ...(whenMode === "once"
             ? {
-                product: {
-                  name: product.name.trim(),
-                  price: product.price.trim(),
-                  description: product.description.trim(),
-                },
+                publish_on: publishOn,
+                publish_time: publishTime,
+                networks,
+                require_approval: requireApproval,
               }
             : {}),
         }),
       });
-      return postResult.post;
+      return { kind: "post" as const, post: postResult.post };
     },
-    onSuccess: (post) => {
+    onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: ["models"] });
       void queryClient.invalidateQueries({ queryKey: ["posts"] });
-      router.push(`/posts/${post.id}?brand=${brandId}`);
+      if (result.kind === "slot") {
+        router.push(`/calendar?brand=${brandId}`);
+        return;
+      }
+      if (result.post) {
+        router.push(`/posts/${result.post.id}?brand=${brandId}`);
+      }
     },
     onError: (error) => {
       const code = error instanceof ApiError ? error.code : "internal_error";
-      appToast.error(errors(code === "ai_unconfigured" ? "ai_unconfigured" : code === "invalid_input" ? "invalid_input" : "internal_error"), "wizard");
+      const known = ["ai_unconfigured", "invalid_input", "schedule_taken", "provider_unavailable"];
+      appToast.error(errors(known.includes(code) ? code : "internal_error"), "wizard");
     },
   });
 
@@ -268,6 +330,7 @@ export function CreationKindPage() {
         {step === "gallery" ? (
           <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col space-y-3 md:space-y-4">
             <WizardStepper
+              steps={KIND_STEPS}
               step={1}
               onGoTo={(next) => {
                 if (next === 0) {
@@ -330,6 +393,7 @@ export function CreationKindPage() {
         {step === "prepare" ? (
           <section className="mx-auto flex w-full max-w-xl flex-1 flex-col space-y-3 md:space-y-4">
             <WizardStepper
+              steps={KIND_STEPS}
               step={2}
               onGoTo={(next) => {
                 if (next === 0) {
@@ -377,15 +441,73 @@ export function CreationKindPage() {
                   className="min-h-11 flex-1"
                   disabled={
                     !selectedRecipe ||
-                    generate.isPending ||
                     (wizardScreenKind(selectedRecipe) === "product" && !product.name.trim())
                   }
-                  onClick={() => generate.mutate()}
+                  onClick={() => setStep("when")}
                 >
-                  {generate.isPending ? <Loader2 className="animate-spin" aria-hidden /> : null}
-                  {t("generate")}
+                  {t("next")}
                 </Button>
               ) : null}
+            </WizardActions>
+          </section>
+        ) : null}
+
+        {step === "when" && selectedRecipe ? (
+          <section className="mx-auto flex w-full max-w-xl flex-1 flex-col space-y-3 md:space-y-4">
+            <WizardStepper
+              steps={KIND_STEPS}
+              step={3}
+              onGoTo={(next) => {
+                if (next === 0) {
+                  backToHub();
+                }
+                if (next === 1) {
+                  setStep("gallery");
+                }
+                if (next === 2) {
+                  setStep("prepare");
+                }
+              }}
+            />
+            <WizardWhen
+              brandId={brandId}
+              timezone={selectedBrand?.timezone ?? ""}
+              mode={whenMode}
+              onMode={setWhenMode}
+              publishOn={publishOn}
+              onPublishOn={setPublishOn}
+              publishTime={publishTime}
+              onPublishTime={setPublishTime}
+              weekday={weekday}
+              onWeekday={setWeekday}
+              startsOn={startsOn}
+              onStartsOn={setStartsOn}
+              endsOn={endsOn}
+              onEndsOn={setEndsOn}
+              networks={networks}
+              onNetworks={setNetworks}
+              requireApproval={requireApproval}
+              onRequireApproval={setRequireApproval}
+            />
+            <WizardActions>
+              <Button type="button" variant="outline" className="min-h-11 min-w-24" onClick={() => setStep("prepare")}>
+                {t("back")}
+              </Button>
+              <Button
+                type="button"
+                className="min-h-11 flex-1"
+                disabled={
+                  generate.isPending ||
+                  (wizardScreenKind(selectedRecipe) === "product" && !product.name.trim()) ||
+                  (whenMode !== "now" && networks.length === 0) ||
+                  (whenMode === "once" && (!publishOn || !publishTime)) ||
+                  (whenMode === "weekly" && (!startsOn || !publishTime))
+                }
+                onClick={() => generate.mutate()}
+              >
+                {generate.isPending ? <Loader2 className="animate-spin" aria-hidden /> : null}
+                {whenMode === "weekly" ? t("whenConfirmWeekly") : t("generate")}
+              </Button>
             </WizardActions>
           </section>
         ) : null}

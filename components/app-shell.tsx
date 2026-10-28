@@ -60,7 +60,12 @@ function isCreationItemActive(pathname: string, href: string) {
 }
 
 function isCreationPath(pathname: string) {
-  return pathname.startsWith("/create") || pathname.startsWith("/posts") || pathname.startsWith("/brands");
+  return (
+    pathname.startsWith("/create") ||
+    pathname.startsWith("/posts") ||
+    pathname.startsWith("/brands") ||
+    pathname.startsWith("/calendar")
+  );
 }
 
 export function PageCreateAction({ href, label }: { href: string; label: string }) {
@@ -133,7 +138,7 @@ function ShellFrame({
   const creationItems: { href: string; label: string; icon: LucideIcon }[] = [
     { href: "/brands", label: t("brands"), icon: Layers },
     { href: "/posts", label: t("manualPost"), icon: PenLine },
-    { href: "/posts/automate", label: t("automation"), icon: CalendarDays },
+    { href: "/calendar", label: t("calendar"), icon: CalendarDays },
   ];
   const showCreateFab = !pathname.startsWith("/create");
   const settingsItems: { href: string; label: string; icon: LucideIcon }[] = [

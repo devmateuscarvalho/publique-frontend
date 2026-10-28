@@ -27,6 +27,20 @@ const HUB_STEPS = ["stepBrand", "stepKind"] as const;
 
 type Step = "site" | "kind";
 
+function scheduleSearch(params: { get: (key: string) => string | null }, brandId: string) {
+  const search = new URLSearchParams();
+  search.set("brand", brandId);
+  const on = params.get("on") ?? "";
+  const at = params.get("at") ?? "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(on)) {
+    search.set("on", on);
+  }
+  if (/^\d{2}:\d{2}$/.test(at)) {
+    search.set("at", at);
+  }
+  return search.toString();
+}
+
 function brandNameFromUrl(raw: string): string {
   try {
     const value = raw.includes("://") ? raw : `https://${raw}`;
@@ -283,14 +297,14 @@ export function CreationWizard() {
       return;
     }
     setStep("kind");
-    router.replace(`/create?brand=${brandId}`, { scroll: false });
+    router.replace(`/create?${scheduleSearch(searchParams, brandId)}`, { scroll: false });
   };
 
   const openKind = (kind: OutputKind) => {
     if (!brandId) {
       return;
     }
-    router.push(`/create/${kind.code}?brand=${brandId}`);
+    router.push(`/create/${kind.code}?${scheduleSearch(searchParams, brandId)}`);
   };
 
   if (loading) {
