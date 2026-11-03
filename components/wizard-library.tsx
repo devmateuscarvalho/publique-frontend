@@ -60,7 +60,7 @@ export function WizardLibrary({
       <section className={`${wizardPanelClass} space-y-3 p-4 md:p-5`}>
         <div>
           <p className="text-sm font-medium">{kind === "avatar" ? t("librarySubjectPerson") : t("librarySubjectProduct")}</p>
-          <p className={wizardHintClass}>{t("libraryHint")}</p>
+          <p className={wizardHintClass}>{t(kind === "product" ? "libraryHintProduct" : "libraryHint")}</p>
         </div>
         {query.isLoading ? <p className="text-sm text-muted-foreground">{t("loading")}</p> : null}
         {query.isError ? <p className="text-sm text-destructive">{t("libraryError")}</p> : null}
@@ -137,6 +137,16 @@ export function WizardLibrary({
       </section>
     </div>
   );
+}
+
+function emptyPhotoKey(category: string) {
+  if (category === "character") {
+    return "libraryItemEmpty";
+  }
+  if (category === "location") {
+    return "libraryPlaceEmpty";
+  }
+  return "libraryPhotoOptional";
 }
 
 function matchesChip(item: { category: string; subtype: string }, chip: OfferingChip) {
@@ -251,7 +261,13 @@ function CreateItem({
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor={`library-create-name-${kind}`}>
-              {kind === "avatar" ? t("characterName") : kind === "location" ? t("placeName") : t("productName")}
+              {kind === "avatar"
+                ? t("characterName")
+                : kind === "location"
+                  ? t("placeName")
+                  : chosenKind === "service"
+                    ? t("serviceName")
+                    : t("productName")}
             </Label>
             <Input id={`library-create-name-${kind}`} className={wizardControlClass} value={name} onChange={(event) => setName(event.target.value)} autoComplete="off" />
           </div>
@@ -373,7 +389,7 @@ function SelectedItem({
       {images.length > 0 ? (
         <p className={wizardHintClass}>{t("libraryUsing", { count: images.length })}</p>
       ) : (
-        <p className={wizardHintClass}>{t("libraryItemEmpty")}</p>
+        <p className={wizardHintClass}>{t(emptyPhotoKey(item.category))}</p>
       )}
       <div className="flex flex-wrap gap-2">
         {images.length > 0 ? (

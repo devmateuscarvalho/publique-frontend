@@ -11,7 +11,15 @@ import {
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { type BrandToken, DECK_TOKENS, setScriptKey } from "@/lib/backoffice-preset-shared";
+import {
+  type BrandToken,
+  type DeckShape,
+  DECK_SHAPE_SLIDES,
+  DECK_TOKENS,
+  normalizeDeckShape,
+  removeScriptKey,
+  setScriptKey,
+} from "@/lib/backoffice-preset-shared";
 
 export function BackofficePresetTopicStudio({
   isNew,
@@ -19,6 +27,7 @@ export function BackofficePresetTopicStudio({
   promptImageRef,
   labTheme,
   labLayout,
+  labShape,
   labTopicTitle,
   labTopicAngle,
   labSlideCount,
@@ -28,6 +37,7 @@ export function BackofficePresetTopicStudio({
   onPromptImage,
   onTheme,
   onLayout,
+  onShape,
   onInsertToken,
 }: {
   isNew: boolean;
@@ -35,6 +45,7 @@ export function BackofficePresetTopicStudio({
   promptImageRef: RefObject<HTMLTextAreaElement | null>;
   labTheme: "light" | "dark" | "random";
   labLayout: "editorial" | "statement" | "steps";
+  labShape: DeckShape;
   labTopicTitle: string;
   labTopicAngle: string;
   labSlideCount: number;
@@ -44,6 +55,7 @@ export function BackofficePresetTopicStudio({
   onPromptImage: (value: string) => void;
   onTheme: (value: "light" | "dark" | "random") => void;
   onLayout: (value: "editorial" | "statement" | "steps") => void;
+  onShape: (value: DeckShape, script: string, slides: number) => void;
   onInsertToken: (token: BrandToken) => void;
 }) {
   const t = useTranslations("backoffice");
@@ -54,6 +66,42 @@ export function BackofficePresetTopicStudio({
         <div>
           <p className="text-sm font-medium">{t("labTopic")}</p>
           <p className="text-sm text-ink/70">{t("labTopicAutoHint")}</p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lab-shape">{t("labShape")}</Label>
+          <p className="text-sm text-ink/70">{t("labShapeHint")}</p>
+          <Select
+            value={labShape || "free"}
+            onValueChange={(value) => {
+              const next = normalizeDeckShape(value);
+              let script = promptImage;
+              if (!next) {
+                script = removeScriptKey(script, "shape");
+                onShape("", script, labSlideCount);
+                return;
+              }
+              script = setScriptKey(script, "shape", next);
+              const slides = DECK_SHAPE_SLIDES[next];
+              script = setScriptKey(script, "slides", String(slides));
+              if (next === "howto") {
+                script = setScriptKey(script, "layout", "steps");
+              }
+              onShape(next, script, slides);
+            }}
+          >
+            <SelectTrigger id="lab-shape" className="min-h-11">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="free">{t("labShapeFree")}</SelectItem>
+              <SelectItem value="headline">{t("labShapeHeadline")}</SelectItem>
+              <SelectItem value="mistakes">{t("labShapeMistakes")}</SelectItem>
+              <SelectItem value="stop">{t("labShapeStop")}</SelectItem>
+              <SelectItem value="decide">{t("labShapeDecide")}</SelectItem>
+              <SelectItem value="versus">{t("labShapeVersus")}</SelectItem>
+              <SelectItem value="howto">{t("labShapeHowto")}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-2">
           <Label htmlFor="lab-layout">{t("labLayout")}</Label>

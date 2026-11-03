@@ -183,6 +183,27 @@ export function scriptKey(script: string, key: string): string {
   return match?.[1]?.trim() ?? "";
 }
 
+export const DECK_SHAPES = ["headline", "mistakes", "stop", "decide", "versus", "howto"] as const;
+export type DeckShape = (typeof DECK_SHAPES)[number] | "";
+
+export function normalizeDeckShape(value: string): DeckShape {
+  const next = value.trim().toLowerCase();
+  return (DECK_SHAPES as readonly string[]).includes(next) ? (next as DeckShape) : "";
+}
+
+export const DECK_SHAPE_SLIDES: Record<Exclude<DeckShape, "">, number> = {
+  headline: 5,
+  mistakes: 7,
+  stop: 5,
+  decide: 6,
+  versus: 5,
+  howto: 6,
+};
+
+export function removeScriptKey(script: string, key: string): string {
+  return script.replace(new RegExp(`^${key}:\\s*.*(?:\\r?\\n)?`, "m"), "");
+}
+
 export function setScriptKey(script: string, key: string, value: string): string {
   const line = `${key}: ${value}`;
   const re = new RegExp(`^${key}:\\s*.*$`, "m");

@@ -33,6 +33,7 @@ import { appToast } from "@/lib/app-toast";
 import {
   LAB_BRAND_KEY,
   type BrandToken,
+  type DeckShape,
   type LogoPlacement,
   IMAGE_TOKENS,
   TEXT_TOKENS,
@@ -40,6 +41,7 @@ import {
   appendReferenceSceneGuidance,
   filterKindTokens,
   findUnknownTokens,
+  normalizeDeckShape,
   readStoredBrandId,
   resolveTemplate,
   scriptKey,
@@ -156,6 +158,7 @@ export function BackofficePresetEditor({
   const [labVisualFormat, setLabVisualFormat] = useState<"carousel">("carousel");
   const [labTheme, setLabTheme] = useState<"light" | "dark" | "random">("dark");
   const [labLayout, setLabLayout] = useState<"editorial" | "statement" | "steps">("editorial");
+  const [labShape, setLabShape] = useState<DeckShape>("");
   const [carouselSlideIndex, setCarouselSlideIndex] = useState(0);
   const [effectiveImage, setEffectiveImage] = useState<EffectivePrompt | null>(null);
   const [effectiveCaption, setEffectiveCaption] = useState<EffectivePrompt | null>(null);
@@ -255,7 +258,7 @@ export function BackofficePresetEditor({
     setLabTopicAngle(preset.lab_topic_angle || "");
     setLabTopicMood(preset.lab_topic_mood || "");
     setLabSlideCount(
-      preset.lab_slide_count && preset.lab_slide_count >= 3 && preset.lab_slide_count <= 5
+      preset.lab_slide_count && preset.lab_slide_count >= 3 && preset.lab_slide_count <= 7
         ? preset.lab_slide_count
         : 4,
     );
@@ -268,6 +271,7 @@ export function BackofficePresetEditor({
     setLabLayout(
       scriptLayout === "statement" || scriptLayout === "steps" ? scriptLayout : "editorial",
     );
+    setLabShape(normalizeDeckShape(scriptKey(preset.prompt_image || "", "shape")));
     setCarouselSlideIndex(0);
     const placement = preset.logo_placement;
     if (placement && (logoPlacements as readonly string[]).includes(placement)) {
@@ -720,6 +724,8 @@ export function BackofficePresetEditor({
             lab_visual_format: "carousel",
             lab_theme: labTheme,
             lab_layout: labLayout,
+            lab_shape: labShape,
+            lab_slide_count: labSlideCount,
           }),
         });
         return { mode: "carousel" as const, carousel };
@@ -1021,6 +1027,7 @@ export function BackofficePresetEditor({
                 promptImageRef={promptImageRef}
                 labTheme={labTheme}
                 labLayout={labLayout}
+                labShape={labShape}
                 labTopicTitle={labTopicTitle}
                 labTopicAngle={labTopicAngle}
                 labSlideCount={labSlideCount}
@@ -1030,6 +1037,16 @@ export function BackofficePresetEditor({
                 onPromptImage={setPromptImage}
                 onTheme={setLabTheme}
                 onLayout={setLabLayout}
+                onShape={(next, script, slides) => {
+                  setLabShape(next);
+                  setPromptImage(script);
+                  if (slides >= 3) {
+                    setLabSlideCount(slides);
+                  }
+                  if (next === "howto") {
+                    setLabLayout("steps");
+                  }
+                }}
                 onInsertToken={insertImageToken}
               />
             ) : (

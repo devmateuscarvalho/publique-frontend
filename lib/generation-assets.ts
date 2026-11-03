@@ -72,12 +72,11 @@ export function generationBrief(args: {
 }
 
 export function needsBrandSubject(screen: string | null, item: BrandItem | null, productName: string) {
-  const photos = orderedItemImages(item).length;
   if (screen === "avatar") {
-    return photos < 1;
+    return orderedItemImages(item).length < 1;
   }
   if (screen === "product") {
-    return photos < 1 || !productName.trim();
+    return !item || !productName.trim();
   }
   return false;
 }
