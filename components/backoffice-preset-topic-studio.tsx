@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   type BrandToken,
   type DeckShape,
+  DECK_SHAPE_LAYOUT,
   DECK_SHAPE_SLIDES,
   DECK_TOKENS,
   normalizeDeckShape,
@@ -83,8 +84,9 @@ export function BackofficePresetTopicStudio({
               script = setScriptKey(script, "shape", next);
               const slides = DECK_SHAPE_SLIDES[next];
               script = setScriptKey(script, "slides", String(slides));
-              if (next === "howto") {
-                script = setScriptKey(script, "layout", "steps");
+              const layout = DECK_SHAPE_LAYOUT[next];
+              if (layout) {
+                script = setScriptKey(script, "layout", layout);
               }
               onShape(next, script, slides);
             }}

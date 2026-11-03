@@ -33,6 +33,7 @@ import { appToast } from "@/lib/app-toast";
 import {
   LAB_BRAND_KEY,
   type BrandToken,
+  DECK_SHAPE_LAYOUT,
   type DeckShape,
   type LogoPlacement,
   IMAGE_TOKENS,
@@ -1043,8 +1044,9 @@ export function BackofficePresetEditor({
                   if (slides >= 3) {
                     setLabSlideCount(slides);
                   }
-                  if (next === "howto") {
-                    setLabLayout("steps");
+                  const layout = next ? DECK_SHAPE_LAYOUT[next] : undefined;
+                  if (layout) {
+                    setLabLayout(layout);
                   }
                 }}
                 onInsertToken={insertImageToken}

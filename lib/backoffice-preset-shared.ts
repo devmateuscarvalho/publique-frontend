@@ -200,6 +200,13 @@ export const DECK_SHAPE_SLIDES: Record<Exclude<DeckShape, "">, number> = {
   howto: 6,
 };
 
+export const DECK_SHAPE_LAYOUT: Partial<Record<Exclude<DeckShape, "">, "statement" | "steps">> = {
+  headline: "statement",
+  mistakes: "steps",
+  decide: "steps",
+  howto: "steps",
+};
+
 export function removeScriptKey(script: string, key: string): string {
   return script.replace(new RegExp(`^${key}:\\s*.*(?:\\r?\\n)?`, "m"), "");
 }
