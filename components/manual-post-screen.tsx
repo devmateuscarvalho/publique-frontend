@@ -25,7 +25,10 @@ import { PostCreatingWait } from "@/components/post-creating-wait";
 import { PostGeneratingCaptionLine, PostGeneratingStudio } from "@/components/post-generating-studio";
 import { PostFeedbackPicker, type PostFeedback } from "@/components/post-feedback-picker";
 import { Button } from "@/components/ui/button";
-import { ApiError, api, type CreativeRecipe, type Post, type VisualResponse } from "@/lib/api";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ApiError, api, type CreativeRecipe, type Post, type PostAsset, type VisualResponse } from "@/lib/api";
+import { normalizeVideoModel, videoModels, type VideoModelId } from "@/lib/video-models";
 import { appToast } from "@/lib/app-toast";
 import { startSocialOAuth } from "@/lib/social-connect";
 import { usePresetCopy } from "@/lib/preset-i18n";
@@ -341,7 +344,7 @@ function DraftFeedCard({
 }) {
   const t = useTranslations("creation");
   const presetCopy = usePresetCopy();
-  const image = post.assets?.[0];
+  const image = feedPreviewAsset(post);
   const pending = post.status === "queued" || post.status === "generating";
   const failed = post.status === "failed";
   const [logoFailed, setLogoFailed] = useState(false);
@@ -429,7 +432,16 @@ function DraftFeedCard({
             isStoryPost(post) ? "mx-auto aspect-[9/16] max-h-72 w-full max-w-[11rem]" : "aspect-square",
           )}
         >
-          {image?.url ? (
+          {image?.url && (image.kind === "video" || image.mime?.startsWith("video/")) ? (
+            <video
+              src={image.url}
+              muted
+              loop
+              playsInline
+              autoPlay
+              className="size-full object-cover"
+            />
+          ) : image?.url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={image.url}
@@ -478,6 +490,7 @@ function formatWhen(value: string | undefined, format: ReturnType<typeof useForm
 
 function ManualDraftPage({ postId }: { postId: string }) {
   const t = useTranslations("creation");
+  const videoCopy = useTranslations("backoffice");
   const phone = useTranslations("wizard");
   const errors = useTranslations("errors");
   const integrations = useTranslations("integrations");
@@ -524,7 +537,15 @@ function ManualDraftPage({ postId }: { postId: string }) {
   const post = postQuery.data?.post;
   const status = post?.status ?? "";
   const pending = status === "queued" || status === "generating";
-  const imageUrls = (post?.assets ?? []).map((asset) => asset.url).filter(Boolean);
+  const videoAsset = (post?.assets ?? []).find((asset) => asset.kind === "video" || asset.mime?.startsWith("video/"));
+  const videoLook = Boolean(post?.generation_stage) || status === "image_ready";
+  const generatedStill = videoLook ? latestGeneratedStill(post) : undefined;
+  const referenceAsset = videoLook ? (post?.assets ?? []).find((asset) => asset.origin === "uploaded") : undefined;
+  const imageUrls = videoAsset
+    ? []
+    : generatedStill?.url
+      ? [generatedStill.url]
+      : (post?.assets ?? []).map((asset) => asset.url).filter(Boolean);
   const carousel = imageUrls.length > 1;
   const phoneAspect = previewPhoneAspect(post);
   const isStory = isStoryPost(post);
@@ -701,6 +722,12 @@ function ManualDraftPage({ postId }: { postId: string }) {
   });
 
   const [feedbackMode, setFeedbackMode] = useState<"" | "reject" | "regenerate">("");
+  const [chosenVideoModel, setChosenVideoModel] = useState<VideoModelId>(videoModels[0].id);
+  useEffect(() => {
+    if (post?.video_model) {
+      setChosenVideoModel(normalizeVideoModel(post.video_model));
+    }
+  }, [post?.video_model]);
   const regenerate = useMutation({
     mutationFn: (feedback?: PostFeedback) =>
       api<{ post: Post }>(`/v1/brands/${brandId}/posts/${postId}/regenerate`, {
@@ -711,6 +738,15 @@ function ManualDraftPage({ postId }: { postId: string }) {
       setFeedbackMode("");
       return postQuery.refetch();
     },
+    onError: (error) => appToast.error(errors(mapDraftError(error))),
+  });
+  const animate = useMutation({
+    mutationFn: () =>
+      api<{ post: Post }>(`/v1/brands/${brandId}/posts/${postId}/animate`, {
+        method: "POST",
+        body: JSON.stringify({ video_model: chosenVideoModel }),
+      }),
+    onSuccess: () => postQuery.refetch(),
     onError: (error) => appToast.error(errors(mapDraftError(error))),
   });
   const approvalStatus = post?.approval_status ?? "not_required";
@@ -855,11 +891,81 @@ function ManualDraftPage({ postId }: { postId: string }) {
 
         {status === "failed" ? (
           <div className="space-y-3 rounded-xl border border-destructive/30 p-4">
-            <p className="text-sm text-ink/70">{t("manualFailed")}</p>
-            <Button type="button" className="min-h-11 w-full" onClick={() => regenerate.mutate()} disabled={regenerate.isPending}>
+            <p className="text-sm text-ink/70">
+              {post?.error_code && errors.has(post.error_code) ? errors(post.error_code) : t("manualFailed")}
+            </p>
+            {generatedStill?.url ? (
+              <figure className="space-y-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={generatedStill.url} alt="" className="aspect-square w-full rounded-lg object-cover" />
+                <figcaption className="text-xs text-ink/60">{t("stillKept")}</figcaption>
+              </figure>
+            ) : null}
+            <Button type="button" className="min-h-11 w-full" onClick={() => regenerate.mutate()} disabled={regenerate.isPending || animate.isPending}>
               {t("manualRegenerate")}
             </Button>
           </div>
+        ) : null}
+
+        {status === "image_ready" ? (
+          <section className="space-y-4 rounded-xl border border-input p-4">
+            <div className="space-y-1">
+              <p className="text-sm font-medium">{t("stillReadyTitle")}</p>
+              <p className="text-sm text-ink/70">{t("stillReadyLead")}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {referenceAsset?.url ? (
+                <figure className="space-y-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={referenceAsset.url} alt="" className="aspect-square w-full rounded-lg object-cover" />
+                  <figcaption className="text-xs text-ink/60">{t("stillReference")}</figcaption>
+                </figure>
+              ) : null}
+              {generatedStill?.url ? (
+                <figure className="space-y-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={generatedStill.url} alt="" className="aspect-square w-full rounded-lg object-cover" />
+                  <figcaption className="text-xs text-ink/60">{t("stillGenerated")}</figcaption>
+                </figure>
+              ) : null}
+            </div>
+            <div className="space-y-2">
+              <Label>{t("videoModel")}</Label>
+              <p className="text-sm text-ink/70">{t("videoModelHint")}</p>
+              <Select value={chosenVideoModel} onValueChange={(value) => setChosenVideoModel(normalizeVideoModel(value))}>
+                <SelectTrigger className="min-h-11">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {videoModels.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {videoCopy(`videoLab.models.${item.labelKey}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="button" className="min-h-11 w-full" onClick={() => animate.mutate()} disabled={animate.isPending || regenerate.isPending}>
+              {t("animate")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11 w-full"
+              onClick={() => regenerate.mutate()}
+              disabled={regenerate.isPending || animate.isPending}
+            >
+              {t("regenerateStill")}
+            </Button>
+          </section>
+        ) : null}
+
+        {videoAsset && generatedStill?.url ? (
+          <figure className="space-y-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={generatedStill.url} alt="" className="w-full rounded-lg object-cover" />
+            <figcaption className="text-xs text-ink/60">{t("stillKept")}</figcaption>
+          </figure>
         ) : null}
 
         {qualityFlags.length > 0 && !alreadyPosted ? (
@@ -892,7 +998,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
         <section className="space-y-3">
           <div>
             <h2 className="text-sm font-medium">{t("viewNetworksTitle")}</h2>
-            <p className="mt-1 text-sm text-ink/70">{t("viewNetworksLead")}</p>
+            <p className="mt-1 text-sm text-ink/70">{videoAsset ? t("videoPublishLead") : t("viewNetworksLead")}</p>
           </div>
           <div className="space-y-2">
             {needsConnect ? (
@@ -923,7 +1029,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
                     <p className="text-xs text-ink/60">{t("manualPublishNeedPageUrn")}</p>
                   ) : (
                     <p className="text-xs text-ink/60">
-                      {isStory ? t("manualPublishLinkedInFeedNote") : t("viewNotPosted")}
+                      {videoAsset ? t("videoAsFeed") : isStory ? t("manualPublishLinkedInFeedNote") : t("viewNotPosted")}
                     </p>
                   )}
                 </div>
@@ -969,7 +1075,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
                     <p className="text-xs text-ink/60">
                       {[
                         instagram?.account_label,
-                        isStory ? t("manualPublishAsStory") : t("viewNotPosted"),
+                        videoAsset ? t("videoAsReel") : isStory ? t("manualPublishAsStory") : t("viewNotPosted"),
                       ]
                         .filter(Boolean)
                         .join(" · ")}
@@ -1023,7 +1129,13 @@ function ManualDraftPage({ postId }: { postId: string }) {
                     <p className="text-xs text-ink/60">
                       {[
                         facebook?.account_label,
-                        isStory ? t("manualPublishAsStory") : t("viewNotPosted"),
+                        videoAsset
+                          ? videoAsset.height > videoAsset.width
+                            ? t("videoAsReel")
+                            : t("videoAsPage")
+                          : isStory
+                            ? t("manualPublishAsStory")
+                            : t("viewNotPosted"),
                       ]
                         .filter(Boolean)
                         .join(" · ")}
@@ -1073,7 +1185,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
                     <p className="text-xs text-red-700 dark:text-red-400">{t("manualPublishNetworkFailed")}</p>
                   ) : (
                     <p className="text-xs text-ink/60">
-                      {[tiktok?.account_label, t("viewNotPosted")].filter(Boolean).join(" · ")}
+                      {[tiktok?.account_label, videoAsset ? t("videoAsTikTok") : t("viewNotPosted")].filter(Boolean).join(" · ")}
                     </p>
                   )}
                 </div>
@@ -1238,16 +1350,21 @@ function ManualDraftPage({ postId }: { postId: string }) {
         )}
       >
         {pending ? (
-          <PostCreatingWait brandName={brandName} aspect={phoneAspect} />
+          <PostCreatingWait
+            brandName={brandName}
+            aspect={phoneAspect}
+            phase={post.generation_stage === "video" ? "motion" : post.generation_stage === "image" ? "still" : undefined}
+          />
         ) : (
           <div className={cn(fromCreating && revealPanel && "animate-[panel-fade_480ms_ease-out]")}>
             <InstagramPhonePreview
               brandName={brandName}
               logoUrl={visualQuery.data?.identity.logo_url}
               logoInvertedUrl={visualQuery.data?.identity.logo_inverted_url}
-              imageUrl={imageUrls[0]}
+              imageUrl={videoAsset ? undefined : imageUrls[0]}
               imageUrls={carousel ? imageUrls : undefined}
-              aspect={phoneAspect}
+              videoUrl={videoAsset?.url}
+              aspect={videoAsset ? videoPhoneAspect(videoAsset) : phoneAspect}
               caption={post.caption}
               captionPending={pending}
               emptyImageLabel={phone("phoneEmptyImage")}
@@ -1262,6 +1379,26 @@ function ManualDraftPage({ postId }: { postId: string }) {
   );
 }
 
+function latestGeneratedStill(post?: Post): PostAsset | undefined {
+  return [...(post?.assets ?? [])]
+    .filter((asset) => asset.origin !== "uploaded" && asset.kind !== "video" && !asset.mime?.startsWith("video/"))
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .at(-1);
+}
+
+function feedPreviewAsset(post: Post): PostAsset | undefined {
+  const assets = post.assets ?? [];
+  const video = assets.find((asset) => asset.kind === "video" || asset.mime?.startsWith("video/"));
+  if (video) {
+    return video;
+  }
+  const generated = assets.filter((asset) => asset.origin !== "uploaded");
+  if (assets.some((asset) => asset.origin === "uploaded") && generated.length > 0) {
+    return generated[generated.length - 1];
+  }
+  return assets[0];
+}
+
 function isStoryPost(post?: Post): boolean {
   // Same signals the API uses for Stories publish.
   // Prefer format/aspect from user_brief — do not infer from JPEG size
@@ -1274,6 +1411,20 @@ function isStoryPost(post?: Post): boolean {
     return true;
   }
   return /9:16\s+Stories\/Reels/i.test(post.image_prompt ?? "");
+}
+
+function videoPhoneAspect(asset: { width: number; height: number }): "reel" | "wide" | "square" {
+  if (asset.width > 0 && asset.height > 0) {
+    const ratio = asset.width / asset.height;
+    if (ratio > 1.2) {
+      return "wide";
+    }
+    if (ratio < 0.9) {
+      return "reel";
+    }
+    return "square";
+  }
+  return "reel";
 }
 
 function previewPhoneAspect(post?: Post): "square" | "portrait" | "story" {
@@ -1310,6 +1461,7 @@ function mapDraftError(error: unknown) {
     "approval_required",
     "approval_rejected",
     "approval_stale",
+    "video_model_image_unsupported",
   ] as const;
   if (known.includes(code as (typeof known)[number])) {
     return code;

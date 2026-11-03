@@ -49,7 +49,7 @@ export function presetLabPathFromPreset(preset: {
   output_kind?: string | null;
 }): string {
   const fromField = normalizeFormatParam(preset.content_format ?? "");
-  if (fromField && fromField !== "video") {
+  if (fromField) {
     return presetLabEditPath(fromField, preset.id);
   }
   if (preset.output_kind === "market_topic") {

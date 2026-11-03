@@ -27,7 +27,7 @@ export default function EditBackofficePresetByFormatPage() {
     }
   }, [format, presetId, rawFormat, router]);
 
-  if (!format || format === "video" || !presetId) {
+  if (!format || !presetId) {
     return (
       <AppShell title={t("edit")}>
         <div className="mx-auto flex w-full max-w-xl flex-col gap-4">
@@ -38,6 +38,10 @@ export default function EditBackofficePresetByFormatPage() {
         </div>
       </AppShell>
     );
+  }
+
+  if (rawFormat.trim().toLowerCase() !== format) {
+    return null;
   }
 
   return <BackofficePresetEditor presetId={presetId} format={format} />;

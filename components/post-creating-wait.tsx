@@ -13,13 +13,19 @@ const BEAT_KEYS = ["0", "1", "2", "3", "4", "5"] as const;
 export function PostCreatingWait({
   brandName,
   aspect = "square",
+  phase,
 }: {
   brandName: string;
   /** Match the finished phone preview framing while the ad generates. */
   aspect?: "square" | "portrait" | "story";
+  /** Still is the advertising photo. Motion animates that saved photo. */
+  phase?: "still" | "motion";
 }) {
   const t = useTranslations("creation");
   const brand = brandName.trim() || t("manualUntitled");
+  const titleKey = phase === "motion" ? "motionNoticeTitle" : phase === "still" ? "stillNoticeTitle" : "creatingNoticeTitle";
+  const beatPrefix = phase === "motion" ? "motionBeats" : phase === "still" ? "stillBeats" : "manualGeneratingBeats";
+  const footerKey = phase === "motion" ? "motionFooter" : phase === "still" ? "stillFooter" : "manualGeneratingFooter";
   const [beatIndex, setBeatIndex] = useState(0);
   const [progress, setProgress] = useState(8);
   const isStory = aspect === "story";
@@ -39,7 +45,7 @@ export function PostCreatingWait({
   }, []);
 
   return (
-    <section aria-busy="true" aria-live="polite" aria-label={t("creatingNoticeTitle")}>
+    <section aria-busy="true" aria-live="polite" aria-label={t(titleKey)}>
       <Iphone>
         {isStory ? (
           <div className="relative flex size-full flex-col overflow-hidden bg-black text-white">
@@ -66,13 +72,13 @@ export function PostCreatingWait({
                 <span className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-white motion-reduce:animate-none" />
               </span>
               <div className="space-y-1.5">
-                <p className="text-sm font-semibold text-white">{t("creatingNoticeTitle")}</p>
+                <p className="text-sm font-semibold text-white">{t(titleKey)}</p>
                 <p className="text-xs leading-relaxed text-white/70">
-                  {t(`manualGeneratingBeats.${BEAT_KEYS[beatIndex]}`, { brand })}
+                  {t(`${beatPrefix}.${BEAT_KEYS[beatIndex]}`, { brand })}
                 </p>
               </div>
               <Progress value={progress} className="mt-2 h-1 w-full max-w-[12rem] bg-white/15 [&>div]:bg-white" />
-              <p className="text-[11px] text-white/45">{t("manualGeneratingFooter")}</p>
+              <p className="text-[11px] text-white/45">{t(footerKey)}</p>
             </div>
             <div className="relative z-10 mt-auto px-3 pb-4 pt-2">
               <div className="min-h-10 rounded-full border border-white/40 bg-black/25 px-3 py-2 backdrop-blur-sm">
@@ -111,9 +117,9 @@ export function PostCreatingWait({
                   <span className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-pine motion-reduce:animate-none" />
                 </span>
                 <div className="space-y-1.5">
-                  <p className="text-sm font-semibold">{t("creatingNoticeTitle")}</p>
+                  <p className="text-sm font-semibold">{t(titleKey)}</p>
                   <p className="text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
-                    {t(`manualGeneratingBeats.${BEAT_KEYS[beatIndex]}`, { brand })}
+                    {t(`${beatPrefix}.${BEAT_KEYS[beatIndex]}`, { brand })}
                   </p>
                 </div>
               </div>
@@ -124,7 +130,7 @@ export function PostCreatingWait({
               <Skeleton className="h-2.5 w-[64%]" />
               <Skeleton className="h-2.5 w-[72%]" />
               <Progress value={progress} className="mt-3 h-1 bg-pine/15 [&>div]:bg-pine" />
-              <p className="text-center text-[11px] text-neutral-400">{t("manualGeneratingFooter")}</p>
+              <p className="text-center text-[11px] text-neutral-400">{t(footerKey)}</p>
             </div>
           </div>
         )}

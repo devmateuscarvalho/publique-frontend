@@ -75,7 +75,10 @@ export function WizardWhen({
 
   return (
     <div className="space-y-5">
-      <WizardStepHeader title={t("whenTitle")} lead={t("whenLead", { zone: timezone || "UTC" })} />
+      <WizardStepHeader
+        title={t("whenTitle")}
+        lead={t("whenLead", { zone: timezone || "UTC" })}
+      />
       <div className="grid grid-cols-3 gap-2">
         {(["now", "once", "weekly"] as const).map((item) => (
           <button

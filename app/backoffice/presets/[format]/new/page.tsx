@@ -51,22 +51,6 @@ function NewPresetByFormatBody() {
     return null;
   }
 
-  if (format === "video") {
-    return (
-      <AppShell title={t("formats.video.title")}>
-        <div className="mx-auto flex w-full max-w-xl flex-col gap-4">
-          <Button asChild variant="outline" className="min-h-11 w-fit">
-            <Link href="/backoffice/presets/new">{t("backToFormats")}</Link>
-          </Button>
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold">{t("formats.video.title")}</h2>
-            <p className="text-sm text-ink/70">{t("formats.video.soon")}</p>
-          </div>
-        </div>
-      </AppShell>
-    );
-  }
-
   const subject = subjectFromQuery || defaultSubjectForFormat(format);
   return <BackofficePresetEditor format={format} kind={subject} />;
 }

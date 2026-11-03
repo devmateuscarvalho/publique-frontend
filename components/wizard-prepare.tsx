@@ -166,6 +166,7 @@ export function WizardPrepare({
   return (
     <div className="space-y-5">
       <WizardStepHeader title={t(`prepareTitle.${kind}`)} lead={t(`prepareLead.${kind}`)} />
+      {recipe?.content_format === "video" ? <p className={wizardHintClass}>{t("videoPrepareNote")}</p> : null}
 
       {showCarousel ? (
         <div className={`${wizardPanelClass} space-y-1.5 p-4 sm:max-w-md sm:p-5`}>

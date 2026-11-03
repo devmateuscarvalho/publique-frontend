@@ -2,7 +2,6 @@
 
 import { Clapperboard, GalleryHorizontal, ImageIcon } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { AppShell } from "@/components/app-shell";
@@ -14,12 +13,11 @@ import { cn } from "@/lib/utils";
 const FORMATS = [
   { code: "image", icon: ImageIcon, ready: true },
   { code: "carousel", icon: GalleryHorizontal, ready: true },
-  { code: "video", icon: Clapperboard, ready: false },
+  { code: "video", icon: Clapperboard, ready: true },
 ] as const;
 
 export function BackofficePresetFormatHub() {
   const t = useTranslations("backoffice");
-  const router = useRouter();
   const { me, loading } = useAccount();
   const isSuperAdmin = me.data?.user.platform_role === "super_admin";
 
@@ -50,20 +48,15 @@ export function BackofficePresetFormatHub() {
             const Icon = format.icon;
             return (
               <li key={format.code}>
-                <button
-                  type="button"
-                  disabled={!format.ready}
+                <Link
+                  href={format.ready ? presetLabNewPath(format.code as ContentFormat) : "/backoffice/presets/new"}
+                  aria-disabled={!format.ready}
                   className={cn(
                     "flex min-h-16 w-full items-center gap-3 rounded-2xl border border-input bg-card px-3 py-3 text-left shadow-sm",
                     format.ready
                       ? "transition hover:border-pine/35 hover:bg-pine/5"
-                      : "cursor-not-allowed opacity-55",
+                      : "pointer-events-none cursor-not-allowed opacity-55",
                   )}
-                  onClick={() => {
-                    if (format.ready) {
-                      router.push(presetLabNewPath(format.code as ContentFormat));
-                    }
-                  }}
                 >
                   <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-muted text-ink">
                     <Icon className="size-5" aria-hidden />
@@ -74,7 +67,7 @@ export function BackofficePresetFormatHub() {
                       {format.ready ? t(`formats.${format.code}.lead`) : t("formats.video.soon")}
                     </span>
                   </span>
-                </button>
+                </Link>
               </li>
             );
           })}

@@ -129,6 +129,7 @@ export type CreativeRecipe = {
   segment_id: string;
   output_kind: "product" | "avatar" | "market_topic" | string;
   content_format?: "image" | "carousel" | "video" | string;
+  video_aspect?: string;
   style_key: string;
   name?: string;
   blurb?: string;
@@ -161,6 +162,8 @@ export type PromptPreset = {
   prompt_text: string;
   result_text: string;
   lab_brand_id?: string;
+  lab_item_id?: string;
+  lab_place_id?: string;
   lab_product_name?: string;
   lab_product_price?: string;
   lab_product_description?: string;
@@ -169,6 +172,9 @@ export type PromptPreset = {
   lab_topic_mood?: string;
   lab_slide_count?: number;
   lab_visual_format?: "single" | "carousel" | string;
+  video_seconds?: number;
+  video_aspect?: string;
+  video_model?: string;
   preview_path: string;
   preview_media_id?: string;
   include_logo: boolean;
@@ -595,6 +601,11 @@ export type Post = {
   };
   caption_prompt?: string;
   image_prompt?: string;
+  generation_stage?: "" | "image" | "video" | string;
+  image_model?: string;
+  video_model?: string;
+  still_prompt?: string;
+  motion_prompt?: string;
   created_at?: string;
   updated_at?: string;
   assets: PostAsset[];

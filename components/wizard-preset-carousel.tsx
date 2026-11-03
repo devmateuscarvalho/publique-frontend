@@ -26,11 +26,40 @@ function lookAspect(kind: string) {
   return kind === "market_topic" ? "aspect-[4/5]" : "aspect-square";
 }
 
-function LookImage({ src, aspect }: { src: string; aspect: string }) {
+function lookFrame(kind: string, format?: string, videoAspect?: string) {
+  if (format === "video") {
+    if (videoAspect === "16:9") {
+      return "aspect-video";
+    }
+    if (videoAspect === "1:1") {
+      return "aspect-square";
+    }
+    return "aspect-[9/16]";
+  }
+  return lookAspect(kind);
+}
+
+function LookImage({ src, aspect, video }: { src: string; aspect: string; video?: boolean }) {
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
   if (!src || failed) {
     return <span className={cn("block w-full bg-muted", aspect)} />;
+  }
+  if (video) {
+    return (
+      <span className={cn("relative block w-full bg-black", aspect)}>
+        <video
+          src={src}
+          muted
+          loop
+          playsInline
+          autoPlay
+          className="absolute inset-0 h-full w-full object-cover"
+          onLoadedData={() => setReady(true)}
+          onError={() => setFailed(true)}
+        />
+      </span>
+    );
   }
   return (
     <span className={cn("relative block w-full bg-muted", aspect)}>
@@ -85,7 +114,7 @@ export function WizardPresetCarousel({
     <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label={label}>
       {recipes.map((recipe) => {
         const active = recipe.id === selectedId;
-        const aspect = lookAspect(recipe.output_kind);
+        const aspect = lookFrame(recipe.output_kind, recipe.content_format, recipe.video_aspect);
         const name = copy.name(recipe);
         const badge = soleFitBadge(recipe.fits);
         return (
@@ -97,7 +126,7 @@ export function WizardPresetCarousel({
                 aria-label={t("gallerySeeOnPhoneAria", { name })}
                 onClick={() => onPreview?.(recipe)}
               >
-                <LookImage src={recipe.preview_path} aspect={aspect} />
+                <LookImage src={recipe.preview_path} aspect={aspect} video={recipe.content_format === "video"} />
                 <span className="pointer-events-none absolute inset-x-0 bottom-0 flex min-h-11 items-center justify-center gap-1.5 bg-gradient-to-t from-black/80 via-black/55 to-transparent px-3 pt-6 pb-2.5 text-[13px] font-medium text-white">
                   <Smartphone className="size-4 shrink-0" aria-hidden />
                   {t("gallerySeeOnPhone")}

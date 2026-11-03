@@ -7,9 +7,12 @@ import {
   Heart,
   MessageCircle,
   MoreHorizontal,
+  Play,
   Send,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 
 import { useTranslations } from "next-intl";
 
@@ -43,8 +46,10 @@ type InstagramPhonePreviewProps = {
   generatingCaptionLabel: string;
   /** ICU template with `{count}`, e.g. "{count} likes". */
   likesLabel: string;
-  /** Media aspect: feed square, feed portrait 4:5, or full-bleed Stories 9:16. */
-  aspect?: "square" | "portrait" | "story";
+  /** Media aspect: feed square, feed portrait 4:5, reel 9:16, landscape 16:9, or full-bleed Stories. */
+  aspect?: "square" | "portrait" | "story" | "reel" | "wide";
+  /** Plays in the media frame instead of a still image. */
+  videoUrl?: string;
   className?: string;
 };
 
@@ -113,6 +118,104 @@ function PreviewMediaImg({
   );
 }
 
+function PhoneFeedVideo({
+  src,
+  videoRef,
+}: {
+  src: string;
+  videoRef: RefObject<HTMLVideoElement | null>;
+}) {
+  const t = useTranslations("backoffice");
+  const backdropRef = useRef<HTMLVideoElement>(null);
+  const [paused, setPaused] = useState(true);
+  const [muted, setMuted] = useState(true);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    const backdrop = backdropRef.current;
+    if (!video) {
+      return;
+    }
+    video.muted = true;
+    if (backdrop) {
+      backdrop.muted = true;
+    }
+    const start = video.play();
+    if (start) {
+      start.catch(() => setPaused(true));
+    }
+    backdrop?.play().catch(() => undefined);
+  }, [src, videoRef]);
+
+  return (
+    <>
+      <video
+        ref={backdropRef}
+        src={src}
+        muted
+        loop
+        playsInline
+        aria-hidden
+        className="pointer-events-none absolute inset-0 size-full scale-110 object-cover opacity-70 blur-2xl"
+      />
+      <video
+        ref={videoRef}
+        key={src}
+        src={src}
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        controls={false}
+        disablePictureInPicture
+        className="absolute inset-0 size-full object-contain"
+        onPlay={() => setPaused(false)}
+        onPause={() => setPaused(true)}
+        onTimeUpdate={(event) => {
+          const video = event.currentTarget;
+          const backdrop = backdropRef.current;
+          if (video.duration) {
+            setProgress(video.currentTime / video.duration);
+          }
+          if (backdrop && Math.abs(backdrop.currentTime - video.currentTime) > 0.4) {
+            backdrop.currentTime = video.currentTime;
+          }
+        }}
+      />
+      {paused ? (
+        <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+          <span className="flex size-12 items-center justify-center rounded-full bg-black/50 text-white shadow-sm">
+            <Play className="size-6 translate-x-0.5 fill-white" aria-hidden />
+          </span>
+        </span>
+      ) : null}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-1 bg-white/35" aria-hidden>
+        <div className="h-full bg-white" style={{ width: `${Math.min(100, progress * 100)}%` }} />
+      </div>
+      <button
+        type="button"
+        className="absolute bottom-3 right-1 z-20 flex size-11 items-center justify-center text-white drop-shadow"
+        aria-label={muted ? t("phoneVideoUnmute") : t("phoneVideoMute")}
+        onClick={() => {
+          const video = videoRef.current;
+          const backdrop = backdropRef.current;
+          if (!video) {
+            return;
+          }
+          video.muted = !video.muted;
+          if (backdrop) {
+            backdrop.muted = true;
+          }
+          setMuted(video.muted);
+        }}
+      >
+        {muted ? <VolumeX className="size-4" aria-hidden /> : <Volume2 className="size-4" aria-hidden />}
+      </button>
+    </>
+  );
+}
+
 export function InstagramPhonePreview({
   brandName,
   logoUrl,
@@ -128,6 +231,7 @@ export function InstagramPhonePreview({
   generatingCaptionLabel,
   likesLabel,
   aspect = "square",
+  videoUrl,
   className,
 }: InstagramPhonePreviewProps) {
   const t = useTranslations("backoffice");
@@ -143,6 +247,8 @@ export function InstagramPhonePreview({
   const burstTimers = useRef<number[]>([]);
   const tapStartRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
   const lastTapRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const playTimerRef = useRef<number | null>(null);
   // Index we are scrolling to programmatically; scroll events are ignored until we land there.
   const pendingTargetRef = useRef<number | null>(null);
   const settleTimerRef = useRef<number | null>(null);
@@ -151,6 +257,9 @@ export function InstagramPhonePreview({
     return () => {
       for (const timer of burstTimers.current) {
         window.clearTimeout(timer);
+      }
+      if (playTimerRef.current !== null) {
+        window.clearTimeout(playTimerRef.current);
       }
     };
   }, []);
@@ -173,6 +282,18 @@ export function InstagramPhonePreview({
       setBursts((list) => list.filter((item) => !ids.has(item.id)));
     }, 1200);
     burstTimers.current.push(timer);
+  };
+
+  const toggleVideo = () => {
+    const video = videoRef.current;
+    if (!video) {
+      return;
+    }
+    if (video.paused) {
+      void video.play();
+      return;
+    }
+    video.pause();
   };
 
   const giveLike = (clientX: number, clientY: number) => {
@@ -232,10 +353,23 @@ export function InstagramPhonePreview({
       Math.hypot(event.clientX - last.x, event.clientY - last.y) < 40
     ) {
       lastTapRef.current = null;
+      if (playTimerRef.current !== null) {
+        window.clearTimeout(playTimerRef.current);
+        playTimerRef.current = null;
+      }
       giveLike(event.clientX, event.clientY);
       return;
     }
     lastTapRef.current = { x: event.clientX, y: event.clientY, t: now };
+    if (videoUrl) {
+      if (playTimerRef.current !== null) {
+        window.clearTimeout(playTimerRef.current);
+      }
+      playTimerRef.current = window.setTimeout(() => {
+        playTimerRef.current = null;
+        toggleVideo();
+      }, 280);
+    }
   };
 
   const likesText = likesLabel.replace("{count}", formatLikes(likesCount));
@@ -392,7 +526,9 @@ export function InstagramPhonePreview({
               onPointerUp={onMediaPointerUp}
               className="absolute inset-0"
             >
-              {storySrc ? (
+              {videoUrl ? (
+                <PhoneFeedVideo src={videoUrl} videoRef={videoRef} />
+              ) : storySrc ? (
                 <>
                   {/* Blurred fill behind contain — same treatment Instagram uses for non-9:16 media. */}
                   <PreviewMediaImg
@@ -532,11 +668,24 @@ export function InstagramPhonePreview({
               onPointerDown={onMediaPointerDown}
               onPointerUp={onMediaPointerUp}
               className={cn(
-                "relative w-full shrink-0 overflow-hidden bg-neutral-100 dark:bg-neutral-900",
-                aspect === "portrait" ? "aspect-[4/5]" : "aspect-square",
+                "relative w-full overflow-hidden",
+                videoUrl
+                  ? "min-h-0 flex-1 bg-black"
+                  : cn(
+                      "shrink-0 bg-neutral-100 dark:bg-neutral-900",
+                      aspect === "portrait"
+                        ? "aspect-[4/5]"
+                        : aspect === "reel"
+                          ? "aspect-[9/16]"
+                          : aspect === "wide"
+                            ? "aspect-video"
+                            : "aspect-square",
+                    ),
               )}
             >
-              {isCarousel ? (
+              {videoUrl ? (
+                <PhoneFeedVideo src={videoUrl} videoRef={videoRef} />
+              ) : isCarousel ? (
                 <>
                   <div
                     ref={trackRef}
@@ -649,9 +798,9 @@ export function InstagramPhonePreview({
               <Bookmark className="size-5" aria-hidden />
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4">
+            <div className={cn("px-3 pb-4", videoUrl ? "max-h-24 shrink-0 overflow-hidden" : "min-h-0 flex-1 overflow-y-auto")}>
               <p className="text-[11px] font-semibold">{likesText}</p>
-              <p className="mt-1 whitespace-pre-wrap text-[12px] leading-relaxed">
+              <p className={cn("mt-1 whitespace-pre-wrap text-[12px] leading-relaxed", videoUrl && "line-clamp-2")}>
                 <span className="font-semibold">{displayName}</span>{" "}
                 <span
                   className={cn(

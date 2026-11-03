@@ -357,15 +357,25 @@ function PresetsBody() {
                           />
                         ) : null}
                         <span className="relative block overflow-hidden rounded-lg bg-muted">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={presetThumb(preset, isCarousel)}
-                            alt=""
-                            className={cn(
-                              "w-full object-cover",
-                              isCarousel ? "aspect-[4/5]" : "aspect-square",
-                            )}
-                          />
+                          {format === "video" && preset.preview_path ? (
+                            <video
+                              src={preset.preview_path}
+                              muted
+                              playsInline
+                              preload="metadata"
+                              className="aspect-[9/16] w-full object-cover"
+                            />
+                          ) : (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img
+                              src={presetThumb(preset, isCarousel)}
+                              alt=""
+                              className={cn(
+                                "w-full object-cover",
+                                isCarousel ? "aspect-[4/5]" : "aspect-square",
+                              )}
+                            />
+                          )}
                           {isCarousel ? (
                             <span className="pointer-events-none absolute top-1 right-1 inline-flex items-center gap-0.5 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold text-white">
                               <GalleryHorizontal className="size-3" aria-hidden />

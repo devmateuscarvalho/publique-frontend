@@ -57,6 +57,7 @@ import {
 import { orderedItemImages } from "@/lib/generation-assets";
 import { itemMatchesLook } from "@/lib/look-fits";
 import { logoPlacements } from "@/lib/post-template";
+import { normalizeVideoModel, videoModels, type VideoModelId } from "@/lib/video-models";
 
 function imageExtension(url: string, contentType: string): string {
   const type = contentType.split(";")[0]?.trim().toLowerCase() ?? "";
@@ -165,6 +166,9 @@ export function BackofficePresetEditor({
   const [effectiveCaption, setEffectiveCaption] = useState<EffectivePrompt | null>(null);
   const [effectivePrompts, setEffectivePrompts] = useState<EffectivePrompt[]>([]);
   const [includeLogo, setIncludeLogo] = useState(true);
+  const [videoSeconds, setVideoSeconds] = useState(5);
+  const [videoAspect, setVideoAspect] = useState<"9:16" | "1:1" | "16:9">("9:16");
+  const [videoModel, setVideoModel] = useState<VideoModelId>(videoModels[0].id);
   const [fitKeys, setFitKeys] = useState<string[]>([]);
   const [logoPlacement, setLogoPlacement] = useState<LogoPlacement>("bottom_right");
   const [resultText, setResultText] = useState("");
@@ -178,7 +182,7 @@ export function BackofficePresetEditor({
     if (!isNew) {
       return;
     }
-    if (format === "image" || format === "carousel") {
+    if (format === "image" || format === "carousel" || format === "video") {
       setContentFormat(format);
     }
     const next = kind?.trim() ?? "";
@@ -193,7 +197,7 @@ export function BackofficePresetEditor({
     if (!isNew) {
       return;
     }
-    if (format !== "image" && format !== "carousel") {
+    if (format !== "image" && format !== "carousel" && format !== "video") {
       router.replace("/backoffice/presets/new");
     }
   }, [isNew, format, router]);
@@ -215,7 +219,7 @@ export function BackofficePresetEditor({
   }, [isNew, presetId, format, presetQuery.data?.prompt_preset, router]);
 
   useEffect(() => {
-    if (!isNew || !kindsQuery.isSuccess || contentFormat !== "image") {
+    if (!isNew || !kindsQuery.isSuccess || (contentFormat !== "image" && contentFormat !== "video")) {
       return;
     }
     const kinds = (kindsQuery.data?.output_kinds ?? []).filter((item) => item.code !== "market_topic");
@@ -252,6 +256,8 @@ export function BackofficePresetEditor({
     if (preset.lab_brand_id) {
       setLabBrandId(preset.lab_brand_id);
     }
+    setLabItemId(preset.lab_item_id || "");
+    setLabPlaceId(preset.lab_place_id || "");
     setLabProductName(preset.lab_product_name || "");
     setLabProductPrice(preset.lab_product_price || "");
     setLabProductDescription(preset.lab_product_description || "");
@@ -274,6 +280,17 @@ export function BackofficePresetEditor({
     );
     setLabShape(normalizeDeckShape(scriptKey(preset.prompt_image || "", "shape")));
     setCarouselSlideIndex(0);
+    if (preset.video_seconds === 10) {
+      setVideoSeconds(10);
+    } else if (preset.content_format === "video") {
+      setVideoSeconds(5);
+    }
+    if (preset.video_aspect === "16:9" || preset.video_aspect === "1:1" || preset.video_aspect === "9:16") {
+      setVideoAspect(preset.video_aspect);
+    }
+    if (preset.content_format === "video") {
+      setVideoModel(normalizeVideoModel(preset.video_model));
+    }
     const placement = preset.logo_placement;
     if (placement && (logoPlacements as readonly string[]).includes(placement)) {
       setLogoPlacement(placement as LogoPlacement);
@@ -314,7 +331,7 @@ export function BackofficePresetEditor({
   const labItemsQuery = useQuery({
     queryKey: ["backoffice-brand-items", labBrandId],
     queryFn: () => api<{ items: BrandItem[] }>(`/v1/backoffice/brands/${labBrandId}/items`),
-    enabled: isSuperAdmin && Boolean(labBrandId) && contentFormat === "image",
+    enabled: isSuperAdmin && Boolean(labBrandId) && (contentFormat === "image" || contentFormat === "video"),
   });
   const labFits = useMemo(
     () =>
@@ -404,6 +421,7 @@ export function BackofficePresetEditor({
       labItemId,
       labPlaceId,
       resultText,
+      videoModel,
     ],
     queryFn: () =>
       api<{
@@ -427,6 +445,7 @@ export function BackofficePresetEditor({
           previous_caption: resultText,
           item_id: labItemId,
           place_id: labPlaceId,
+          video_model: contentFormat === "video" ? videoModel : undefined,
         }),
       }),
     enabled: isSuperAdmin && !isNew && Boolean(labBrandId) && Boolean(presetId),
@@ -465,7 +484,7 @@ export function BackofficePresetEditor({
 
   // Live client fallback when preview-prompts is unavailable (or still loading).
   const liveImageEffective = useMemo((): EffectivePrompt | null => {
-    if (contentFormat !== "image" || !promptImage.trim() || !labBrandId) {
+    if ((contentFormat !== "image" && contentFormat !== "video") || !promptImage.trim() || !labBrandId) {
       return null;
     }
     const recipe = resolveTemplate(promptImage, promptTokens);
@@ -479,7 +498,7 @@ export function BackofficePresetEditor({
       hasLocationRef,
     );
     const withLogo = appendLogoClearZone(withRefs, includeLogo, logoPlacement);
-    const quality = contextQuery.data?.envelopes?.image_quality_appendix?.trim() ?? "";
+    const quality = contentFormat === "video" ? "" : (contextQuery.data?.envelopes?.image_quality_appendix?.trim() ?? "");
     const sent = quality ? `${withLogo.trim()}\n\n${quality}` : withLogo.trim();
     return { kind: "image", recipe, user: sent, sent };
   }, [
@@ -655,6 +674,8 @@ export function BackofficePresetEditor({
         prompt_image: promptImage,
         prompt_text: promptText,
         lab_brand_id: labBrandId || "",
+        lab_item_id: labItemId,
+        lab_place_id: labPlaceId,
         lab_product_name: labProductName,
         lab_product_price: labProductPrice,
         lab_product_description: labProductDescription,
@@ -666,7 +687,10 @@ export function BackofficePresetEditor({
         include_logo: includeLogo,
         logo_placement: logoPlacement,
         enabled,
-        ...(contentFormat === "image"
+        ...(contentFormat === "video"
+          ? { video_seconds: videoSeconds, video_aspect: videoAspect, video_model: videoModel }
+          : {}),
+        ...(contentFormat === "image" || contentFormat === "video"
           ? {
               fits: fitKeys.map((key) => {
                 const [category, subtype = ""] = key.split(":");
@@ -703,7 +727,39 @@ export function BackofficePresetEditor({
 
   const generate = useMutation({
     mutationFn: async () => {
-      appToast.info(contentFormat === "carousel" ? t("generatingCarousel") : t("generating"));
+      appToast.info(
+        contentFormat === "carousel"
+          ? t("generatingCarousel")
+          : contentFormat === "video"
+            ? t("videoLab.generating")
+            : t("generating"),
+      );
+      if (contentFormat === "video") {
+        const video = await api<{
+          prompt_preset: PromptPreset;
+          resolved_prompt: string;
+          result_text?: string;
+          effective_prompt?: EffectivePrompt;
+        }>(`/v1/backoffice/prompt-presets/${presetId}/generate-video`, {
+          method: "POST",
+          body: JSON.stringify({
+            prompt_image: promptImage,
+            prompt_text: promptText,
+            brand_id: labBrandId,
+            video_seconds: videoSeconds,
+            video_aspect: videoAspect,
+            video_model: videoModel,
+            include_logo: includeLogo,
+            logo_placement: logoPlacement,
+            lab_product_name: labProductName,
+            lab_product_price: labProductPrice,
+            lab_product_description: labProductDescription,
+            item_id: labItemId,
+            place_id: labPlaceId,
+          }),
+        });
+        return { mode: "video" as const, video };
+      }
       if (contentFormat === "carousel") {
         // One shot: research → deck script + caption → render slides.
         const carousel = await api<{
@@ -792,6 +848,14 @@ export function BackofficePresetEditor({
           nextLayout === "statement" || nextLayout === "steps" ? nextLayout : "editorial",
         );
         setCarouselSlideIndex(0);
+      } else if (result.mode === "video") {
+        const { video } = result;
+        setPreviewPath(video.prompt_preset.preview_path);
+        setAssets(video.prompt_preset.assets ?? []);
+        setPromptImage(video.prompt_preset.prompt_image || promptImage);
+        setPromptText(video.prompt_preset.prompt_text || promptText);
+        setResultText(video.result_text || video.prompt_preset.result_text || "");
+        setEffectiveCaption(video.effective_prompt ?? null);
       } else {
         const { image, text } = result;
         setPreviewPath(image.prompt_preset.preview_path);
@@ -808,7 +872,11 @@ export function BackofficePresetEditor({
       }
       await queryClient.invalidateQueries({ queryKey: ["backoffice-prompt-preset", presetId] });
       await queryClient.invalidateQueries({ queryKey: ["backoffice-prompt-presets"] });
-      appToast.success("ok");
+      if (result.mode === "video") {
+        await queryClient.invalidateQueries({ queryKey: ["notices"] });
+      } else {
+        appToast.success("ok");
+      }
     },
     onError: (err) => {
       const code = err instanceof ApiError ? err.code : "error";
@@ -838,7 +906,21 @@ export function BackofficePresetEditor({
     setDownloadingImages(true);
     try {
       const base = slugFileBase(name || "preset");
-      await downloadImagesAsZip(downloadUrls, `${base}.zip`, base);
+      if (contentFormat === "video") {
+        const response = await fetch(downloadUrls[0], { credentials: "include" });
+        if (!response.ok) {
+          throw new Error("download_failed");
+        }
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = objectUrl;
+        anchor.download = `${base}.mp4`;
+        anchor.click();
+        URL.revokeObjectURL(objectUrl);
+      } else {
+        await downloadImagesAsZip(downloadUrls, `${base}.zip`, base);
+      }
       appToast.success("ok");
     } catch {
       appToast.error("error");
@@ -897,7 +979,11 @@ export function BackofficePresetEditor({
     !busy &&
     Boolean(labBrandId) &&
     (contentFormat === "carousel" ||
-      (unknownTokens.length === 0 && Boolean(promptImage.trim()) && Boolean(promptText.trim())));
+      (contentFormat === "video" && unknownTokens.length === 0 && Boolean(promptImage.trim())) ||
+      (contentFormat === "image" &&
+        unknownTokens.length === 0 &&
+        Boolean(promptImage.trim()) &&
+        Boolean(promptText.trim())));
   const canDownloadImages = downloadUrls.length > 0 && !busy && !downloadingImages;
   const formatLabel = t(`formats.${contentFormat}.title`);
   const imageSubjects = (kindsQuery.data?.output_kinds ?? []).filter(
@@ -957,7 +1043,7 @@ export function BackofficePresetEditor({
               </Select>
             </div>
 
-            {contentFormat === "image" ? (
+            {contentFormat === "image" || contentFormat === "video" ? (
               <div className="space-y-2">
                 <Label>{t("fitLabel")}</Label>
                 <p className="text-sm text-ink/70">{t("fitHint")}</p>
@@ -989,7 +1075,7 @@ export function BackofficePresetEditor({
               </div>
             ) : null}
 
-            {contentFormat === "image" ? (
+            {contentFormat === "image" || contentFormat === "video" ? (
               <div className="space-y-2">
                 <Label>{t("subjectTag")}</Label>
                 <p className="text-sm text-ink/70">{t("subjectTagHint")}</p>
@@ -1054,15 +1140,72 @@ export function BackofficePresetEditor({
             ) : (
             <Tabs defaultValue="image" className="w-full">
               <TabsList>
-                <TabsTrigger value="image">{t("tabs.image")}</TabsTrigger>
+                <TabsTrigger value="image">
+                  {contentFormat === "video" ? t("formats.video.title") : t("tabs.image")}
+                </TabsTrigger>
                 <TabsTrigger value="text">{t("tabs.text")}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="image" className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="preset-prompt-image">{t("promptImage")}</Label>
-                  <p className="text-sm text-ink/70">{t("promptImageHint")}</p>
+                  <Label htmlFor="preset-prompt-image">
+                    {contentFormat === "video" ? t("videoLab.prompt") : t("promptImage")}
+                  </Label>
+                  <p className="text-sm text-ink/70">
+                    {contentFormat === "video" ? t("videoLab.promptHint") : t("promptImageHint")}
+                  </p>
                 </div>
+                {contentFormat === "video" ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-2 sm:col-span-2">
+                      <Label>{t("videoLab.model")}</Label>
+                      <p className="text-sm text-ink/70">{t("videoLab.modelHint")}</p>
+                      <Select value={videoModel} onValueChange={(value) => setVideoModel(normalizeVideoModel(value))}>
+                        <SelectTrigger className="min-h-11">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {videoModels.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {t(`videoLab.models.${item.labelKey}`)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t("videoLab.duration")}</Label>
+                      <Select
+                        value={String(videoSeconds)}
+                        onValueChange={(value) => setVideoSeconds(value === "10" ? 10 : 5)}
+                      >
+                        <SelectTrigger className="min-h-11">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">{t("videoLab.seconds", { n: 5 })}</SelectItem>
+                          <SelectItem value="10">{t("videoLab.seconds", { n: 10 })}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t("videoLab.aspect")}</Label>
+                      <Select
+                        value={videoAspect}
+                        onValueChange={(value) => setVideoAspect(value as "9:16" | "1:1" | "16:9")}
+                      >
+                        <SelectTrigger className="min-h-11">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="9:16">{t("videoLab.aspectStory")}</SelectItem>
+                          <SelectItem value="1:1">{t("videoLab.aspectSquare")}</SelectItem>
+                          <SelectItem value="16:9">{t("videoLab.aspectWide")}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                ) : null}
 
                 <div className="space-y-3 rounded-xl border border-border p-3">
                   <label className="flex min-h-11 items-center gap-3 text-sm">
@@ -1119,7 +1262,7 @@ export function BackofficePresetEditor({
                   <EffectivePromptPanel prompts={imagePanelPrompts} />
                 </div>
 
-                {contentFormat === "image" && labBrandId ? (
+                {(contentFormat === "image" || contentFormat === "video") && labBrandId ? (
                   <div className="space-y-4 rounded-xl border border-border p-3">
                     <div className="space-y-2">
                       <Label>{t("labItem")}</Label>
@@ -1233,7 +1376,8 @@ export function BackofficePresetEditor({
               brandName={previewBrandName}
               logoUrl={contextQuery.data?.logo_url}
               logoInvertedUrl={contextQuery.data?.logo_inverted_url}
-              imageUrl={previewImageUrl || undefined}
+              imageUrl={contentFormat === "video" ? undefined : previewImageUrl || undefined}
+              videoUrl={contentFormat === "video" ? previewPath || undefined : undefined}
               imageUrls={
                 contentFormat === "carousel" && carouselSlides.length > 1
                   ? carouselSlides.map((slide) => slide.url)
@@ -1241,10 +1385,20 @@ export function BackofficePresetEditor({
               }
               activeIndex={safeCarouselIndex}
               onActiveIndexChange={setCarouselSlideIndex}
-              aspect={contentFormat === "carousel" ? "portrait" : "square"}
+              aspect={
+                contentFormat === "carousel"
+                  ? "portrait"
+                  : contentFormat === "video"
+                    ? videoAspect === "9:16"
+                      ? "reel"
+                      : videoAspect === "16:9"
+                        ? "wide"
+                        : "square"
+                    : "square"
+              }
               caption={resultText}
               captionPending={generate.isPending}
-              emptyImageLabel={t("phoneEmptyImage")}
+              emptyImageLabel={contentFormat === "video" ? t("videoLab.previewEmpty") : t("phoneEmptyImage")}
               emptyCaptionLabel={t("phoneEmptyCaption")}
               generatingCaptionLabel={t("phoneGeneratingCaption")}
               likesLabel={t.raw("phoneLikes")}
@@ -1252,7 +1406,11 @@ export function BackofficePresetEditor({
             {busy ? (
               <p className="flex items-center gap-2 text-sm text-ink/70">
                 <Loader2 className="size-4 animate-spin" aria-hidden />
-                {contentFormat === "carousel" ? t("generatingCarousel") : t("generating")}
+                {contentFormat === "carousel"
+                  ? t("generatingCarousel")
+                  : contentFormat === "video"
+                    ? t("videoLab.generating")
+                    : t("generating")}
               </p>
             ) : null}
             {downloadUrls.length > 0 ? (
@@ -1271,9 +1429,11 @@ export function BackofficePresetEditor({
                 ) : (
                   <>
                     <Download className="size-4" aria-hidden />
-                    {downloadUrls.length > 1
-                      ? t("downloadImagesZip", { count: downloadUrls.length })
-                      : t("downloadImageZip")}
+                    {contentFormat === "video"
+                      ? t("videoLab.download")
+                      : downloadUrls.length > 1
+                        ? t("downloadImagesZip", { count: downloadUrls.length })
+                        : t("downloadImageZip")}
                   </>
                 )}
               </Button>
@@ -1295,7 +1455,7 @@ export function BackofficePresetEditor({
                         <button
                           type="button"
                           className="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-ink/55 hover:bg-muted hover:text-ink"
-                          aria-label={t("enabledHint")}
+                          aria-label={contentFormat === "video" ? t("videoLab.publishHint") : t("enabledHint")}
                         >
                           <span className="flex size-5 items-center justify-center rounded-full border border-current text-[11px] font-semibold leading-none">
                             i
@@ -1303,7 +1463,7 @@ export function BackofficePresetEditor({
                         </button>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-xs text-left leading-snug">
-                        {t("enabledHint")}
+                        {contentFormat === "video" ? t("videoLab.publishHint") : t("enabledHint")}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>

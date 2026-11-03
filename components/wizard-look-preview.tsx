@@ -33,6 +33,7 @@ export function WizardLookPreview({
   const t = useTranslations("wizard");
   const copy = usePresetCopy();
   const slides = lookPreviewSlides(recipe);
+  const video = recipe?.content_format === "video";
   const portrait = recipe?.output_kind === "market_topic" || slides.length > 1;
   const lookName = recipe ? copy.name(recipe) : t("previewTitle");
 
@@ -54,9 +55,10 @@ export function WizardLookPreview({
             brandName={brandName}
             logoUrl={visualLogoUrl(visual)}
             logoInvertedUrl={visual?.logo_inverted_url}
-            imageUrl={slides[0]}
-            imageUrls={slides.length > 1 ? slides : undefined}
-            aspect={portrait ? "portrait" : "square"}
+            imageUrl={video ? undefined : slides[0]}
+            imageUrls={!video && slides.length > 1 ? slides : undefined}
+            videoUrl={video ? slides[0] : undefined}
+            aspect={video ? videoPhoneAspect(recipe?.video_aspect) : portrait ? "portrait" : "square"}
             caption={lookPreviewCaption(recipe)}
             emptyImageLabel={emptyImageLabel}
             emptyCaptionLabel={emptyCaptionLabel}
@@ -67,6 +69,16 @@ export function WizardLookPreview({
       </SheetContent>
     </Sheet>
   );
+}
+
+function videoPhoneAspect(value?: string): "reel" | "wide" | "square" {
+  if (value === "16:9") {
+    return "wide";
+  }
+  if (value === "1:1") {
+    return "square";
+  }
+  return "reel";
 }
 
 function lookPreviewCaption(recipe?: CreativeRecipe | null): string {
