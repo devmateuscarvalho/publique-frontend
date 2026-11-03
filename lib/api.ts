@@ -516,7 +516,6 @@ export type PostModel = {
   creative_recipe_id?: string;
   prompt_preset_id?: string;
   output_kind?: string;
-  weekdays: number[];
   created_at?: string;
   updated_at?: string;
 };

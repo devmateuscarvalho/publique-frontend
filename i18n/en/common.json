@@ -1083,7 +1083,6 @@
     "dateNav": "Date navigation",
     "jumpToDate": "Choose a date. Current period: {period}",
     "views": "View",
-    "week": "Week",
     "month": "Month",
     "agenda": "Agenda",
     "empty": "Nothing this day.",
@@ -1522,25 +1521,6 @@
     "industry": "Industry",
     "commercial": "Commercial",
     "opinion": "Opinion"
-  },
-  "aiKeys": {
-    "title": "AI",
-    "lead": "We use your company's key. The cost comes from the account you connect.",
-    "ready": "Ready to write the profile and the ideas.",
-    "stored": "The key is stored safely. Writing with this AI is not turned on yet.",
-    "empty": "No key saved.",
-    "key": "AI key",
-    "save": "Save key",
-    "use": "Use this AI",
-    "inUse": "In use",
-    "remove": "Remove key",
-    "removeConfirm": "Remove this AI key?",
-    "cancel": "Cancel",
-    "providers": {
-      "openai": "OpenAI",
-      "anthropic": "Anthropic",
-      "google": "Google"
-    }
   },
   "integrations": {
     "title": "Integrations",

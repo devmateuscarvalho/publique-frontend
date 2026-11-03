@@ -9,7 +9,7 @@ import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-type CalendarView = "week" | "month" | "agenda";
+type CalendarView = "month" | "agenda";
 
 const segment =
   "inline-flex h-11 min-w-0 items-center justify-center text-sm transition-colors focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset";
@@ -120,11 +120,11 @@ export function CalendarToolbar({
         </div>
 
         <div
-          className="grid h-11 w-full grid-cols-3 divide-x divide-line overflow-hidden rounded-md border border-line bg-card @4xl:w-auto @4xl:min-w-60"
+          className="grid h-11 w-full grid-cols-2 divide-x divide-line overflow-hidden rounded-md border border-line bg-card @4xl:w-auto @4xl:min-w-44"
           role="tablist"
           aria-label={t("views")}
         >
-          {(["week", "month", "agenda"] as const).map((item) => (
+          {(["month", "agenda"] as const).map((item) => (
             <button
               key={item}
               type="button"

@@ -53,19 +53,15 @@ function isCreationItemActive(pathname: string, href: string) {
   if (href === "/posts") {
     return pathname === "/posts" || (pathname.startsWith("/posts/") && !pathname.startsWith("/posts/automate"));
   }
-  if (href === "/brands") {
-    return pathname === "/brands" || pathname.startsWith("/brands/");
-  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function isCreationPath(pathname: string) {
-  return (
-    pathname.startsWith("/create") ||
-    pathname.startsWith("/posts") ||
-    pathname.startsWith("/brands") ||
-    pathname.startsWith("/calendar")
-  );
+  return pathname.startsWith("/create") || pathname.startsWith("/posts") || pathname.startsWith("/calendar");
+}
+
+function isSettingsPath(pathname: string) {
+  return pathname.startsWith("/settings") || pathname.startsWith("/brands");
 }
 
 export function PageCreateAction({ href, label }: { href: string; label: string }) {
@@ -125,7 +121,7 @@ function ShellFrame({
   const pathname = usePathname();
   const { isMobile, setOpen, setOpenMobile, state } = useSidebar();
   const [creationOpen, setCreationOpen] = useState(() => isCreationPath(pathname));
-  const [settingsOpen, setSettingsOpen] = useState(() => pathname.startsWith("/settings"));
+  const [settingsOpen, setSettingsOpen] = useState(() => isSettingsPath(pathname));
   const [backofficeOpen, setBackofficeOpen] = useState(() => pathname.startsWith("/backoffice"));
   const { me } = useAccount();
   const isSuperAdmin = me.data?.user.platform_role === "super_admin";
@@ -136,14 +132,18 @@ function ShellFrame({
   });
 
   const creationItems: { href: string; label: string; icon: LucideIcon }[] = [
-    { href: "/brands", label: t("brands"), icon: Layers },
     { href: "/posts", label: t("manualPost"), icon: PenLine },
     { href: "/calendar", label: t("calendar"), icon: CalendarDays },
   ];
   const showCreateFab = !pathname.startsWith("/create") && !pathname.startsWith("/backoffice");
   const settingsItems: { href: string; label: string; icon: LucideIcon }[] = [
-    { href: "/settings/users", label: t("users"), icon: Users },
-    { href: "/settings/organization", label: t("organization"), icon: Briefcase },
+    { href: "/brands", label: t("brands"), icon: Layers },
+    ...(role === "owner"
+      ? [
+          { href: "/settings/users", label: t("users"), icon: Users },
+          { href: "/settings/organization", label: t("organization"), icon: Briefcase },
+        ]
+      : []),
   ];
   const backofficeItems: { href: string; label: string; icon: LucideIcon }[] = [
     { href: "/backoffice/presets", label: t("promptPresets"), icon: Cake },
@@ -210,11 +210,10 @@ function ShellFrame({
                     </SidebarMenuSub>
                   ) : null}
                 </SidebarMenuItem>
-                {role === "owner" ? (
-                  <SidebarMenuItem>
+                <SidebarMenuItem>
                     <SidebarMenuButton
                       type="button"
-                      isActive={pathname.startsWith("/settings")}
+                      isActive={isSettingsPath(pathname)}
                       tooltip={t("settings")}
                       aria-expanded={settingsOpen}
                       onClick={() => {
@@ -250,7 +249,6 @@ function ShellFrame({
                       </SidebarMenuSub>
                     ) : null}
                   </SidebarMenuItem>
-                ) : null}
                 {isSuperAdmin ? (
                   <SidebarMenuItem>
                     <SidebarMenuButton

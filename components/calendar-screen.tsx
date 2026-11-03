@@ -19,7 +19,7 @@ import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const NETWORKS = ["linkedin", "instagram", "facebook", "tiktok"] as const;
-type View = "week" | "month" | "agenda";
+type View = "month" | "agenda";
 type Focus = "all" | "published" | "scheduled" | "pending" | "attention" | "series";
 
 function isISODate(value: string | null): value is string {
@@ -161,7 +161,7 @@ export function CalendarScreen() {
     Intl.DateTimeFormat().resolvedOptions().timeZone ||
     "UTC";
   const viewParam = searchParams.get("view");
-  const view: View = viewParam === "month" || viewParam === "agenda" ? viewParam : "week";
+  const view: View = viewParam === "agenda" ? "agenda" : "month";
   const today = zonedISO(new Date(), zone);
   const cursor = isISODate(searchParams.get("cursor")) ? (searchParams.get("cursor") as string) : today;
 
@@ -353,29 +353,15 @@ export function CalendarScreen() {
 
           {!calendarQuery.isLoading && !calendarQuery.isError && view !== "agenda" ? (
             <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
-              {view === "week" ? (
-                <WeekGrid
-                  days={weekDays}
-                  byDay={byDay}
-                  rawDay={rawDay}
-                  zone={zone}
-                  today={today}
-                  selected={cursor}
-                  onSelect={(day) => replaceQuery({ cursor: day })}
-                  onOpen={setOpened}
-                  createHref={createHref}
-                />
-              ) : (
-                <MonthGrid
-                  cells={cells}
-                  month={cursor.slice(0, 7)}
-                  byDay={byDay}
-                  today={today}
-                  selected={cursor}
-                  onSelect={(day) => replaceQuery({ cursor: day })}
-                  onOpen={setOpened}
-                />
-              )}
+              <MonthGrid
+                cells={cells}
+                month={cursor.slice(0, 7)}
+                byDay={byDay}
+                today={today}
+                selected={cursor}
+                onSelect={(day) => replaceQuery({ cursor: day })}
+                onOpen={setOpened}
+              />
               <DayPanel
                 day={cursor}
                 events={byDay(cursor)}
@@ -390,111 +376,6 @@ export function CalendarScreen() {
       </CreationFrame>
       <CalendarInspector event={opened} zone={zone} onClose={() => setOpened(null)} />
     </AppShell>
-  );
-}
-
-function WeekGrid({
-  days,
-  byDay,
-  rawDay,
-  zone,
-  today,
-  selected,
-  onSelect,
-  onOpen,
-  createHref,
-}: {
-  days: string[];
-  byDay: (day: string) => CalendarEvent[];
-  rawDay: (day: string) => CalendarEvent[];
-  zone: string;
-  today: string;
-  selected: string;
-  onSelect: (day: string) => void;
-  onOpen: (event: CalendarEvent) => void;
-  createHref: (day: string) => string;
-}) {
-  const t = useTranslations("calendar");
-  const creation = useTranslations("creation");
-  return (
-    <>
-      <div className="grid grid-cols-7 border border-line md:hidden">
-        {days.map((day) => (
-          <button
-            key={day}
-            type="button"
-            aria-pressed={day === selected}
-            className={cn(
-              "min-h-14 cursor-pointer border-l border-line text-sm first:border-l-0",
-              day === today && "text-pine",
-              day === selected && "bg-sand",
-            )}
-            onClick={() => onSelect(day)}
-          >
-            <span className="block text-[10px] uppercase text-ink/45">{t(`weekdayShort.${isoWeekday(day)}` as "weekdayShort.1")}</span>
-            <span className="tabular-nums">{Number(day.slice(8))}</span>
-          </button>
-        ))}
-      </div>
-      <div className="hidden border border-line bg-card md:grid md:grid-cols-7">
-        {days.map((day) => {
-          const items = byDay(day);
-          const shown = items.slice(0, 4);
-          return (
-            <section
-              key={day}
-              className={cn(
-                "flex min-h-[26rem] cursor-pointer flex-col border-l border-line first:border-l-0",
-                day === today && "border-t-2 border-t-pine",
-                day === selected && "bg-sand/60",
-              )}
-              onClick={() => onSelect(day)}
-            >
-              <button
-                type="button"
-                className="flex cursor-pointer items-baseline justify-between px-2 py-2 text-left"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onSelect(day);
-                }}
-              >
-                <span className="text-[11px] uppercase tracking-wide text-ink/45">{creation(`weekdays.${isoWeekday(day)}`)}</span>
-                <span className={cn("text-sm tabular-nums", day === today && "font-semibold text-pine")}>{Number(day.slice(8))}</span>
-              </button>
-              <div className="flex flex-1 flex-col gap-1 px-1.5 pb-2">
-                {shown.map((event) => (
-                  <EventChip key={eventKey(event)} event={event} zone={zone} onOpen={onOpen} />
-                ))}
-                {items.length > shown.length ? (
-                  <button
-                    type="button"
-                    className="min-h-8 cursor-pointer px-1 text-left text-xs text-ink/60"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onSelect(day);
-                    }}
-                  >
-                    {t("more", { count: items.length - shown.length })}
-                  </button>
-                ) : null}
-                {items.length === 0 && rawDay(day).length === 0 ? (
-                  <Link
-                    href={createHref(day)}
-                    className="mt-auto inline-flex min-h-11 cursor-pointer items-center px-1 text-xs text-ink/45 hover:text-ink"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    {t("planDay")}
-                  </Link>
-                ) : null}
-                {items.length === 0 && rawDay(day).length > 0 ? (
-                  <p className="px-1 text-xs text-ink/45">{t("emptyFiltered")}</p>
-                ) : null}
-              </div>
-            </section>
-          );
-        })}
-      </div>
-    </>
   );
 }
 

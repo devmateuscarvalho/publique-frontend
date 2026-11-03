@@ -1083,7 +1083,6 @@
     "dateNav": "Navegação de datas",
     "jumpToDate": "Escolher data. Período atual: {period}",
     "views": "Visualização",
-    "week": "Semana",
     "month": "Mês",
     "agenda": "Agenda",
     "empty": "Nada neste dia.",
@@ -1522,25 +1521,6 @@
     "industry": "Setor",
     "commercial": "Comercial",
     "opinion": "Opinião"
-  },
-  "aiKeys": {
-    "title": "IA",
-    "lead": "Usamos a chave da sua empresa. O gasto sai da conta que você conectar.",
-    "ready": "Pronta para gerar o perfil e as ideias.",
-    "stored": "A chave fica guardada com segurança. Escrever com esta IA ainda não está ligado.",
-    "empty": "Nenhuma chave salva.",
-    "key": "Chave da IA",
-    "save": "Salvar chave",
-    "use": "Usar esta IA",
-    "inUse": "Em uso",
-    "remove": "Remover chave",
-    "removeConfirm": "Remover esta chave de IA?",
-    "cancel": "Cancelar",
-    "providers": {
-      "openai": "OpenAI",
-      "anthropic": "Anthropic",
-      "google": "Google"
-    }
   },
   "integrations": {
     "title": "Integrações",
