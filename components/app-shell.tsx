@@ -6,6 +6,7 @@ import {
   CalendarDays,
   ChevronRight,
   CircleDollarSign,
+  LayoutDashboard,
   LayoutTemplate,
   LogOut,
   PenLine,
@@ -171,6 +172,18 @@ function ShellFrame({
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname.startsWith("/dashboard")}
+                    tooltip={t("dashboard")}
+                  >
+                    <Link href="/dashboard" onClick={() => setOpenMobile(false)}>
+                      <LayoutDashboard />
+                      <span>{t("dashboard")}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     type="button"

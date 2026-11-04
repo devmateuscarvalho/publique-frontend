@@ -2,6 +2,7 @@ export const videoModels = [
   { id: "fal-ai/kling-video/v2.5-turbo/pro/text-to-video", labelKey: "kling25Pro" },
   { id: "fal-ai/kling-video/v3/standard/text-to-video", labelKey: "kling3Standard" },
   { id: "fal-ai/kling-video/v3/pro/text-to-video", labelKey: "kling3Pro" },
+  { id: "fal-ai/veo3.1", labelKey: "veo31" },
 ] as const;
 
 export type VideoModelId = (typeof videoModels)[number]["id"];

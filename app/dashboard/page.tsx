@@ -1,5 +1,13 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { Suspense } from "react";
+
+import { PerformanceDashboard } from "@/components/performance-dashboard";
 
 export default function DashboardPage() {
-  redirect("/create");
+  return (
+    <Suspense>
+      <PerformanceDashboard />
+    </Suspense>
+  );
 }

@@ -5,7 +5,6 @@ import {
   AlertTriangle,
   ArrowDownRight,
   ArrowUpRight,
-  CalendarDays,
   Check,
   ChevronDown,
   ChevronRight,
@@ -16,14 +15,12 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Suspense, useMemo, useState, type ComponentProps, type ReactNode } from "react";
-import type { DateRange } from "react-day-picker";
-import { enUS, ptBR } from "react-day-picker/locale";
 import { Bar, BarChart, CartesianGrid, Cell, Label, Pie, PieChart, XAxis, YAxis } from "recharts";
 
 import { AppShell } from "@/components/app-shell";
+import { addDays, daysBetween, DateRangeFilter, fromYmd, presetRange, toYmd } from "@/components/date-range-filter";
 import { useAccount } from "@/components/use-account";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   ChartContainer,
   ChartLegend,
@@ -35,7 +32,6 @@ import {
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useIsMobile } from "@/hooks/use-mobile";
 import {
   api,
   type AICostGroup,
@@ -48,8 +44,6 @@ import {
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-const PRESETS = ["today", "7d", "30d", "month", "last_month", "90d"] as const;
-type Preset = (typeof PRESETS)[number];
 const SPLITS = ["stage", "model", "origin"] as const;
 type Split = (typeof SPLITS)[number];
 const RANKINGS = ["organization", "brand", "model", "post"] as const;
@@ -64,45 +58,6 @@ function browserTimeZone() {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   } catch {
     return "UTC";
-  }
-}
-
-const pad = (n: number) => String(n).padStart(2, "0");
-const toYmd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
-const startOfToday = () => {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-};
-const daysBetween = (a: Date, b: Date) => Math.round((b.getTime() - a.getTime()) / 86_400_000);
-
-function fromYmd(raw: string | null): Date | null {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw ?? "");
-  if (!m) {
-    return null;
-  }
-  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-  return Number.isNaN(d.getTime()) ? null : d;
-}
-
-/** Inclusive local days for a preset, in the browser zone. */
-function presetRange(preset: Preset, today = startOfToday()): { from: Date; to: Date } {
-  switch (preset) {
-    case "today":
-      return { from: today, to: today };
-    case "7d":
-      return { from: addDays(today, -6), to: today };
-    case "30d":
-      return { from: addDays(today, -29), to: today };
-    case "90d":
-      return { from: addDays(today, -89), to: today };
-    case "last_month":
-      return {
-        from: new Date(today.getFullYear(), today.getMonth() - 1, 1),
-        to: new Date(today.getFullYear(), today.getMonth(), 0),
-      };
-    default:
-      return { from: new Date(today.getFullYear(), today.getMonth(), 1), to: today };
   }
 }
 
@@ -278,6 +233,9 @@ function CostsBody() {
           from={from}
           to={to}
           onChange={(range) => setParam({ from: toYmd(range.from), to: toYmd(range.to) })}
+          periodLabel={t("filters.period")}
+          presetLabel={(preset) => t(`presets.${preset}`)}
+          pickEndLabel={t("filters.pickEnd")}
         />
         <ComboFilter
           label={t("filters.organization")}
@@ -504,82 +462,6 @@ function FilterTrigger({
     >
       {children}
     </button>
-  );
-}
-
-function DateRangeFilter({ from, to, onChange }: { from: Date; to: Date; onChange: (range: { from: Date; to: Date }) => void }) {
-  const t = useTranslations("aiCosts");
-  const locale = useLocale();
-  const isMobile = useIsMobile();
-  const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState<DateRange | undefined>();
-  const fmt = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" });
-  const preset = PRESETS.find((p) => {
-    const r = presetRange(p);
-    return toYmd(r.from) === toYmd(from) && toYmd(r.to) === toYmd(to);
-  });
-  const label = preset ? t(`presets.${preset}`) : fmt.formatRange(from, to);
-  const selected = draft ?? { from, to };
-
-  return (
-    <Popover
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next);
-        setDraft(undefined);
-      }}
-    >
-      <PopoverTrigger asChild>
-        <FilterTrigger active aria-label={t("filters.period")}>
-          <CalendarDays className="size-4" />
-          <span className="max-w-56 truncate">{label}</span>
-          <ChevronDown className="size-4 opacity-70" />
-        </FilterTrigger>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-auto max-w-[calc(100vw-2rem)] p-0">
-        <div className="flex flex-col md:flex-row">
-          <div className="grid grid-cols-2 gap-1 border-b border-input p-2 md:flex md:w-44 md:flex-col md:border-r md:border-b-0">
-            {PRESETS.map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => {
-                  onChange(presetRange(p));
-                  setOpen(false);
-                }}
-                className={cn(
-                  "min-h-11 rounded-md px-3 text-left text-sm",
-                  p === preset ? "bg-foreground text-background" : "hover:bg-muted",
-                )}
-              >
-                {t(`presets.${p}`)}
-              </button>
-            ))}
-          </div>
-          <div className="p-1">
-            <Calendar
-              mode="range"
-              locale={locale.startsWith("pt") ? ptBR : enUS}
-              numberOfMonths={isMobile ? 1 : 2}
-              defaultMonth={isMobile ? to : new Date(to.getFullYear(), to.getMonth() - 1, 1)}
-              selected={selected}
-              disabled={{ after: startOfToday() }}
-              onSelect={(_, day) => {
-                if (!draft) {
-                  setDraft({ from: day, to: undefined });
-                  return;
-                }
-                const start = draft.from ?? day;
-                const [a, b] = day < start ? [day, start] : [start, day];
-                onChange({ from: a, to: b });
-                setOpen(false);
-              }}
-            />
-            {draft ? <p className="px-3 pb-3 text-xs text-ink/60">{t("filters.pickEnd")}</p> : null}
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
   );
 }
 

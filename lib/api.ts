@@ -552,6 +552,90 @@ export type PostPublication = {
   external_id: string;
   error_code: string;
   updated_at?: string;
+  published_at?: string | null;
+};
+
+export type MetricValue = { value: number } | null;
+
+export type AnalyticsMetrics = {
+  impressions: MetricValue;
+  reach: MetricValue;
+  views: MetricValue;
+  likes: MetricValue;
+  comments: MetricValue;
+  shares: MetricValue;
+  saves: MetricValue;
+  engagement: MetricValue;
+  profile_visits: MetricValue;
+  link_clicks: MetricValue;
+  video_watch_time_ms: MetricValue;
+};
+
+export type PostAnalyticsPublication = {
+  network: string;
+  external_id: string;
+  media_kind: string;
+  published_at?: string | null;
+  last_collected_at?: string | null;
+  status: string;
+  error_code: string;
+  metrics: AnalyticsMetrics;
+  platform_metrics?: Record<string, unknown>;
+  engagement_rate_bps?: number | null;
+  series: {
+    slot: string;
+    collected_at: string;
+    status: string;
+    metrics: AnalyticsMetrics;
+  }[];
+};
+
+export type LatestAnalyticsItem = {
+  post_id: string;
+  network: string;
+  collected_at: string;
+  reach: MetricValue;
+  likes: MetricValue;
+};
+
+export type AnalyticsSlice = {
+  posts: number;
+  metrics: AnalyticsMetrics;
+  engagement_rate_bps?: number | null;
+};
+
+export type AnalyticsNetworkSummary = AnalyticsSlice & { network: string };
+
+export type AnalyticsDaySummary = AnalyticsSlice & {
+  day: string;
+  networks?: AnalyticsNetworkSummary[];
+};
+
+export type AnalyticsRankedPost = {
+  post_id: string;
+  brand_id: string;
+  title: string;
+  networks: string[];
+  engagement: MetricValue;
+  likes: MetricValue;
+  reach: MetricValue;
+};
+
+export type AnalyticsRankedLook = {
+  preset_id: string;
+  name: string;
+  style_key: string;
+  posts: number;
+  total: MetricValue;
+  average: MetricValue;
+};
+
+export type AnalyticsSummary = AnalyticsSlice & {
+  networks: AnalyticsNetworkSummary[];
+  series: AnalyticsDaySummary[];
+  ranking: AnalyticsRankedPost[];
+  ranking_basis: "engagement" | "likes" | "";
+  looks: AnalyticsRankedLook[];
 };
 
 export type Post = {
@@ -597,7 +681,21 @@ export type Post = {
     name: string;
     style_key: string;
     output_kind: string;
+    content_format?: "image" | "carousel" | "video" | string;
     version?: number;
+  };
+  /** Wizard choices stored with the post: type and look stay on `preset`. */
+  mold?: {
+    when?: "now" | "once" | "weekly" | string;
+    weekday?: number;
+    hour?: number;
+    minute?: number;
+    subject?: { name?: string; category?: string };
+    price?: string;
+    place?: string;
+    theme?: string;
+    mood?: string;
+    aspect?: string;
   };
   caption_prompt?: string;
   image_prompt?: string;
