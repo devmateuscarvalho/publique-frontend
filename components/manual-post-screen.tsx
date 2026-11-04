@@ -45,7 +45,7 @@ import { queueIsStory } from "@/lib/post-queue";
 import { usePresetCopy } from "@/lib/preset-i18n";
 import { startSocialOAuth } from "@/lib/social-connect";
 import { cn } from "@/lib/utils";
-import { normalizeVideoModel, videoModels, type VideoModelId } from "@/lib/video-models";
+import { modelsForAspect, normalizeVideoModel, videoModelById, videoModels, type VideoModelId } from "@/lib/video-models";
 
 const studioLabel = "text-[11px] font-medium uppercase tracking-[0.16em] text-ink/45";
 
@@ -564,10 +564,10 @@ function ManualDraftPage({ postId }: { postId: string }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [chosenVideoModel, setChosenVideoModel] = useState<VideoModelId>(videoModels[0].id);
   useEffect(() => {
-    if (post?.video_model) {
-      setChosenVideoModel(normalizeVideoModel(post.video_model));
-    }
-  }, [post?.video_model]);
+    const allowed = modelsForAspect(post?.video_aspect);
+    const preferred = post?.video_model ? normalizeVideoModel(post.video_model) : allowed[0].id;
+    setChosenVideoModel(allowed.some((item) => item.id === preferred) ? preferred : allowed[0].id);
+  }, [post?.video_model, post?.video_aspect]);
   const regenerate = useMutation({
     mutationFn: (feedback?: PostFeedback) =>
       api<{ post: Post }>(`/v1/brands/${brandId}/posts/${postId}/regenerate`, {
@@ -1086,13 +1086,14 @@ function ManualDraftPage({ postId }: { postId: string }) {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {videoModels.map((item) => (
+                          {modelsForAspect(post?.video_aspect).map((item) => (
                             <SelectItem key={item.id} value={item.id}>
                               {videoCopy(`videoLab.models.${item.labelKey}`)}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      <p className="text-xs leading-relaxed text-ink/70">{videoCopy(`videoLab.blurbs.${videoModelById(chosenVideoModel).blurbKey}`)}</p>
                       <p className="text-xs leading-relaxed text-ink/55">{t("videoModelHint")}</p>
                     </div>
                     <Button

@@ -57,7 +57,7 @@ import {
 import { orderedItemImages } from "@/lib/generation-assets";
 import { itemMatchesLook } from "@/lib/look-fits";
 import { logoPlacements } from "@/lib/post-template";
-import { normalizeVideoModel, videoModels, type VideoModelId } from "@/lib/video-models";
+import { aspectsForModel, normalizeVideoModel, videoModelById, videoModels, type VideoAspect, type VideoModelId } from "@/lib/video-models";
 
 function imageExtension(url: string, contentType: string): string {
   const type = contentType.split(";")[0]?.trim().toLowerCase() ?? "";
@@ -167,7 +167,7 @@ export function BackofficePresetEditor({
   const [effectivePrompts, setEffectivePrompts] = useState<EffectivePrompt[]>([]);
   const [includeLogo, setIncludeLogo] = useState(true);
   const [videoSeconds, setVideoSeconds] = useState(5);
-  const [videoAspect, setVideoAspect] = useState<"9:16" | "1:1" | "16:9">("9:16");
+  const [videoAspect, setVideoAspect] = useState<VideoAspect>("9:16");
   const [videoModel, setVideoModel] = useState<VideoModelId>(videoModels[0].id);
   const [fitKeys, setFitKeys] = useState<string[]>([]);
   const [logoPlacement, setLogoPlacement] = useState<LogoPlacement>("bottom_right");
@@ -280,16 +280,21 @@ export function BackofficePresetEditor({
     );
     setLabShape(normalizeDeckShape(scriptKey(preset.prompt_image || "", "shape")));
     setCarouselSlideIndex(0);
-    if (preset.video_seconds === 10) {
-      setVideoSeconds(10);
-    } else if (preset.content_format === "video") {
-      setVideoSeconds(5);
-    }
-    if (preset.video_aspect === "16:9" || preset.video_aspect === "1:1" || preset.video_aspect === "9:16") {
-      setVideoAspect(preset.video_aspect);
-    }
     if (preset.content_format === "video") {
-      setVideoModel(normalizeVideoModel(preset.video_model));
+      const nextModel = normalizeVideoModel(preset.video_model);
+      setVideoModel(nextModel);
+      const allowed = aspectsForModel(nextModel);
+      const stored = preset.video_aspect;
+      if (stored === "16:9" || stored === "1:1" || stored === "9:16") {
+        setVideoAspect(allowed.includes(stored) ? stored : (allowed[0] ?? "9:16"));
+      }
+      if (preset.video_seconds === 10) {
+        setVideoSeconds(10);
+      } else {
+        setVideoSeconds(5);
+      }
+    } else if (preset.video_aspect === "16:9" || preset.video_aspect === "1:1" || preset.video_aspect === "9:16") {
+      setVideoAspect(preset.video_aspect);
     }
     const placement = preset.logo_placement;
     if (placement && (logoPlacements as readonly string[]).includes(placement)) {
@@ -1160,7 +1165,18 @@ export function BackofficePresetEditor({
                     <div className="space-y-2 sm:col-span-2">
                       <Label>{t("videoLab.model")}</Label>
                       <p className="text-sm text-ink/70">{t("videoLab.modelHint")}</p>
-                      <Select value={videoModel} onValueChange={(value) => setVideoModel(normalizeVideoModel(value))}>
+                      <p className="text-sm text-ink/80">{t(`videoLab.blurbs.${videoModelById(videoModel).blurbKey}`)}</p>
+                      <Select
+                        value={videoModel}
+                        onValueChange={(value) => {
+                          const next = normalizeVideoModel(value);
+                          setVideoModel(next);
+                          const allowed = aspectsForModel(next);
+                          if (!allowed.includes(videoAspect)) {
+                            setVideoAspect(allowed[0] ?? "9:16");
+                          }
+                        }}
+                      >
                         <SelectTrigger className="min-h-11">
                           <SelectValue />
                         </SelectTrigger>
@@ -1198,9 +1214,15 @@ export function BackofficePresetEditor({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="9:16">{t("videoLab.aspectStory")}</SelectItem>
-                          <SelectItem value="1:1">{t("videoLab.aspectSquare")}</SelectItem>
-                          <SelectItem value="16:9">{t("videoLab.aspectWide")}</SelectItem>
+                          {aspectsForModel(videoModel).map((value) => (
+                            <SelectItem key={value} value={value}>
+                              {value === "16:9"
+                                ? t("videoLab.aspectWide")
+                                : value === "1:1"
+                                  ? t("videoLab.aspectSquare")
+                                  : t("videoLab.aspectStory")}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>

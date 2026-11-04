@@ -702,6 +702,7 @@ export type Post = {
   generation_stage?: "" | "image" | "video" | string;
   image_model?: string;
   video_model?: string;
+  video_aspect?: string;
   still_prompt?: string;
   motion_prompt?: string;
   created_at?: string;

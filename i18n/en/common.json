@@ -234,16 +234,26 @@
     },
     "videoLab": {
       "prompt": "Video prompt",
-      "promptHint": "Describe the scene and the motion. The model accepts 2500 characters: past that, the end of the scene is cut and the brand parameters stay. Tokens such as '{{brand.name}}' are filled in on generate.",
+      "promptHint": "Describe the scene and the motion. Seedance 2.5 keeps 15000 characters; the other Seedance variants keep 3500; Kling 3.0 keeps 2500; Veo 3.1 and Gen-4.5 keep 1000. Past that, the end of the scene is cut and the brand parameters stay. Tokens such as '{{brand.name}}' are filled in on generate.",
       "caption": "Caption prompt",
       "captionHint": "Optional. The caption is written after the video.",
       "model": "Model",
-      "modelHint": "With no photo, the video comes from the text plus the brand visual parameters (colors and fonts). One photo is sent with the request. Extra photos, or the logo, are accepted only by the Kling 3 models. The chosen model is never swapped. Kling 3 and Veo 3.1 native audio stay off. Veo 3.1 renders at 1080p: 5 seconds become 4 and 10 become 8. It does not accept 1:1.",
+      "modelHint": "With no photo, the video comes from the text plus the brand visual parameters. One photo is the first frame. Extra photos and the logo are accepted only by Seedance; the other models refuse that combination and are not swapped. Seedance 2.5 and 2.0 render at 1080p with audio. Fast and Mini render at 720p with audio. Kling 3.0 stays silent. Veo 3.1 renders at 1080p with audio: 5 seconds become 4 and 10 become 8. Veo 3.1 and Gen-4.5 do not accept 1:1.",
+      "blurbs": {
+        "seedance": "For commercials with camera moves, transformations, lighting, and more elaborate scenes.",
+        "kling": "For realistic animation, products in motion, and scenes with physical interaction.",
+        "veo": "For premium campaigns, cinematic scenes, and video with native audio.",
+        "gen4": "For creative control, camera direction, and generative editing."
+      },
       "models": {
-        "kling25Pro": "Kling 2.5 Turbo Pro · US$ 0.07/s",
-        "kling3Standard": "Kling 3 Standard · US$ 0.084/s",
-        "kling3Pro": "Kling 3 Pro · US$ 0.112/s",
-        "veo31": "Veo 3.1 · US$ 0.20/s"
+        "seedance25": "Seedance 2.5 · 1080p · US$ 0.68/s",
+        "seedance20": "Seedance 2.0 · 1080p · US$ 0.40/s",
+        "seedance20Fast": "Seedance 2.0 Fast · 720p · US$ 0.24/s",
+        "seedance20Mini": "Seedance 2.0 Mini · 720p · US$ 0.15/s",
+        "kling30": "Kling 3.0 · 720p · US$ 0.09/s",
+        "kling30Pro": "Kling 3.0 Pro · 1080p · US$ 0.12/s",
+        "veo31": "Veo 3.1 · audio · US$ 0.40/s",
+        "gen45": "Gen-4.5 · US$ 0.12/s"
       },
       "duration": "Duration",
       "seconds": "{n} seconds",
@@ -829,7 +839,7 @@
     "animate": "Animate this photo",
     "regenerateStill": "Generate another photo",
     "videoModel": "Video model",
-    "videoModelHint": "Duration and aspect stay on the published look. The model you pick animates this photo. If it cannot take the image, the screen says so and the model is not swapped. On Veo 3.1, 5 seconds render as 4 and 10 as 8, at 1080p with audio off. 1:1 is not accepted.",
+    "videoModelHint": "Duration and aspect stay on the published look. The model you pick animates this photo. Extra photos and the logo are accepted only by Seedance. On Veo 3.1, 5 seconds render as 4 and 10 as 8, at 1080p with audio. Veo 3.1 and Gen-4.5 do not accept 1:1.",
     "stillKept": "Photo used in the video",
     "manualGeneratingBeats": {
       "0": "Reading how {brand} sounds…",
@@ -1615,7 +1625,8 @@
     "provider_unavailable": "OpenAI did not finish this generation. Check the key/model or try again in a moment.",
     "video_image_too_small": "The photo or logo is smaller than 300×300 pixels. The video model will not accept it. Use a larger file.",
     "video_prompt_too_long": "The video prompt is longer than 2500 characters, the model limit. Shorten the visual text and try again.",
-    "video_balance": "The Fal account has no balance. Top it up at fal.ai and try again.",
+    "video_balance": "The Runway account has no credits. Top it up at runwayml.com and try again.",
+    "video_unconfigured": "Video generation uses Runway. Set RUNWAY_API_KEY on the server and restart the API.",
     "video_provider_unavailable": "The video model did not finish this generation. Try again in a moment.",
     "video_publish_closed": "This video could not be published right now. Try again in a moment.",
     "video_model_image_unsupported": "This model does not accept this image combination. Pick another from the list. The system does not switch the model.",

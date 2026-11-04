@@ -234,16 +234,26 @@
     },
     "videoLab": {
       "prompt": "Prompt do vídeo",
-      "promptHint": "Descreva a cena e o movimento. O modelo aceita 2500 caracteres: se passar, o final da cena é cortado e os parâmetros da marca ficam. Tokens como '{{brand.name}}' são preenchidos na geração.",
+      "promptHint": "Descreva a cena e o movimento. O Seedance 2.5 guarda 15000 caracteres; as outras variações, 3500; o Kling 3.0, 2500; o Veo 3.1 e o Gen-4.5, 1000. Se passar, o final da cena é cortado e os parâmetros da marca ficam. Tokens como '{{brand.name}}' são preenchidos na geração.",
       "caption": "Prompt da legenda",
       "captionHint": "Opcional. A legenda sai depois do vídeo.",
       "model": "Modelo",
-      "modelHint": "Sem foto, o vídeo sai do texto e dos parâmetros visuais da marca (cores e fontes). Com uma foto, a imagem vai junto. Mais de uma foto, ou o logo, só entra nos modelos Kling 3. O sistema não troca o modelo escolhido. O áudio nativo do Kling 3 e do Veo 3.1 fica desligado. O Veo 3.1 sai em 1080p: 5 segundos viram 4 e 10 viram 8. Ele não aceita proporção 1:1.",
+      "modelHint": "Sem foto, o vídeo sai do texto e dos parâmetros visuais da marca. Com uma foto, ela é o primeiro quadro. Fotos extras e o logo entram no Seedance; nos outros modelos essa combinação é recusada e o modelo não muda. Seedance 2.5 e 2.0 saem em 1080p com áudio. Fast e Mini saem em 720p com áudio. O Kling 3.0 sai sem áudio. O Veo 3.1 sai em 1080p com áudio: 5 segundos viram 4 e 10 viram 8. O Veo 3.1 e o Gen-4.5 não aceitam 1:1.",
+      "blurbs": {
+        "seedance": "Para criar comerciais com movimentos de câmera, transformações, iluminação e cenas mais elaboradas.",
+        "kling": "Para animações realistas, produtos em movimento e cenas com interação física.",
+        "veo": "Para campanhas premium, cenas cinematográficas e vídeos com áudio nativo.",
+        "gen4": "Para controle criativo, direção de câmera e edição generativa."
+      },
       "models": {
-        "kling25Pro": "Kling 2.5 Turbo Pro · US$ 0,07/s",
-        "kling3Standard": "Kling 3 Standard · US$ 0,084/s",
-        "kling3Pro": "Kling 3 Pro · US$ 0,112/s",
-        "veo31": "Veo 3.1 · US$ 0,20/s"
+        "seedance25": "Seedance 2.5 · 1080p · US$ 0,68/s",
+        "seedance20": "Seedance 2.0 · 1080p · US$ 0,40/s",
+        "seedance20Fast": "Seedance 2.0 Fast · 720p · US$ 0,24/s",
+        "seedance20Mini": "Seedance 2.0 Mini · 720p · US$ 0,15/s",
+        "kling30": "Kling 3.0 · 720p · US$ 0,09/s",
+        "kling30Pro": "Kling 3.0 Pro · 1080p · US$ 0,12/s",
+        "veo31": "Veo 3.1 · áudio · US$ 0,40/s",
+        "gen45": "Gen-4.5 · US$ 0,12/s"
       },
       "duration": "Duração",
       "seconds": "{n} segundos",
@@ -829,7 +839,7 @@
     "animate": "Animar esta foto",
     "regenerateStill": "Gerar outra foto",
     "videoModel": "Modelo de vídeo",
-    "videoModelHint": "Duração e proporção continuam as do visual publicado. O modelo escolhido anima esta foto. Se ele não aceitar a imagem, a tela avisa e o modelo não muda sozinho. No Veo 3.1, 5 segundos saem como 4 e 10 como 8, em 1080p e sem áudio. Proporção 1:1 não entra.",
+    "videoModelHint": "Duração e proporção continuam as do visual publicado. O modelo escolhido anima esta foto. Fotos extras e o logo só entram no Seedance. No Veo 3.1, 5 segundos saem como 4 e 10 como 8, em 1080p e com áudio. O Veo 3.1 e o Gen-4.5 não aceitam 1:1.",
     "stillKept": "Foto usada no vídeo",
     "manualGeneratingBeats": {
       "0": "Lendo o jeito da {brand}…",
@@ -1615,7 +1625,8 @@
     "provider_unavailable": "A OpenAI não concluiu esta geração. Confira a chave/modelo ou tente de novo em instantes.",
     "video_image_too_small": "A foto ou o logo enviado tem menos de 300×300 pixels. O modelo de vídeo não aceita essa imagem. Use um arquivo maior.",
     "video_prompt_too_long": "O prompt do vídeo passou de 2500 caracteres, o limite do modelo. Encurte o texto do visual e tente de novo.",
-    "video_balance": "A conta da Fal está sem saldo. Recarregue em fal.ai e tente gerar de novo.",
+    "video_balance": "A conta da Runway está sem créditos. Recarregue em runwayml.com e tente gerar de novo.",
+    "video_unconfigured": "A geração de vídeo usa a Runway. Defina RUNWAY_API_KEY no servidor e reinicie a API.",
     "video_provider_unavailable": "O modelo de vídeo não concluiu esta geração. Tente de novo em instantes.",
     "video_publish_closed": "Este vídeo não pôde ser publicado agora. Tente de novo em instantes.",
     "video_model_image_unsupported": "Este modelo não aceita esta combinação de imagem. Escolha outro na lista. O sistema não troca o modelo.",
