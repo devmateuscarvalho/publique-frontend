@@ -51,7 +51,8 @@
     "integrations": "Integrações",
     "backoffice": "Backoffice",
     "promptPresets": "Visuais",
-    "aiCosts": "Custos de IA"
+    "aiCosts": "Custos de IA",
+    "appLogs": "Logs"
   },
   "aiCosts": {
     "title": "Custos de IA",
@@ -192,6 +193,30 @@
       "video_second": "Segundo de vídeo"
     }
   },
+  "appLogs": {
+    "title": "Logs",
+    "lead": "O que este processo da API registrou nas últimas 48 horas. Um arquivo por dia UTC. O que passa de 48 horas é apagado.",
+    "search": "Filtrar texto",
+    "level": "Nível",
+    "levels": {
+      "all": "Todos",
+      "warn": "Avisos e erros",
+      "error": "Só erros"
+    },
+    "connecting": "Conectando",
+    "live": "Ao vivo",
+    "paused": "Pausado",
+    "error": "Não foi possível ler os logs.",
+    "pause": "Pausar",
+    "resume": "Continuar",
+    "resumeWith": "Continuar · {count} novas",
+    "loadOlder": "Carregar anteriores",
+    "loadingOlder": "Carregando…",
+    "empty": "Nenhuma linha nas últimas 48 horas.",
+    "noneOlder": "Não há linhas mais antigas nesse intervalo.",
+    "jump": "Ir para o fim",
+    "gap": "Algumas linhas no meio não couberam nesta retomada."
+  },
   "backoffice": {
     "title": "Backoffice",
     "hubLead": "Ferramentas de plataforma. Só super admin acessa.",
@@ -199,6 +224,8 @@
     "presetsLead": "Crie visuais para toda a plataforma. Publique para aparecer na galeria de qualquer marca.",
     "aiCosts": "Custos de IA",
     "aiCostsLead": "Quanto cada organização, marca, etapa e post gasta com IA, e a tabela de preços.",
+    "appLogs": "Logs",
+    "appLogsLead": "O que a API registrou nas últimas 48 horas, ao vivo.",
     "searchPresets": "Buscar por nome ou resumo",
     "statusFilter": "Status",
     "presetsCount": "{count, plural, one {# visual} other {# visuais}}",
@@ -1442,10 +1469,10 @@
     },
     "libraryCharacters": "Pessoas da marca",
     "libraryOfferings": "Itens da marca",
-    "libraryHint": "Escolha um item da marca ou crie um novo. As fotos dele são a referência da imagem.",
-    "libraryHintProduct": "Escolha um produto ou serviço, ou crie um novo. A foto é opcional.",
+    "libraryHint": "Opcional. Escolha uma pessoa da marca, ou Nenhum para gerar pelo visual e pela marca.",
+    "libraryHintProduct": "Opcional. Escolha um produto ou serviço, ou Nenhum para gerar pelo visual e pela marca.",
     "libraryError": "Não foi possível carregar o acervo.",
-    "libraryEmpty": "Nada salvo para este visual. Crie um item para usar como referência.",
+    "libraryEmpty": "Nada salvo para este visual. Dá para seguir em Nenhum, ou criar um item.",
     "libraryNone": "Nenhum",
     "libraryCreateNew": "Criar novo",
     "libraryCreateUse": "Criar e usar",
@@ -1825,6 +1852,10 @@
     "avatar-casual-blurb": "Retrato leve e aproximável, fora do estúdio rígido.",
     "avatar-ugc": "Estilo celular",
     "avatar-ugc-blurb": "Foto nativa de celular — autêntica, menos “anúncio de stock”.",
+    "mascot": "Mascote",
+    "mascot-blurb": "O mascote da marca, com uniforme feito da paleta e dos serviços. Sem local, usa o ambiente típico.",
+    "mascot-scene": "Mascote em cena",
+    "mascot-scene-blurb": "O mascote em ação no local enviado ou no ambiente típico da marca.",
     "product": "Packshot",
     "product-blurb": "Foto premium do produto em destaque, com a linguagem da marca.",
     "product-in-use": "Em uso",

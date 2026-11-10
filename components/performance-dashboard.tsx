@@ -3,15 +3,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { useFormatter, useTranslations } from "next-intl";
 import Link from "next/link";
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { createPortal } from "react-dom";
 import { Bar, BarChart, CartesianGrid, LabelList, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import { AppShell } from "@/components/app-shell";
 import { BrandFilter, CreationFrame, useBrandQuery } from "@/components/creation-screen";
 import { addDays, DateRangeFilter, fromYmd, presetRange, toYmd, type PeriodPreset } from "@/components/date-range-filter";
 import { formatMetric } from "@/components/post-analytics";
-import { SocialNetworkIcon, type SocialNetworkID } from "@/components/social-network-icons";
+import { SocialNetworkGlyph, SocialNetworkIcon, type SocialNetworkID } from "@/components/social-network-icons";
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { useAccount } from "@/components/use-account";
 import { api, type AnalyticsMetrics, type AnalyticsSummary, type MetricValue } from "@/lib/api";
@@ -105,8 +106,12 @@ export function PerformanceDashboard() {
   const ranking = summary?.ranking ?? [];
   const looks = summary?.looks ?? [];
   const basis = summary?.ranking_basis === "likes" ? "likes" : "engagement";
+  const networkNames = Object.fromEntries(NETWORKS.map((id) => [id, metrics(`manualPublishNetworks.${id}`)])) as Record<
+    (typeof NETWORKS)[number],
+    string
+  >;
   const compareRows = networks.map((item) => ({
-    network: metrics(`manualPublishNetworks.${item.network as SocialNetworkID}`),
+    network: item.network,
     reach: numberOf(item.metrics.reach) ?? 0,
     likes: numberOf(item.metrics.likes) ?? 0,
     comments: numberOf(item.metrics.comments) ?? 0,
@@ -146,6 +151,10 @@ export function PerformanceDashboard() {
     reach: { label: metrics("analyticsMetrics.reach"), color: "var(--chart-1)" },
     likes: { label: metrics("analyticsMetrics.likes"), color: "var(--chart-2)" },
     comments: { label: metrics("analyticsMetrics.comments"), color: "var(--chart-3)" },
+    instagram: { label: networkNames.instagram },
+    facebook: { label: networkNames.facebook },
+    linkedin: { label: networkNames.linkedin },
+    tiktok: { label: networkNames.tiktok },
   } satisfies ChartConfig;
   const networkConfig = {
     instagram: { label: metrics("manualPublishNetworks.instagram"), color: "var(--chart-1)" },
@@ -240,10 +249,28 @@ export function PerformanceDashboard() {
                       <ChartContainer config={chartConfig} className="aspect-auto h-28 w-full">
                         <BarChart data={compareRows} layout="vertical" margin={{ left: 0, right: 32, top: 2, bottom: 2 }}>
                           <XAxis type="number" hide domain={[0, (max: number) => (max > 0 ? max : 1)]} />
-                          <YAxis type="category" dataKey="network" width={76} tickLine={false} axisLine={false} tickMargin={8} interval={0} />
+                          <YAxis
+                            type="category"
+                            dataKey="network"
+                            width={36}
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                            tickSize={0}
+                            interval={0}
+                            tick={(raw) => {
+                              const props = raw as { x?: number; y?: number; payload?: { value?: string } };
+                              return <NetworkTick x={props.x} y={props.y} payload={props.payload} names={networkNames} />;
+                            }}
+                          />
                           <ChartTooltip
                             content={
                               <ChartTooltipContent
+                                labelFormatter={(_value, payload) => {
+                                  const row = payload?.[0]?.payload as { network?: string } | undefined;
+                                  const id = row?.network;
+                                  return id && id in networkNames ? networkNames[id as SocialNetworkID] : "";
+                                }}
                                 formatter={(_value, _name, item) => {
                                   const metric = String(item?.dataKey ?? "");
                                   const text = (item?.payload as Record<string, unknown> | undefined)?.[`${metric}Text`];
@@ -398,6 +425,59 @@ function DayBreakdown({
         ))}
       </ul>
     </div>
+  );
+}
+
+function NetworkTick({
+  x = 0,
+  y = 0,
+  payload,
+  names,
+}: {
+  x?: number;
+  y?: number;
+  payload?: { value?: string };
+  names: Record<string, string>;
+}) {
+  const [tip, setTip] = useState<{ x: number; y: number } | null>(null);
+  const id = String(payload?.value ?? "");
+  const name = names[id] ?? id;
+  const known = (NETWORKS as readonly string[]).includes(id);
+  if (!known) {
+    return (
+      <text x={x} y={y} textAnchor="end" dominantBaseline="middle" className="fill-muted-foreground text-[11px]">
+        {name}
+      </text>
+    );
+  }
+  return (
+    <g
+      transform={`translate(${x},${y})`}
+      role="img"
+      aria-label={name}
+      onMouseEnter={(event) => {
+        const box = event.currentTarget.getBoundingClientRect();
+        setTip({ x: box.right + 8, y: box.top + box.height / 2 });
+      }}
+      onMouseLeave={() => setTip(null)}
+    >
+      <rect x={-20} y={-12} width={24} height={24} fill="transparent" />
+      <g transform="translate(-16,-8) scale(0.6667)" className="text-ink/70">
+        <SocialNetworkGlyph id={id as SocialNetworkID} />
+      </g>
+      {tip && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              className="pointer-events-none fixed z-50 -translate-y-1/2 whitespace-nowrap rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs font-medium text-foreground shadow-xl"
+              style={{ left: tip.x, top: tip.y }}
+              aria-hidden
+            >
+              {name}
+            </div>,
+            document.body,
+          )
+        : null}
+    </g>
   );
 }
 

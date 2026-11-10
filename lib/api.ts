@@ -9,7 +9,7 @@ export class ApiError extends Error {
 
 const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
-function apiBase(): string {
+export function apiBase(): string {
   if (typeof window === "undefined") return configuredApiUrl;
   const host = window.location.hostname;
   if (host === "localhost" || host === "127.0.0.1") return configuredApiUrl;
@@ -314,6 +314,14 @@ export type AIMissingPrice = {
   unit: string;
   calls: number;
   last_seen: string;
+};
+
+export type AppLogLine = {
+  id: string;
+  time?: string;
+  level: string;
+  message: string;
+  attrs?: Record<string, unknown>;
 };
 
 export type ListMeta = {

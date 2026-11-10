@@ -84,7 +84,10 @@ export function itemMatchesLook(
   item: { category: string; subtype: string },
 ): boolean {
   if (item.category === "location") {
-    return outputKind === "avatar" || outputKind === "product";
+    return outputKind === "avatar" || outputKind === "product" || outputKind === "mascot";
+  }
+  if (outputKind === "mascot") {
+    return item.category === "character" && item.subtype === "mascot";
   }
   if (outputKind === "avatar" && item.category !== "character") {
     return false;

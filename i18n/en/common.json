@@ -51,7 +51,8 @@
     "integrations": "Integrations",
     "backoffice": "Backoffice",
     "promptPresets": "Looks",
-    "aiCosts": "AI costs"
+    "aiCosts": "AI costs",
+    "appLogs": "Logs"
   },
   "aiCosts": {
     "title": "AI costs",
@@ -192,6 +193,30 @@
       "video_second": "Video second"
     }
   },
+  "appLogs": {
+    "title": "Logs",
+    "lead": "What this API process logged in the last 48 hours. One file per UTC day. Anything older is deleted.",
+    "search": "Filter text",
+    "level": "Level",
+    "levels": {
+      "all": "All",
+      "warn": "Warnings and errors",
+      "error": "Errors only"
+    },
+    "connecting": "Connecting",
+    "live": "Live",
+    "paused": "Paused",
+    "error": "Could not read the logs.",
+    "pause": "Pause",
+    "resume": "Resume",
+    "resumeWith": "Resume · {count} new",
+    "loadOlder": "Load older",
+    "loadingOlder": "Loading…",
+    "empty": "No lines in the last 48 hours.",
+    "noneOlder": "No older lines in this window.",
+    "jump": "Jump to latest",
+    "gap": "Some lines in the middle did not fit this reconnect."
+  },
   "backoffice": {
     "title": "Backoffice",
     "hubLead": "Platform tools. Super admin only.",
@@ -199,6 +224,8 @@
     "presetsLead": "Create looks for the whole platform. Publish them so every brand can pick them in the gallery.",
     "aiCosts": "AI costs",
     "aiCostsLead": "What each organization, brand, stage and post spends on AI, plus the price table.",
+    "appLogs": "Logs",
+    "appLogsLead": "What this API process logged in the last 48 hours, live.",
     "searchPresets": "Search by name or blurb",
     "statusFilter": "Status",
     "presetsCount": "{count, plural, one {# look} other {# looks}}",
@@ -1442,10 +1469,10 @@
     },
     "libraryCharacters": "Brand people",
     "libraryOfferings": "Brand items",
-    "libraryHint": "Pick a brand item or create a new one. Its photos are the image reference.",
-    "libraryHintProduct": "Pick a product or service, or create one. A photo is optional.",
+    "libraryHint": "Optional. Pick a brand person, or None to generate from the look and the brand.",
+    "libraryHintProduct": "Optional. Pick a product or service, or None to generate from the look and the brand.",
     "libraryError": "The library could not be loaded.",
-    "libraryEmpty": "Nothing saved for this look. Create an item to use as the reference.",
+    "libraryEmpty": "Nothing saved for this look. You can continue with None, or create an item.",
     "libraryNone": "None",
     "libraryCreateNew": "Create new",
     "libraryCreateUse": "Create and use",
@@ -1825,6 +1852,10 @@
     "avatar-casual-blurb": "Relaxed, approachable portrait away from stiff studio lighting.",
     "avatar-ugc": "Phone style",
     "avatar-ugc-blurb": "Native smartphone look — authentic, less stock-ad polish.",
+    "mascot": "Mascot",
+    "mascot-blurb": "The brand mascot in a uniform drawn from the palette and the services. With no place, it uses the typical environment.",
+    "mascot-scene": "Mascot in scene",
+    "mascot-scene-blurb": "The mascot mid-action in the sent place, or in the brand's typical environment.",
     "product": "Packshot",
     "product-blurb": "Premium hero product photo in the brand’s visual language.",
     "product-in-use": "In use",

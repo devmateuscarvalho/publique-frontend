@@ -413,7 +413,8 @@ export function BackofficePresetEditor({
   ]);
 
   const subjectPhotoCount = orderedItemImages(labSubject).length;
-  const personCount = outputKind === "avatar" ? (subjectPhotoCount > 0 ? 1 : 0) : Math.min(3, subjectPhotoCount);
+  const oneSubject = outputKind === "avatar" || outputKind === "mascot";
+  const personCount = oneSubject ? (subjectPhotoCount > 0 ? 1 : 0) : Math.min(3, subjectPhotoCount);
   const hasLocationRef = orderedItemImages(labPlace).length > 0;
 
   const previewPromptsQuery = useQuery({

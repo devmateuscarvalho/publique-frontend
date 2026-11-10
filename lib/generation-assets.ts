@@ -72,11 +72,14 @@ export function generationBrief(args: {
 }
 
 export function needsBrandSubject(screen: string | null, item: BrandItem | null, productName: string) {
+  if (!item) {
+    return false;
+  }
   if (screen === "avatar") {
     return orderedItemImages(item).length < 1;
   }
   if (screen === "product") {
-    return !item || !productName.trim();
+    return !productName.trim();
   }
   return false;
 }

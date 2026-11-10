@@ -11,6 +11,7 @@ import {
   LogOut,
   PenLine,
   Plus,
+  ScrollText,
   Settings,
   Shield,
   Sparkles,
@@ -136,7 +137,7 @@ function ShellFrame({
     { href: "/posts", label: t("manualPost"), icon: PenLine },
     { href: "/calendar", label: t("calendar"), icon: CalendarDays },
   ];
-  const showCreateFab = !pathname.startsWith("/create") && !pathname.startsWith("/backoffice");
+  const onCreate = pathname === "/create" || pathname.startsWith("/create/");
   const settingsItems: { href: string; label: string; icon: LucideIcon }[] = [
     { href: "/brands", label: t("brands"), icon: Layers },
     ...(role === "owner"
@@ -149,6 +150,7 @@ function ShellFrame({
   const backofficeItems: { href: string; label: string; icon: LucideIcon }[] = [
     { href: "/backoffice/presets", label: t("promptPresets"), icon: Cake },
     { href: "/backoffice/costs", label: t("aiCosts"), icon: CircleDollarSign },
+    { href: "/backoffice/logs", label: t("appLogs"), icon: ScrollText },
   ];
 
   return (
@@ -169,6 +171,28 @@ function ShellFrame({
           <SidebarTrigger className="shrink-0" aria-label={t("menu")} />
         </SidebarHeader>
         <SidebarContent>
+          <SidebarGroup className="pb-1">
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={t("startCreating")}
+                    className={`h-11 justify-center rounded-none border-2 px-3 text-xs font-bold tracking-widest uppercase shadow-md transition hover:border-ruby hover:bg-ruby hover:text-white focus-visible:ring-ruby active:border-ruby active:bg-ruby active:text-white dark:hover:border-blush dark:hover:bg-blush dark:hover:text-[#1f1f1f] dark:active:border-blush dark:active:bg-blush dark:active:text-[#1f1f1f] ${
+                      onCreate
+                        ? "border-ruby bg-ruby text-white dark:border-blush dark:bg-blush dark:text-[#1f1f1f]"
+                        : "border-blush bg-blush text-[#1f1f1f] dark:border-ruby dark:bg-ruby dark:text-white"
+                    }`}
+                  >
+                    <Link href="/create" onClick={() => setOpenMobile(false)} aria-current={onCreate ? "page" : undefined}>
+                      <WandSparkles />
+                      <span>{t("startCreating")}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -334,19 +358,7 @@ function ShellFrame({
                 {title}
               </h1>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              {action}
-              {showCreateFab ? (
-                <Link
-                  href="/create"
-                  className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-none border-2 border-blush bg-blush px-4 py-2.5 text-xs font-bold tracking-widest text-[#1f1f1f] uppercase shadow-md transition hover:border-ruby hover:bg-ruby hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ruby focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-ruby dark:bg-ruby dark:text-white dark:hover:border-blush dark:hover:bg-blush dark:hover:text-[#1f1f1f]"
-                  aria-label={t("startCreating")}
-                >
-                  <WandSparkles className="size-4 shrink-0" aria-hidden />
-                  <span className="max-w-[10rem] truncate sm:max-w-none">{t("startCreating")}</span>
-                </Link>
-              ) : null}
-            </div>
+            {action ? <div className="flex shrink-0 items-center gap-2">{action}</div> : null}
           </header>
           {children}
         </div>

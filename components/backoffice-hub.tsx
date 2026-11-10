@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleDollarSign, LayoutTemplate } from "lucide-react";
+import { CircleDollarSign, LayoutTemplate, ScrollText } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
@@ -19,6 +19,12 @@ const items = [
     titleKey: "aiCosts" as const,
     leadKey: "aiCostsLead" as const,
     icon: CircleDollarSign,
+  },
+  {
+    href: "/backoffice/logs",
+    titleKey: "appLogs" as const,
+    leadKey: "appLogsLead" as const,
+    icon: ScrollText,
   },
 ];
 
