@@ -150,6 +150,9 @@ export function BackofficePresetEditor({
   const [labBrandId, setLabBrandId] = useState("");
   const [labItemId, setLabItemId] = useState("");
   const [labPlaceId, setLabPlaceId] = useState("");
+  const [labPersonId, setLabPersonId] = useState("");
+  const [pair, setPair] = useState("");
+  const [setting, setSetting] = useState("");
   const [labProductName, setLabProductName] = useState("");
   const [labProductPrice, setLabProductPrice] = useState("");
   const [labProductDescription, setLabProductDescription] = useState("");
@@ -258,6 +261,9 @@ export function BackofficePresetEditor({
     }
     setLabItemId(preset.lab_item_id || "");
     setLabPlaceId(preset.lab_place_id || "");
+    setLabPersonId(preset.lab_person_id || "");
+    setPair(preset.pair || "");
+    setSetting(preset.setting || "");
     setLabProductName(preset.lab_product_name || "");
     setLabProductPrice(preset.lab_product_price || "");
     setLabProductDescription(preset.lab_product_description || "");
@@ -357,8 +363,18 @@ export function BackofficePresetEditor({
     () => (labItemsQuery.data?.items ?? []).filter((item) => item.category === "location"),
     [labItemsQuery.data?.items],
   );
+  const labPeople = useMemo(
+    () =>
+      (labItemsQuery.data?.items ?? []).filter(
+        (item) => item.category === "character" && item.subtype === "person",
+      ),
+    [labItemsQuery.data?.items],
+  );
+  const wantsPerson = pair === "mascot_person";
+  const flatField = setting === "brand_field";
   const labSubject = labSubjectItems.find((item) => item.id === labItemId) ?? null;
   const labPlace = labPlaces.find((item) => item.id === labPlaceId) ?? null;
+  const labPerson = labPeople.find((item) => item.id === labPersonId) ?? null;
   useEffect(() => {
     if (!labItemsQuery.isSuccess) {
       return;
@@ -369,7 +385,10 @@ export function BackofficePresetEditor({
     if (labPlaceId && !labPlaces.some((item) => item.id === labPlaceId)) {
       setLabPlaceId("");
     }
-  }, [labItemsQuery.isSuccess, labItemId, labPlaceId, labSubjectItems, labPlaces]);
+    if (labPersonId && !labPeople.some((item) => item.id === labPersonId)) {
+      setLabPersonId("");
+    }
+  }, [labItemsQuery.isSuccess, labItemId, labPlaceId, labPersonId, labSubjectItems, labPlaces, labPeople]);
 
   const [previewDebounced, setPreviewDebounced] = useState({
     promptImage: "",
@@ -414,8 +433,14 @@ export function BackofficePresetEditor({
 
   const subjectPhotoCount = orderedItemImages(labSubject).length;
   const oneSubject = outputKind === "avatar" || outputKind === "mascot";
-  const personCount = oneSubject ? (subjectPhotoCount > 0 ? 1 : 0) : Math.min(3, subjectPhotoCount);
-  const hasLocationRef = orderedItemImages(labPlace).length > 0;
+  const personCount = wantsPerson
+    ? (subjectPhotoCount > 0 ? 1 : 0) + (orderedItemImages(labPerson).length > 0 ? 1 : 0)
+    : oneSubject
+      ? subjectPhotoCount > 0
+        ? 1
+        : 0
+      : Math.min(3, subjectPhotoCount);
+  const hasLocationRef = !flatField && orderedItemImages(labPlace).length > 0;
 
   const previewPromptsQuery = useQuery({
     queryKey: [
@@ -426,6 +451,7 @@ export function BackofficePresetEditor({
       contentFormat,
       labItemId,
       labPlaceId,
+      labPersonId,
       resultText,
       videoModel,
     ],
@@ -450,7 +476,8 @@ export function BackofficePresetEditor({
           lab_topic_mood: previewDebounced.labTopicMood,
           previous_caption: resultText,
           item_id: labItemId,
-          place_id: labPlaceId,
+          place_id: flatField ? "" : labPlaceId,
+          person_id: wantsPerson ? labPersonId : "",
           video_model: contentFormat === "video" ? videoModel : undefined,
         }),
       }),
@@ -502,6 +529,7 @@ export function BackofficePresetEditor({
       outputKind,
       personCount,
       hasLocationRef,
+      wantsPerson ? "person" : "",
     );
     const withLogo = appendLogoClearZone(withRefs, includeLogo, logoPlacement);
     const quality = contentFormat === "video" ? "" : (contextQuery.data?.envelopes?.image_quality_appendix?.trim() ?? "");
@@ -515,6 +543,7 @@ export function BackofficePresetEditor({
     outputKind,
     personCount,
     hasLocationRef,
+    wantsPerson,
     includeLogo,
     logoPlacement,
     contextQuery.data?.envelopes?.image_quality_appendix,
@@ -681,7 +710,8 @@ export function BackofficePresetEditor({
         prompt_text: promptText,
         lab_brand_id: labBrandId || "",
         lab_item_id: labItemId,
-        lab_place_id: labPlaceId,
+        lab_place_id: flatField ? "" : labPlaceId,
+        lab_person_id: wantsPerson ? labPersonId : "",
         lab_product_name: labProductName,
         lab_product_price: labProductPrice,
         lab_product_description: labProductDescription,
@@ -808,7 +838,8 @@ export function BackofficePresetEditor({
             lab_product_price: labProductPrice,
             lab_product_description: labProductDescription,
             item_id: labItemId,
-            place_id: labPlaceId,
+            place_id: flatField ? "" : labPlaceId,
+            person_id: wantsPerson ? labPersonId : "",
           }),
         },
       );
@@ -1325,6 +1356,42 @@ export function BackofficePresetEditor({
                         </div>
                       ) : null}
                     </div>
+                    {wantsPerson ? (
+                      <div className="space-y-2">
+                        <Label>{t("labPerson")}</Label>
+                        <p className="text-sm text-ink/70">{t("labPersonHint")}</p>
+                        <Select
+                          value={labPersonId || "none"}
+                          onValueChange={(value) => setLabPersonId(value === "none" ? "" : value)}
+                          disabled={labItemsQuery.isLoading}
+                        >
+                          <SelectTrigger className="min-h-11">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">{t("labItemNone")}</SelectItem>
+                            {labPeople.map((item) => (
+                              <SelectItem key={item.id} value={item.id}>
+                                {item.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {!labItemsQuery.isLoading && labPeople.length === 0 ? (
+                          <p className="text-sm text-ink/70">{t("labPersonEmpty")}</p>
+                        ) : null}
+                        {labPerson ? (
+                          <LibraryPhoto
+                            src={orderedItemImages(labPerson)[0]?.url}
+                            emptyLabel={wizardCopy("libraryNoPhoto")}
+                            className="size-16 rounded-md"
+                          />
+                        ) : null}
+                      </div>
+                    ) : null}
+                    {flatField ? (
+                      <p className="text-sm text-ink/70">{t("labFlatField")}</p>
+                    ) : (
                     <div className="space-y-2">
                       <Label>{t("labPlace")}</Label>
                       <p className="text-sm text-ink/70">{t("labPlaceHint")}</p>
@@ -1349,6 +1416,7 @@ export function BackofficePresetEditor({
                         />
                       ) : null}
                     </div>
+                    )}
                   </div>
                 ) : null}
                 {isNew ? <p className="text-sm text-ink/70">{t("saveBeforeGenerate")}</p> : null}

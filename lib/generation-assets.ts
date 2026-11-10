@@ -52,16 +52,18 @@ export function generationBrief(args: {
       };
     }
   }
-  if (args.screen === "avatar" && args.item?.category === "character") {
-    brief.item = {
-      id: args.item.id,
-      category: args.item.category,
-      subtype: args.item.subtype,
-      name: args.characterName.trim() || args.item.name,
-      description: args.item.description,
-    };
+  if ((args.screen === "avatar" || args.screen === "mascot") && args.item?.category === "character") {
+    if (args.screen !== "mascot" || args.item.subtype === "mascot") {
+      brief.item = {
+        id: args.item.id,
+        category: args.item.category,
+        subtype: args.item.subtype,
+        name: args.characterName.trim() || args.item.name,
+        description: args.item.description,
+      };
+    }
   }
-  if (args.place && (args.screen === "product" || args.screen === "avatar")) {
+  if (args.place && usesLibrarySubject(args.screen)) {
     brief.place = {
       id: args.place.id,
       name: args.place.name,
@@ -71,11 +73,15 @@ export function generationBrief(args: {
   return brief;
 }
 
+export function usesLibrarySubject(screen: string | null) {
+  return screen === "product" || screen === "avatar" || screen === "mascot";
+}
+
 export function needsBrandSubject(screen: string | null, item: BrandItem | null, productName: string) {
   if (!item) {
     return false;
   }
-  if (screen === "avatar") {
+  if (screen === "avatar" || screen === "mascot") {
     return orderedItemImages(item).length < 1;
   }
   if (screen === "product") {

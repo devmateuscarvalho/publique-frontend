@@ -50,6 +50,9 @@ export function wizardScreenKind(recipe?: CreativeRecipe | null) {
   if (recipe.output_kind === "avatar") {
     return "avatar";
   }
+  if (recipe.output_kind === "mascot") {
+    return "mascot";
+  }
   if (recipe.lab_visual_format === "single") {
     return "single";
   }
@@ -160,7 +163,7 @@ export function WizardPrepare({
   const t = useTranslations("wizard");
   const kind = wizardScreenKind(recipe);
   const showLogo = kind !== "carousel";
-  const showRefs = kind === "product" || kind === "avatar";
+  const showRefs = kind === "product" || kind === "avatar" || kind === "mascot";
   const showCarousel = kind === "carousel";
   const showImageDirection = kind === "single";
   return (

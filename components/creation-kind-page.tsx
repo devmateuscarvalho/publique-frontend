@@ -36,7 +36,7 @@ import {
   type PostModel,
   type VisualResponse,
 } from "@/lib/api";
-import { attachModelReferences, generationBrief, needsBrandSubject } from "@/lib/generation-assets";
+import { attachModelReferences, generationBrief, needsBrandSubject, usesLibrarySubject } from "@/lib/generation-assets";
 import { lookMatchesFit, lookMatchesKind, type OfferingChip } from "@/lib/look-fits";
 import { appToast } from "@/lib/app-toast";
 import { type LogoPlacement } from "@/lib/backoffice-preset-shared";
@@ -243,7 +243,7 @@ export function CreationKindPage() {
         }),
       });
       const screen = wizardScreenKind(selectedRecipe);
-      if (screen === "product" || screen === "avatar") {
+      if (usesLibrarySubject(screen)) {
         await attachModelReferences({
           brandId,
           modelId: modelResult.model.id,

@@ -14,6 +14,9 @@ export function lookMatchesKind(fits: LookFit[] | undefined, outputKind: string)
   if (outputKind === "product") {
     return fits.some((fit) => fit.category === "product" || fit.category === "service");
   }
+  if (outputKind === "mascot") {
+    return fits.some((fit) => fit.category === "character" && (fit.subtype === "" || fit.subtype === "mascot"));
+  }
   return true;
 }
 
@@ -113,6 +116,9 @@ export function librarySaveCategory(
   fits: LookFit[] | undefined,
   chip: OfferingChip,
 ): { category: string; subtype: string } {
+  if (outputKind === "mascot") {
+    return { category: "character", subtype: "mascot" };
+  }
   if (outputKind === "avatar") {
     return { category: "character", subtype: "person" };
   }

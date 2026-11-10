@@ -164,6 +164,9 @@ export type PromptPreset = {
   lab_brand_id?: string;
   lab_item_id?: string;
   lab_place_id?: string;
+  lab_person_id?: string;
+  pair?: string;
+  setting?: string;
   lab_product_name?: string;
   lab_product_price?: string;
   lab_product_description?: string;

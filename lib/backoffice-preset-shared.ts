@@ -42,21 +42,42 @@ function productReferenceGuidance(n: number): string {
   return `Images 1, 2, and 3 are PRODUCT photos. ${sameProduct}`;
 }
 
-export function referenceSceneGuidance(outputKind: string, personCount: number, hasLocation: boolean): string {
+export function referenceSceneGuidance(
+  outputKind: string,
+  personCount: number,
+  hasLocation: boolean,
+  companion = "",
+): string {
   let n = Math.min(Math.max(personCount, 0), 3);
   const avatar = outputKind === "avatar";
+  const mascot = outputKind === "mascot";
   const product = outputKind === "product";
-  if (avatar && n > 1) {
+  const pair = mascot && companion === "person";
+  if ((avatar || mascot) && !pair && n > 1) {
     n = 1;
   }
-  if (n === 0 && !hasLocation) {
+  if (n === 0 && !hasLocation && !pair) {
     return "";
   }
   const parts = ["Reference images are attached in order. Follow this mapping exactly."];
-  if (avatar) {
+  if (pair) {
+    if (n >= 2) {
+      parts.push(
+        "Image 1 is the MASCOT (species, face, markings, proportions). Keep that same character recognizably consistent. The prompt chooses the medium. Image 2 is the PERSON who works at the brand (face, hair, skin tone, body type). Keep that same person recognizably consistent. Show both in the same frame. Do not merge them into one character.",
+      );
+    } else if (n === 1) {
+      parts.push(
+        "Image 1 is the MASCOT (species, face, markings, proportions). Keep that same character recognizably consistent. No brand person photo is attached. Do not invent a person standing next to the mascot.",
+      );
+    } else {
+      parts.push("No mascot photo and no brand person photo are attached. Do not invent either character.");
+    }
+  } else if (avatar || mascot) {
     if (n >= 1) {
       parts.push(
-        "Image 1 is the AVATAR person (face, hair, skin tone, body type, clothing). Keep that same identifiable person recognizably consistent in the result. Place them in a new scene matching the prompt; do not invent a different person and do not add extra people from the reference.",
+        mascot
+          ? "Image 1 is the MASCOT (species, face, markings, proportions). Keep that same character recognizably consistent. The prompt chooses the medium: follow it for a photograph, and follow it for an illustration of this same character. The outfit may change into a brand uniform. Do not invent a different character and do not add other mascots from the reference."
+          : "Image 1 is the AVATAR person (face, hair, skin tone, body type). Keep that same identifiable person recognizably consistent. The prompt chooses the medium: follow it for a photograph, and follow it for an illustration of this same person. The outfit may change into a brand uniform when the prompt asks for one. Place them in a new scene matching the prompt; do not invent a different person and do not add extra people from the reference.",
       );
     }
   } else if (product) {
@@ -98,8 +119,9 @@ export function appendReferenceSceneGuidance(
   outputKind: string,
   personCount: number,
   hasLocation: boolean,
+  companion = "",
 ): string {
-  const guide = referenceSceneGuidance(outputKind, personCount, hasLocation);
+  const guide = referenceSceneGuidance(outputKind, personCount, hasLocation, companion);
   const base = prompt.trim();
   if (!guide) {
     return base;

@@ -29,7 +29,7 @@ import {
 } from "@/components/wizard-prepare";
 import { WizardFitChips } from "@/components/wizard-fit-chips";
 import { ApiError, api, type BrandItem, type CreativeRecipe, type OutputKind } from "@/lib/api";
-import { attachModelReferences, generationBrief, needsBrandSubject } from "@/lib/generation-assets";
+import { attachModelReferences, generationBrief, needsBrandSubject, usesLibrarySubject } from "@/lib/generation-assets";
 import { lookMatchesFit, lookMatchesKind, type OfferingChip } from "@/lib/look-fits";
 import { type LogoPlacement } from "@/lib/backoffice-preset-shared";
 import { startSocialOAuth } from "@/lib/social-connect";
@@ -265,7 +265,7 @@ function WeekPlanner() {
           ...brief,
         }),
       });
-      if ((screen === "product" || screen === "avatar") && selectedRecipe) {
+      if (usesLibrarySubject(screen) && selectedRecipe) {
         await attachModelReferences({
           brandId,
           modelId: result.slot.post_model_id,

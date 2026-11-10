@@ -21,6 +21,14 @@ import { cn } from "@/lib/utils";
 type WizardProduct = { name: string; price: string; description: string };
 
 type CreateKind = "physical" | "digital" | "service" | "person" | "mascot";
+type SubjectKind = "avatar" | "product" | "mascot";
+
+function libraryKind(recipe?: CreativeRecipe | null): SubjectKind {
+  if (recipe?.output_kind === "avatar" || recipe?.output_kind === "mascot") {
+    return recipe.output_kind;
+  }
+  return "product";
+}
 
 export function WizardLibrary({
   brandId,
@@ -44,7 +52,11 @@ export function WizardLibrary({
   onPlace: (item: BrandItem | null) => void;
 }) {
   const t = useTranslations("wizard");
-  const kind = recipe?.output_kind === "avatar" ? "avatar" : "product";
+  const kind = libraryKind(recipe);
+  const subjectTitle =
+    kind === "mascot" ? t("librarySubjectMascot") : kind === "avatar" ? t("librarySubjectPerson") : t("librarySubjectProduct");
+  const subjectHint =
+    kind === "mascot" ? t("libraryHintMascot") : kind === "product" ? t("libraryHintProduct") : t("libraryHint");
   const query = useQuery({
     queryKey: ["brand-items", brandId],
     queryFn: () => api<{ items: BrandItem[] }>(`/v1/brands/${brandId}/items`),
@@ -59,8 +71,8 @@ export function WizardLibrary({
     <div className="space-y-4">
       <section className={`${wizardPanelClass} space-y-3 p-4 md:p-5`}>
         <div>
-          <p className="text-sm font-medium">{kind === "avatar" ? t("librarySubjectPerson") : t("librarySubjectProduct")}</p>
-          <p className={wizardHintClass}>{t(kind === "product" ? "libraryHintProduct" : "libraryHint")}</p>
+          <p className="text-sm font-medium">{subjectTitle}</p>
+          <p className={wizardHintClass}>{subjectHint}</p>
         </div>
         {query.isLoading ? <p className="text-sm text-muted-foreground">{t("loading")}</p> : null}
         {query.isError ? <p className="text-sm text-destructive">{t("libraryError")}</p> : null}
@@ -159,9 +171,12 @@ function matchesChip(item: { category: string; subtype: string }, chip: Offering
   return item.category === "product" && (item.subtype === "" || item.subtype === chip);
 }
 
-function createOptions(kind: "avatar" | "product" | "location", offering: OfferingChip, fits: CreativeRecipe["fits"]): CreateKind[] {
+function createOptions(kind: SubjectKind | "location", offering: OfferingChip, fits: CreativeRecipe["fits"]): CreateKind[] {
   if (kind === "location") {
     return [];
+  }
+  if (kind === "mascot") {
+    return itemMatchesLook(fits, "mascot", { category: "character", subtype: "mascot" }) ? ["mascot"] : [];
   }
   const options: CreateKind[] =
     kind === "avatar" ? ["person", "mascot"] : ["physical", "digital", "service"];
@@ -189,7 +204,7 @@ function CreateItem({
   onCreated,
 }: {
   brandId: string;
-  kind: "avatar" | "product" | "location";
+  kind: SubjectKind | "location";
   offering: OfferingChip;
   fits: CreativeRecipe["fits"];
   onCreated: (item: BrandItem) => void;
@@ -209,8 +224,9 @@ function CreateItem({
 
   const create = useMutation({
     mutationFn: async () => {
-      const category = kind === "location" ? "location" : kind === "avatar" ? "character" : chosenKind === "service" ? "service" : "product";
-      const subtype = category === "product" || category === "character" ? (chosenKind === "service" ? "" : chosenKind) : "";
+      const category =
+        kind === "location" ? "location" : kind === "avatar" || kind === "mascot" ? "character" : chosenKind === "service" ? "service" : "product";
+      const subtype = kind === "mascot" ? "mascot" : category === "product" || category === "character" ? (chosenKind === "service" ? "" : chosenKind) : "";
       const created = await api<{ item: BrandItem }>(`/v1/brands/${brandId}/items`, {
         method: "POST",
         body: JSON.stringify({
@@ -261,13 +277,15 @@ function CreateItem({
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor={`library-create-name-${kind}`}>
-              {kind === "avatar"
-                ? t("characterName")
-                : kind === "location"
-                  ? t("placeName")
-                  : chosenKind === "service"
-                    ? t("serviceName")
-                    : t("productName")}
+              {kind === "mascot"
+                ? t("mascotName")
+                : kind === "avatar"
+                  ? t("characterName")
+                  : kind === "location"
+                    ? t("placeName")
+                    : chosenKind === "service"
+                      ? t("serviceName")
+                      : t("productName")}
             </Label>
             <Input id={`library-create-name-${kind}`} className={wizardControlClass} value={name} onChange={(event) => setName(event.target.value)} autoComplete="off" />
           </div>
