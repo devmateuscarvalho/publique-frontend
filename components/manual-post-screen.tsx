@@ -697,7 +697,13 @@ function ManualDraftPage({ postId }: { postId: string }) {
     onError: (error) => appToast.error(errors(mapDraftError(error))),
   });
   if (postQuery.isLoading) {
-    return null;
+    return (
+      <div className="flex min-h-[min(40rem,calc(100svh-9rem))] w-full items-center justify-center">
+        <div className="w-full max-w-96 shrink-0">
+          <PostCreatingWait brandName={brandName} />
+        </div>
+      </div>
+    );
   }
 
   if (!brandId || postQuery.isError || !post) {
@@ -992,11 +998,11 @@ function ManualDraftPage({ postId }: { postId: string }) {
         <div
           className={cn(
             presenting
-              ? "flex flex-1 items-center justify-center"
+              ? "flex w-full flex-1 flex-col items-center justify-center"
               : "grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_22.5rem]",
           )}
         >
-          <div className="min-w-0">
+          <div className={cn(presenting ? "w-full max-w-96 shrink-0" : "min-w-0")}>
             {status === "failed" && !presenting ? (
               <p className="mb-6 text-sm leading-relaxed text-destructive" role="alert">
                 {failedCopy}
