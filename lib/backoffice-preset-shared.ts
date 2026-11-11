@@ -222,12 +222,31 @@ export const DECK_SHAPE_SLIDES: Record<Exclude<DeckShape, "">, number> = {
   howto: 6,
 };
 
-export const DECK_SHAPE_LAYOUT: Partial<Record<Exclude<DeckShape, "">, "statement" | "steps">> = {
+export const DECK_SHAPE_LAYOUT: Partial<Record<Exclude<DeckShape, "">, "editorial" | "statement" | "steps">> = {
   headline: "statement",
-  mistakes: "steps",
-  decide: "steps",
+  mistakes: "editorial",
+  decide: "editorial",
   howto: "steps",
 };
+
+export const DECK_DIRECTIONS = ["poster", "magazine", "document"] as const;
+export type DeckDirection = (typeof DECK_DIRECTIONS)[number] | "";
+
+export function normalizeDeckDirection(value: string): DeckDirection {
+  const next = value.trim().toLowerCase();
+  return (DECK_DIRECTIONS as readonly string[]).includes(next) ? (next as DeckDirection) : "";
+}
+
+// directionForShape is what a new look records. Free, stop, and versus stay empty.
+export function directionForShape(shape: DeckShape): DeckDirection {
+  if (shape === "headline") {
+    return "poster";
+  }
+  if (shape === "mistakes" || shape === "decide" || shape === "howto") {
+    return "document";
+  }
+  return "";
+}
 
 export function removeScriptKey(script: string, key: string): string {
   return script.replace(new RegExp(`^${key}:\\s*.*(?:\\r?\\n)?`, "m"), "");

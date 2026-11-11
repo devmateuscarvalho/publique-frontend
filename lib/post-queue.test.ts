@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  canOfferDraftRegenerate,
   laneCounts,
   postMatchesQuery,
   queueLane,
@@ -54,6 +55,22 @@ test("lanes follow the next action", () => {
   assert.equal(queueSignal(post({ id: "q", approval_status: "pending", quality_flags: ["low_quality_score"] }), now), "review");
   assert.equal(queueLane(post({ id: "r", status: "draft" }), now), "drafts");
   assert.equal(queueSignal(post({ id: "pub", status: "publishing" }), now), "publishing");
+});
+
+test("a finished draft regenerates only when the quality gate failed", () => {
+  const base = {
+    status: "draft",
+    isAIGenerated: true,
+    alreadyPosted: false,
+    publishing: false,
+  };
+  assert.equal(canOfferDraftRegenerate({ ...base, qualityFlags: ["low_quality_score"] }), true);
+  assert.equal(canOfferDraftRegenerate({ ...base, qualityFlags: ["unsupported_figure"] }), true);
+  assert.equal(canOfferDraftRegenerate({ ...base, qualityFlags: [] }), false);
+  assert.equal(canOfferDraftRegenerate(base), false);
+  assert.equal(canOfferDraftRegenerate({ ...base, isAIGenerated: false, qualityFlags: ["low_quality_score"] }), false);
+  assert.equal(canOfferDraftRegenerate({ ...base, alreadyPosted: true, qualityFlags: ["low_quality_score"] }), false);
+  assert.equal(canOfferDraftRegenerate({ ...base, status: "failed", qualityFlags: ["low_quality_score"] }), false);
 });
 
 test("search ignores accents and requires every word", () => {

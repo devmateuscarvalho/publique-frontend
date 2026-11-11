@@ -17,8 +17,11 @@ import {
   DECK_SHAPE_LAYOUT,
   DECK_SHAPE_SLIDES,
   DECK_TOKENS,
+  directionForShape,
+  normalizeDeckDirection,
   normalizeDeckShape,
   removeScriptKey,
+  scriptKey,
   setScriptKey,
 } from "@/lib/backoffice-preset-shared";
 
@@ -60,6 +63,15 @@ export function BackofficePresetTopicStudio({
   onInsertToken: (token: BrandToken) => void;
 }) {
   const t = useTranslations("backoffice");
+  const labDirection = normalizeDeckDirection(scriptKey(promptImage, "direction"));
+  const directionLabel =
+    labDirection === "poster"
+      ? t("labDirectionPoster")
+      : labDirection === "magazine"
+        ? t("labDirectionMagazine")
+        : labDirection === "document"
+          ? t("labDirectionDocument")
+          : t("labDirectionCurrent");
 
   return (
     <div className="space-y-5">
@@ -78,6 +90,7 @@ export function BackofficePresetTopicStudio({
               let script = promptImage;
               if (!next) {
                 script = removeScriptKey(script, "shape");
+                script = removeScriptKey(script, "direction");
                 onShape("", script, labSlideCount);
                 return;
               }
@@ -88,6 +101,10 @@ export function BackofficePresetTopicStudio({
               if (layout) {
                 script = setScriptKey(script, "layout", layout);
               }
+              const direction = directionForShape(next);
+              script = direction
+                ? setScriptKey(script, "direction", direction)
+                : removeScriptKey(script, "direction");
               onShape(next, script, slides);
             }}
           >
@@ -128,6 +145,53 @@ export function BackofficePresetTopicStudio({
               <SelectItem value="steps">{t("labLayoutSteps")}</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lab-medium">{t("labMedium")}</Label>
+          <p className="text-sm text-ink/70">{t("labMediumHint")}</p>
+          <Select
+            value={scriptKey(promptImage, "medium").trim().toLowerCase() === "campaign" ? "campaign" : "type"}
+            onValueChange={(value) => {
+              if (value === "campaign") {
+                onPromptImage(setScriptKey(promptImage, "medium", "campaign"));
+                return;
+              }
+              onPromptImage(removeScriptKey(removeScriptKey(promptImage, "medium"), "art"));
+            }}
+          >
+            <SelectTrigger id="lab-medium" className="min-h-11">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="type">{t("labMediumType")}</SelectItem>
+              <SelectItem value="campaign">{t("labMediumCampaign")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lab-direction">{t("labDirection")}</Label>
+          <p className="text-sm text-ink/70">{t("labDirectionHint")}</p>
+          <Select
+            value={labDirection || "current"}
+            onValueChange={(value) => {
+              const next = normalizeDeckDirection(value);
+              const script = next
+                ? setScriptKey(promptImage, "direction", next)
+                : removeScriptKey(promptImage, "direction");
+              onPromptImage(script);
+            }}
+          >
+            <SelectTrigger id="lab-direction" className="min-h-11">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="current">{t("labDirectionCurrent")}</SelectItem>
+              <SelectItem value="poster">{t("labDirectionPoster")}</SelectItem>
+              <SelectItem value="magazine">{t("labDirectionMagazine")}</SelectItem>
+              <SelectItem value="document">{t("labDirectionDocument")}</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-sm text-ink/80">{t("labDirectionPreview", { direction: directionLabel })}</p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="lab-theme">{t("labTheme")}</Label>

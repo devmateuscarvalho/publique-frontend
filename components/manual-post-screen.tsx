@@ -19,17 +19,7 @@ import { PostCreatingWait } from "@/components/post-creating-wait";
 import { PostFeedbackPicker, type PostFeedback } from "@/components/post-feedback-picker";
 import { PostFeed } from "@/components/post-feed";
 import { SocialNetworkIcon, socialMarkClass, type SocialNetworkID } from "@/components/social-network-icons";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,7 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAccount } from "@/components/use-account";
 import { ApiError, api, type CreativeRecipe, type LatestAnalyticsItem, type Post, type PostAsset, type VisualResponse } from "@/lib/api";
 import { appToast } from "@/lib/app-toast";
-import { queueIsStory } from "@/lib/post-queue";
+import { canOfferDraftRegenerate, queueIsStory } from "@/lib/post-queue";
 import { usePresetCopy } from "@/lib/preset-i18n";
 import { startSocialOAuth } from "@/lib/social-connect";
 import { cn } from "@/lib/utils";
@@ -561,7 +551,6 @@ function ManualDraftPage({ postId }: { postId: string }) {
   });
 
   const [feedbackMode, setFeedbackMode] = useState<"" | "reject" | "regenerate">("");
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [chosenVideoModel, setChosenVideoModel] = useState<VideoModelId>(videoModels[0].id);
   useEffect(() => {
     const allowed = modelsForAspect(post?.video_aspect);
@@ -656,8 +645,13 @@ function ManualDraftPage({ postId }: { postId: string }) {
     status === "published" ||
     status === "publishing" ||
     (post?.publications ?? []).some((item) => item.status === "published" || item.status === "publishing");
-  const canDelete = Boolean(post) && !alreadyPosted && !publish.isPending;
-  const canRegenerateDraft = status === "draft" && Boolean(post?.is_ai_generated) && !alreadyPosted && !publish.isPending;
+  const canRegenerateDraft = canOfferDraftRegenerate({
+    status,
+    isAIGenerated: Boolean(post?.is_ai_generated),
+    alreadyPosted,
+    publishing: publish.isPending,
+    qualityFlags,
+  });
   const creatingPostId = useRef<string | null>(null);
   const [revealPanel, setRevealPanel] = useState(true);
   const fromCreating = creatingPostId.current === postId;
@@ -687,15 +681,6 @@ function ManualDraftPage({ postId }: { postId: string }) {
     return () => window.clearTimeout(timer);
   }, [pending, postId, post, postQuery.isLoading]);
 
-  const remove = useMutation({
-    mutationFn: () => api(`/v1/brands/${brandId}/posts/${postId}`, { method: "DELETE" }),
-    onSuccess: async () => {
-      appToast.success(t("manualDeleted"));
-      await queryClient.invalidateQueries({ queryKey: ["posts"] });
-      router.push("/posts");
-    },
-    onError: (error) => appToast.error(errors(mapDraftError(error))),
-  });
   if (postQuery.isLoading) {
     return (
       <div className="flex min-h-[min(40rem,calc(100svh-9rem))] w-full items-center justify-center">
@@ -779,7 +764,7 @@ function ManualDraftPage({ postId }: { postId: string }) {
       : "";
   const needsAnyConnect = needsConnect || needsInstagramConnect || needsFacebookConnect || needsTikTokConnect;
   const networkLead = videoAsset && !alreadyPosted ? t("videoPublishLead") : needsAnyConnect ? t("viewNetworksLead") : "";
-  const showMenu = canRegenerateDraft || canDelete;
+  const showMenu = canRegenerateDraft && feedbackMode !== "regenerate";
   const showApprovalButtons = showApprovalActions && feedbackMode !== "reject";
   const showToolbarActions = showApprovalButtons || showPublish || status === "failed" || showMenu;
   const showQuality = (qualityFlags.length > 0 || Boolean(qualityReview)) && !alreadyPosted;
@@ -974,19 +959,9 @@ function ManualDraftPage({ postId }: { postId: string }) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="min-w-48">
-                      {canRegenerateDraft && feedbackMode !== "regenerate" ? (
-                        <DropdownMenuItem className="min-h-11" onSelect={() => setFeedbackMode("regenerate")}>
-                          {t("feedbackRegenerateAction")}
-                        </DropdownMenuItem>
-                      ) : null}
-                      {canDelete ? (
-                        <DropdownMenuItem
-                          className="min-h-11 text-destructive focus:text-destructive"
-                          onSelect={() => setConfirmDelete(true)}
-                        >
-                          {t("manualDelete")}
-                        </DropdownMenuItem>
-                      ) : null}
+                      <DropdownMenuItem className="min-h-11" onSelect={() => setFeedbackMode("regenerate")}>
+                        {t("feedbackRegenerateAction")}
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : null}
@@ -1283,21 +1258,6 @@ function ManualDraftPage({ postId }: { postId: string }) {
           )}
         </div>
       </div>
-
-      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("manualDelete")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("manualDeleteConfirm")}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("manualDeleteCancel")}</AlertDialogCancel>
-            <AlertDialogAction className={buttonVariants({ variant: "destructive" })} onClick={() => remove.mutate()}>
-              {t("manualDelete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

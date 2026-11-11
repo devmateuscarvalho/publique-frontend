@@ -65,6 +65,23 @@ export function timeMs(iso?: string | null): number | null {
   return Number.isNaN(ms) ? null : ms;
 }
 
+/** A finished AI draft can be regenerated only after the quality gate failed. */
+export function canOfferDraftRegenerate(input: {
+  status: string;
+  isAIGenerated: boolean;
+  alreadyPosted: boolean;
+  publishing: boolean;
+  qualityFlags?: string[];
+}): boolean {
+  return (
+    input.status === "draft" &&
+    input.isAIGenerated &&
+    !input.alreadyPosted &&
+    !input.publishing &&
+    (input.qualityFlags?.length ?? 0) > 0
+  );
+}
+
 export function hasFutureSchedule(post: QueuePost, now = Date.now()): boolean {
   const at = timeMs(post.publish_at);
   return at != null && at > now;

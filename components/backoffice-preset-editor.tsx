@@ -42,6 +42,7 @@ import {
   appendReferenceSceneGuidance,
   filterKindTokens,
   findUnknownTokens,
+  normalizeDeckDirection,
   normalizeDeckShape,
   readStoredBrandId,
   resolveTemplate,
@@ -818,6 +819,8 @@ export function BackofficePresetEditor({
             lab_theme: labTheme,
             lab_layout: labLayout,
             lab_shape: labShape,
+            lab_direction: normalizeDeckDirection(scriptKey(promptImage, "direction")),
+            lab_medium: scriptKey(promptImage, "medium").trim().toLowerCase() === "campaign" ? "campaign" : "",
             lab_slide_count: labSlideCount,
           }),
         });
@@ -1462,6 +1465,22 @@ export function BackofficePresetEditor({
             <div>
               <p className="text-sm font-medium">{t("phonePreview")}</p>
               <p className="text-sm text-ink/70">{t("phonePreviewHint")}</p>
+              {contentFormat === "carousel" ? (
+                <p className="mt-1 text-sm text-ink">
+                  {t("labDirectionPreview", {
+                    direction: (() => {
+                      const direction = normalizeDeckDirection(scriptKey(promptImage, "direction"));
+                      if (direction === "poster") return t("labDirectionPoster");
+                      if (direction === "magazine") return t("labDirectionMagazine");
+                      if (direction === "document") return t("labDirectionDocument");
+                      return t("labDirectionCurrent");
+                    })(),
+                  })}
+                  {scriptKey(promptImage, "medium").trim().toLowerCase() === "campaign"
+                    ? ` · ${t("labMediumCampaign")}`
+                    : ""}
+                </p>
+              ) : null}
             </div>
             <InstagramPhonePreview
               brandName={previewBrandName}
